@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Producto | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="product-detail">
+
+    <div class="container product-detail__grid">
+
+        <!-- Galería -->
+        <div class="product-detail__gallery">
+
+            <div class="product-detail__main-image">
+
+                <span class="product-detail__badge">
+                    Nuevo
+                </span>
+
+                <div class="product-detail__placeholder">
+                    <i data-lucide="image"></i>
+                </div>
+
+            </div>
+
+            <div class="product-detail__thumbnails">
+
+                <button type="button">
+                    <i data-lucide="image"></i>
+                </button>
+
+                <button type="button">
+                    <i data-lucide="image"></i>
+                </button>
+
+                <button type="button">
+                    <i data-lucide="image"></i>
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <!-- Información -->
+        <div class="product-detail__info">
+
+            <span class="product-detail__brand">
+                Beauty
+            </span>
+
+            <h1>
+                Producto de maquillaje
+            </h1>
+
+            <div class="product-detail__sku">
+                Código:
+                <strong>PRONTY-001</strong>
+            </div>
+
+            <p class="product-detail__description">
+                Descripción del producto. Aquí mostraremos información clara
+                sobre sus características, presentación y beneficios.
+            </p>
+
+
+            <div class="product-detail__prices">
+
+                <div class="product-detail__price">
+
+                    <span>Precio detal</span>
+
+                    <strong>
+                        $25.000
+                    </strong>
+
+                </div>
+
+                <div class="product-detail__price product-detail__price--wholesale">
+
+                    <span>Precio mayorista</span>
+
+                    <strong>
+                        $18.000
+                    </strong>
+
+                    <small>
+                        Disponible para clientes mayoristas activos.
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="product-detail__stock">
+
+                <i data-lucide="flame"></i>
+
+                <span>
+                    Pocas unidades
+                </span>
+
+            </div>
+
+
+            <div class="product-detail__quantity">
+
+                <span>Cantidad</span>
+
+                <div class="quantity-control">
+
+                    <button type="button" aria-label="Disminuir cantidad">
+                        <i data-lucide="minus"></i>
+                    </button>
+
+                    <input
+                        type="number"
+                        value="1"
+                        min="1"
+                        aria-label="Cantidad"
+                    >
+
+                    <button type="button" aria-label="Aumentar cantidad">
+                        <i data-lucide="plus"></i>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <button class="product-detail__cart-button">
+
+                <i data-lucide="shopping-bag"></i>
+
+                Agregar al carrito
+
+            </button>
+
+
+            <div class="product-detail__benefits">
+
+                <div>
+                    <i data-lucide="truck"></i>
+
+                    <span>
+                        Envíos en Colombia
+                    </span>
+                </div>
+
+                <div>
+                    <i data-lucide="shield-check"></i>
+
+                    <span>
+                        Compra segura
+                    </span>
+                </div>
+
+                <div>
+                    <i data-lucide="message-circle"></i>
+
+                    <span>
+                        Atención por WhatsApp
+                    </span>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

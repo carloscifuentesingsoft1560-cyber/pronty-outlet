@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Productos | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="catalog-page">
+
+    <div class="container">
+
+        <div class="catalog-header">
+
+            <div>
+                <span class="section-heading__eyebrow">
+                    <i data-lucide="shopping-bag"></i>
+                    Pronty Outlet
+                </span>
+
+                <h1>Nuestros productos</h1>
+
+                <p>
+                    Encuentra Beauty, Kawaii, cuidado personal,
+                    Moda SHEIN y promociones.
+                </p>
+            </div>
+
+        </div>
+
+        <div class="catalog-layout">
+
+            <!-- Filtros -->
+            <aside class="catalog-filters">
+
+                <div class="catalog-filters__header">
+                    <h2>
+                        <i data-lucide="sliders-horizontal"></i>
+                        Filtrar
+                    </h2>
+
+                    <button type="button">
+                        Limpiar
+                    </button>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Categoría</h3>
+
+                    <label>
+                        <input type="checkbox">
+                        Maquillaje
+                    </label>
+
+                    <label>
+                        <input type="checkbox">
+                        Kawaii
+                    </label>
+
+                    <label>
+                        <input type="checkbox">
+                        Cuidado facial y corporal
+                    </label>
+
+                    <label>
+                        <input type="checkbox">
+                        Moda SHEIN
+                    </label>
+
+                    <label>
+                        <input type="checkbox">
+                        Promociones
+                    </label>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Marca</h3>
+
+                    <select>
+                        <option value="">Todas las marcas</option>
+                        <option value="shein">SHEIN</option>
+                        <option value="marca-1">Marca 1</option>
+                        <option value="marca-2">Marca 2</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Rango de precio</h3>
+
+                    <div class="price-fields">
+
+                        <input
+                            type="number"
+                            placeholder="Desde"
+                        >
+
+                        <input
+                            type="number"
+                            placeholder="Hasta"
+                        >
+
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label>
+                        <input type="checkbox">
+                        Solo promociones
+                    </label>
+                </div>
+
+            </aside>
+
+
+            <!-- Productos -->
+            <div class="catalog-products">
+
+                <div class="catalog-toolbar">
+
+                    <span>
+                        Mostrando productos
+                    </span>
+
+                    <select>
+                        <option>Más recientes</option>
+                        <option>Precio: menor a mayor</option>
+                        <option>Precio: mayor a menor</option>
+                    </select>
+
+                </div>
+
+
+                <div class="product-grid">
+
+                    <!-- Producto ejemplo 1 -->
+                    <article class="product-card">
+
+                        <div class="product-card__image">
+                            <a href="{% url 'product_detail' %}">
+                                <span class="product-card__badge">
+                                    Nuevo
+                                </span>
+
+                                <div class="product-card__placeholder">
+                                    <i data-lucide="image"></i>
+                                </div>
+                            </a>
+
+                        </div>
+
+                        <div class="product-card__body">
+
+                            <span class="product-card__brand">
+                                Beauty
+                            </span>
+
+                            <h3>
+                                <a href="{% url 'product_detail' %}">
+                                    Producto de maquillaje
+                                </a>
+                            </h3>
+
+                            <div class="product-card__prices">
+
+                                <div>
+                                    <span>Detal</span>
+                                    <strong>$25.000</strong>
+                                </div>
+
+                                <div class="product-card__wholesale">
+                                    <span>Mayorista</span>
+                                    <strong>$18.000</strong>
+                                </div>
+
+                            </div>
+
+                            <button class="product-card__button">
+                                <i data-lucide="shopping-bag"></i>
+                                Agregar al carrito
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- Producto ejemplo 2 -->
+                    <article class="product-card">
+
+                        <div class="product-card__image">
+                            <a href="{% url 'product_detail' %}">
+                                <span class="product-card__badge product-card__badge--low-stock">
+                                    Pocas unidades
+                                </span>
+
+                                <div class="product-card__placeholder">
+                                    <i data-lucide="image"></i>
+                                </div>
+                            </a>
+                        </div>
+
+                        <div class="product-card__body">
+
+                            <span class="product-card__brand">
+                                Kawaii
+                            </span>
+
+                            <h3>
+                                <a href="{% url 'product_detail' %}">
+                                    Producto Kawaii
+                                </a>
+                            </h3>
+
+                            <div class="product-card__prices">
+
+                                <div>
+                                    <span>Detal</span>
+                                    <strong>$32.000</strong>
+                                </div>
+
+                                <div class="product-card__wholesale">
+                                    <span>Mayorista</span>
+                                    <strong>$24.000</strong>
+                                </div>
+
+                            </div>
+
+                            <button class="product-card__button">
+                                <i data-lucide="shopping-bag"></i>
+                                Agregar al carrito
+                            </button>
+
+                        </div>
+
+                    </article>
+
+
+                    <!-- Producto ejemplo 3 -->
+                    <article class="product-card">
+
+                        <div class="product-card__image">
+                            <a href="{% url 'product_detail' %}">
+
+                                <span class="product-card__badge product-card__badge--promotion">
+                                    Promoción
+                                </span>
+
+                                <div class="product-card__placeholder">
+                                    <i data-lucide="image"></i>
+                                </div>
+                            </a>
+
+                        </div>
+
+                        <div class="product-card__body">
+
+                            <span class="product-card__brand">
+                                Skincare
+                            </span>
+
+                            <h3>
+                                <a href="{% url 'product_detail' %}">
+                                    Producto de cuidado facial
+                                </a>
+
+                            </h3>
+
+                            <div class="product-card__prices">
+
+                                <div>
+                                    <span>Detal</span>
+                                    <strong>$45.000</strong>
+                                </div>
+
+                                <div class="product-card__wholesale">
+                                    <span>Mayorista</span>
+                                    <strong>$35.000</strong>
+                                </div>
+
+                            </div>
+
+                            <button class="product-card__button">
+                                <i data-lucide="shopping-bag"></i>
+                                Agregar al carrito
+                            </button>
+
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

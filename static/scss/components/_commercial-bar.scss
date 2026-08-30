@@ -1,0 +1,42 @@
+.commercial-bar {
+  background-color: #1f5c4a;
+  color: #ffffff;
+}
+
+.commercial-bar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding-block: 0.7rem;
+}
+
+.commercial-bar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+}
+
+.commercial-bar__item svg {
+  width: 17px;
+  height: 17px;
+  color: #d8b25b;
+}
+
+.commercial-bar__item strong {
+  color: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .commercial-bar__inner {
+    justify-content: flex-start;
+    overflow-x: auto;
+    gap: 1.5rem;
+  }
+
+  .commercial-bar__item {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}

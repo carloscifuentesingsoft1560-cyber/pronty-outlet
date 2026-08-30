@@ -1,0 +1,16 @@
+{
+  "name": "pronty-outlet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "sass": "sass static/scss/main.scss static/css/main.css",
+    "sass:watch": "sass --watch static/scss/main.scss:static/css/main.css"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "sass": "^1.77.8"
+  }
+}
