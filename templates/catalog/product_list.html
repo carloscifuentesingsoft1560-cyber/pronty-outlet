@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load pronty_filters %}
 
 {% block title %}
 Productos | Pronty Outlet
@@ -13,280 +14,378 @@ Productos | Pronty Outlet
         <div class="catalog-header">
 
             <div>
+
                 <span class="section-heading__eyebrow">
                     <i data-lucide="shopping-bag"></i>
                     Pronty Outlet
                 </span>
 
-                <h1>Nuestros productos</h1>
+                <h1>
+                    Nuestros productos
+                </h1>
 
                 <p>
                     Encuentra Beauty, Kawaii, cuidado personal,
                     Moda SHEIN y promociones.
                 </p>
+
             </div>
 
         </div>
 
+
         <div class="catalog-layout">
 
-            <!-- Filtros -->
+            <!-- FILTROS -->
             <aside class="catalog-filters">
 
-                <div class="catalog-filters__header">
-                    <h2>
-                        <i data-lucide="sliders-horizontal"></i>
-                        Filtrar
-                    </h2>
+                <form method="get">
 
-                    <button type="button">
-                        Limpiar
-                    </button>
-                </div>
+                    <div class="catalog-filters__header">
 
-                <div class="filter-group">
-                    <h3>Categoría</h3>
+                        <h2>
+                            <i data-lucide="sliders-horizontal"></i>
+                            Filtrar
+                        </h2>
 
-                    <label>
-                        <input type="checkbox">
-                        Maquillaje
-                    </label>
-
-                    <label>
-                        <input type="checkbox">
-                        Kawaii
-                    </label>
-
-                    <label>
-                        <input type="checkbox">
-                        Cuidado facial y corporal
-                    </label>
-
-                    <label>
-                        <input type="checkbox">
-                        Moda SHEIN
-                    </label>
-
-                    <label>
-                        <input type="checkbox">
-                        Promociones
-                    </label>
-                </div>
-
-                <div class="filter-group">
-                    <h3>Marca</h3>
-
-                    <select>
-                        <option value="">Todas las marcas</option>
-                        <option value="shein">SHEIN</option>
-                        <option value="marca-1">Marca 1</option>
-                        <option value="marca-2">Marca 2</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <h3>Rango de precio</h3>
-
-                    <div class="price-fields">
-
-                        <input
-                            type="number"
-                            placeholder="Desde"
-                        >
-
-                        <input
-                            type="number"
-                            placeholder="Hasta"
-                        >
+                        <a href="{% url 'product_list' %}">
+                            Limpiar
+                        </a>
 
                     </div>
-                </div>
 
-                <div class="filter-group">
-                    <label>
-                        <input type="checkbox">
-                        Solo promociones
-                    </label>
-                </div>
+
+                    <!-- Categorías -->
+                    <div class="filter-group">
+
+                        <h3>
+                            Categoría
+                        </h3>
+
+                        {% for category in categories %}
+
+                            <label>
+
+                                <input
+                                    type="checkbox"
+                                    name="category"
+                                    value="{{ category.slug }}"
+                                    {% if category.slug in selected_categories %}
+                                        checked
+                                    {% endif %}
+                                >
+
+                                {{ category.name }}
+
+                            </label>
+
+                        {% empty %}
+
+                            <p>
+                                No hay categorías disponibles.
+                            </p>
+
+                        {% endfor %}
+
+                    </div>
+
+
+                    <!-- Marca -->
+                    <div class="filter-group">
+
+                        <h3>
+                            Marca
+                        </h3>
+
+                        <select name="brand">
+
+                            <option value="">
+                                Todas las marcas
+                            </option>
+
+                            {% for brand in brands %}
+
+                                <option
+                                    value="{{ brand.slug }}"
+                                    {% if selected_brand == brand.slug %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    {{ brand.name }}
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- Rango de precio -->
+                    <div class="filter-group">
+
+                        <h3>
+                            Rango de precio
+                        </h3>
+
+                        <div class="price-fields">
+
+                            <input
+                                type="number"
+                                name="price_min"
+                                placeholder="Desde"
+                                value="{{ price_min|default:'' }}"
+                                min="0"
+                            >
+
+                            <input
+                                type="number"
+                                name="price_max"
+                                placeholder="Hasta"
+                                value="{{ price_max|default:'' }}"
+                                min="0"
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Promociones -->
+                    <div class="filter-group">
+
+                        <label>
+
+                            <input
+                                type="checkbox"
+                                name="on_sale"
+                                value="1"
+                                {% if on_sale %}
+                                    checked
+                                {% endif %}
+                            >
+
+                            Solo promociones
+
+                        </label>
+
+                    </div>
+
+
+                    <!-- Orden -->
+                    <div class="filter-group">
+
+                        <h3>
+                            Ordenar por
+                        </h3>
+
+                        <select name="ordering">
+
+                            <option
+                                value="recent"
+                                {% if not ordering or ordering == 'recent' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Más recientes
+                            </option>
+
+                            <option
+                                value="price_asc"
+                                {% if ordering == 'price_asc' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Precio: menor a mayor
+                            </option>
+
+                            <option
+                                value="price_desc"
+                                {% if ordering == 'price_desc' %}
+                                    selected
+                                {% endif %}
+                            >
+                                Precio: mayor a menor
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <button
+                        class="product-card__button"
+                        type="submit"
+                    >
+                        <i data-lucide="search"></i>
+                        Aplicar filtros
+                    </button>
+
+                </form>
 
             </aside>
 
 
-            <!-- Productos -->
+            <!-- PRODUCTOS -->
             <div class="catalog-products">
 
                 <div class="catalog-toolbar">
 
                     <span>
-                        Mostrando productos
+                        Mostrando {{ products|length }} producto{{ products|length|pluralize }}
                     </span>
-
-                    <select>
-                        <option>Más recientes</option>
-                        <option>Precio: menor a mayor</option>
-                        <option>Precio: mayor a menor</option>
-                    </select>
 
                 </div>
 
 
                 <div class="product-grid">
 
-                    <!-- Producto ejemplo 1 -->
-                    <article class="product-card">
+                    {% for product in products %}
 
-                        <div class="product-card__image">
-                            <a href="{% url 'product_detail' %}">
-                                <span class="product-card__badge">
-                                    Nuevo
-                                </span>
+                        <article class="product-card">
 
-                                <div class="product-card__placeholder">
-                                    <i data-lucide="image"></i>
-                                </div>
-                            </a>
+                            <!-- Imagen -->
+                            <div class="product-card__image">
 
-                        </div>
+                                <a href="{% url 'product_detail' product.slug %}">
 
-                        <div class="product-card__body">
+                                    {% if product.is_new %}
 
-                            <span class="product-card__brand">
-                                Beauty
-                            </span>
+                                        <span class="product-card__badge product-card__badge--new">
+                                            Nuevo
+                                        </span>
 
-                            <h3>
-                                <a href="{% url 'product_detail' %}">
-                                    Producto de maquillaje
+                                    {% elif product.is_low_stock %}
+
+                                        <span class="product-card__badge product-card__badge--low">
+                                            Pocas unidades
+                                        </span>
+
+                                    {% elif product.is_on_sale %}
+
+                                        <span class="product-card__badge product-card__badge--sale">
+                                            Promoción
+                                        </span>
+
+                                    {% endif %}
+
+
+                                    {% if product.image %}
+
+                                        <img
+                                            src="{{ product.image.url }}"
+                                            alt="{{ product.name }}"
+                                        >
+
+                                    {% else %}
+
+                                        <div class="product-card__placeholder">
+                                            <i data-lucide="image"></i>
+                                        </div>
+
+                                    {% endif %}
+
                                 </a>
-                            </h3>
-
-                            <div class="product-card__prices">
-
-                                <div>
-                                    <span>Detal</span>
-                                    <strong>$25.000</strong>
-                                </div>
-
-                                <div class="product-card__wholesale">
-                                    <span>Mayorista</span>
-                                    <strong>$18.000</strong>
-                                </div>
 
                             </div>
 
-                            <button class="product-card__button">
-                                <i data-lucide="shopping-bag"></i>
-                                Agregar al carrito
-                            </button>
 
-                        </div>
+                            <!-- Contenido -->
+                            <div class="product-card__content">
 
-                    </article>
-
-
-                    <!-- Producto ejemplo 2 -->
-                    <article class="product-card">
-
-                        <div class="product-card__image">
-                            <a href="{% url 'product_detail' %}">
-                                <span class="product-card__badge product-card__badge--low-stock">
-                                    Pocas unidades
+                                <span class="product-card__category">
+                                    {{ product.category.name }}
                                 </span>
 
-                                <div class="product-card__placeholder">
-                                    <i data-lucide="image"></i>
+
+                                <h3>
+
+                                    <a href="{% url 'product_detail' product.slug %}">
+                                        {{ product.name }}
+                                    </a>
+
+                                </h3>
+
+
+                                {% if product.brand %}
+
+                                    <span class="product-card__brand">
+                                        {{ product.brand.name }}
+                                    </span>
+
+                                {% endif %}
+
+
+                                <div class="product-card__prices">
+
+                                    <div class="product-card__price">
+
+                                        <span>
+                                            Detal
+                                        </span>
+
+                                        <strong>
+                                            ${{ product.retail_price|currency_co }}
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div class="product-card__price product-card__price--wholesale">
+
+                                        <span>
+                                            Mayorista
+                                        </span>
+
+                                        <strong>
+                                            ${{ product.wholesale_price|currency_co }}
+                                        </strong>
+
+                                    </div>
+
                                 </div>
-                            </a>
-                        </div>
 
-                        <div class="product-card__body">
 
-                            <span class="product-card__brand">
-                                Kawaii
-                            </span>
+                                {% if product.is_out_of_stock %}
 
-                            <h3>
-                                <a href="{% url 'product_detail' %}">
-                                    Producto Kawaii
-                                </a>
-                            </h3>
+                                    <button
+                                        class="product-card__button"
+                                        type="button"
+                                        disabled
+                                    >
+                                        Agotado
+                                    </button>
 
-                            <div class="product-card__prices">
+                                {% else %}
 
-                                <div>
-                                    <span>Detal</span>
-                                    <strong>$32.000</strong>
-                                </div>
+                                    <button
+                                        class="product-card__button"
+                                        type="button"
+                                    >
 
-                                <div class="product-card__wholesale">
-                                    <span>Mayorista</span>
-                                    <strong>$24.000</strong>
-                                </div>
+                                        <i data-lucide="shopping-bag"></i>
+
+                                        Agregar al carrito
+
+                                    </button>
+
+                                {% endif %}
 
                             </div>
 
-                            <button class="product-card__button">
-                                <i data-lucide="shopping-bag"></i>
-                                Agregar al carrito
-                            </button>
+                        </article>
+
+                    {% empty %}
+
+                        <div class="catalog-empty">
+
+                            <p>
+                                No encontramos productos con esos filtros.
+                            </p>
 
                         </div>
 
-                    </article>
-
-
-                    <!-- Producto ejemplo 3 -->
-                    <article class="product-card">
-
-                        <div class="product-card__image">
-                            <a href="{% url 'product_detail' %}">
-
-                                <span class="product-card__badge product-card__badge--promotion">
-                                    Promoción
-                                </span>
-
-                                <div class="product-card__placeholder">
-                                    <i data-lucide="image"></i>
-                                </div>
-                            </a>
-
-                        </div>
-
-                        <div class="product-card__body">
-
-                            <span class="product-card__brand">
-                                Skincare
-                            </span>
-
-                            <h3>
-                                <a href="{% url 'product_detail' %}">
-                                    Producto de cuidado facial
-                                </a>
-
-                            </h3>
-
-                            <div class="product-card__prices">
-
-                                <div>
-                                    <span>Detal</span>
-                                    <strong>$45.000</strong>
-                                </div>
-
-                                <div class="product-card__wholesale">
-                                    <span>Mayorista</span>
-                                    <strong>$35.000</strong>
-                                </div>
-
-                            </div>
-
-                            <button class="product-card__button">
-                                <i data-lucide="shopping-bag"></i>
-                                Agregar al carrito
-                            </button>
-
-                        </div>
-
-                    </article>
+                    {% endfor %}
 
                 </div>
 
