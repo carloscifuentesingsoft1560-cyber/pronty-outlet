@@ -21,6 +21,39 @@ class ProductImageInline(admin.TabularInline):
     )
 
 
+class InventoryMovementInline(admin.TabularInline):
+    model = InventoryMovement
+    extra = 0
+
+    fields = (
+        'movement_type',
+        'quantity',
+        'previous_stock',
+        'new_stock',
+        'reason',
+        'reference',
+        'created_by',
+        'created_at',
+    )
+
+    readonly_fields = (
+        'movement_type',
+        'quantity',
+        'previous_stock',
+        'new_stock',
+        'reason',
+        'reference',
+        'created_by',
+        'created_at',
+    )
+
+    can_delete = False
+    show_change_link = True
+
+    def has_add_permission(self, request, obj=None):
+        return False
+
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = (
@@ -102,12 +135,14 @@ class ProductAdmin(admin.ModelAdmin):
     }
 
     readonly_fields = (
+        'stock',
         'created_at',
         'updated_at',
     )
 
     inlines = [
         ProductImageInline,
+        InventoryMovementInline,
     ]
 
 
