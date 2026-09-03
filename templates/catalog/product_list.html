@@ -11,6 +11,7 @@ Productos | Pronty Outlet
 
     <div class="container">
 
+        <!-- ENCABEZADO -->
         <div class="catalog-header">
 
             <div>
@@ -36,7 +37,10 @@ Productos | Pronty Outlet
 
         <div class="catalog-layout">
 
+            <!-- ========================= -->
             <!-- FILTROS -->
+            <!-- ========================= -->
+
             <aside class="catalog-filters">
 
                 <form method="get">
@@ -183,7 +187,7 @@ Productos | Pronty Outlet
 
                             <option
                                 value="recent"
-                                {% if not ordering or ordering == 'recent' %}
+                                {% if ordering == 'recent' %}
                                     selected
                                 {% endif %}
                             >
@@ -226,7 +230,10 @@ Productos | Pronty Outlet
             </aside>
 
 
+            <!-- ========================= -->
             <!-- PRODUCTOS -->
+            <!-- ========================= -->
+
             <div class="catalog-products">
 
                 <div class="catalog-toolbar">
@@ -243,6 +250,7 @@ Productos | Pronty Outlet
                     {% for product in products %}
 
                         <article class="product-card">
+
 
                             <!-- Imagen -->
                             <div class="product-card__image">
@@ -277,6 +285,13 @@ Productos | Pronty Outlet
                                             alt="{{ product.name }}"
                                         >
 
+                                    {% elif product.active_gallery %}
+
+                                        <img
+                                            src="{{ product.active_gallery.0.image.url }}"
+                                            alt="{{ product.name }}"
+                                        >
+
                                     {% else %}
 
                                         <div class="product-card__placeholder">
@@ -290,7 +305,7 @@ Productos | Pronty Outlet
                             </div>
 
 
-                            <!-- Contenido -->
+                            <!-- Información -->
                             <div class="product-card__content">
 
                                 <span class="product-card__category">
@@ -316,6 +331,7 @@ Productos | Pronty Outlet
                                 {% endif %}
 
 
+                                <!-- Precios -->
                                 <div class="product-card__prices">
 
                                     <div class="product-card__price">
@@ -346,6 +362,7 @@ Productos | Pronty Outlet
                                 </div>
 
 
+                                <!-- Botón -->
                                 {% if product.is_out_of_stock %}
 
                                     <button
@@ -374,6 +391,7 @@ Productos | Pronty Outlet
                             </div>
 
                         </article>
+
 
                     {% empty %}
 

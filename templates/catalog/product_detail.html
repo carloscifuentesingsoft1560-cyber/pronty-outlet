@@ -11,7 +11,6 @@
 
     <div class="container product-detail__grid">
 
-        <!-- Galería -->
         <div class="product-detail__gallery">
 
             <div class="product-detail__main-image">
@@ -32,10 +31,12 @@
                     </span>
                 {% endif %}
 
-                {% if product.image %}
+
+                {% if main_image %}
 
                     <img
-                        src="{{ product.image.url }}"
+                        id="main-product-image"
+                        src="{{ main_image.url }}"
                         alt="{{ product.name }}"
                     >
 
@@ -50,26 +51,54 @@
             </div>
 
 
-            <div class="product-detail__thumbnails">
+            {% if product.image or gallery_images %}
 
-                <button type="button">
-                    <i data-lucide="image"></i>
-                </button>
+                <div class="product-detail__thumbnails">
 
-                <button type="button">
-                    <i data-lucide="image"></i>
-                </button>
+                    {% if product.image %}
 
-                <button type="button">
-                    <i data-lucide="image"></i>
-                </button>
+                        <button
+                            type="button"
+                            class="product-thumbnail"
+                            data-image="{{ product.image.url }}"
+                            aria-label="Ver imagen principal"
+                        >
 
-            </div>
+                            <img
+                                src="{{ product.image.url }}"
+                                alt="{{ product.name }}"
+                            >
+
+                        </button>
+
+                    {% endif %}
+
+
+                    {% for image in gallery_images %}
+
+                        <button
+                            type="button"
+                            class="product-thumbnail"
+                            data-image="{{ image.image.url }}"
+                            aria-label="Ver imagen de {{ product.name }}"
+                        >
+
+                            <img
+                                src="{{ image.image.url }}"
+                                alt="{% if image.alt_text %}{{ image.alt_text }}{% else %}{{ product.name }}{% endif %}"
+                            >
+
+                        </button>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
 
         </div>
 
 
-        <!-- Información -->
         <div class="product-detail__info">
 
             <span class="product-detail__brand">
@@ -80,12 +109,9 @@
                 {{ product.name }}
             </h1>
 
-
             <div class="product-detail__sku">
                 Código:
-                <strong>
-                    {{ product.sku }}
-                </strong>
+                <strong>{{ product.sku }}</strong>
             </div>
 
 
@@ -108,15 +134,12 @@
 
                 <div class="product-detail__sku">
                     Marca:
-                    <strong>
-                        {{ product.brand.name }}
-                    </strong>
+                    <strong>{{ product.brand.name }}</strong>
                 </div>
 
             {% endif %}
 
 
-            <!-- Precios -->
             <div class="product-detail__prices">
 
                 <div class="product-detail__price">
@@ -151,15 +174,10 @@
             </div>
 
 
-            <!-- Estado de stock -->
             {% if product.is_out_of_stock %}
 
                 <div class="product-detail__stock">
-
-                    <span>
-                        Agotado
-                    </span>
-
+                    <span>Agotado</span>
                 </div>
 
             {% elif product.is_low_stock %}
@@ -177,7 +195,6 @@
             {% endif %}
 
 
-            <!-- Cantidad -->
             {% if not product.is_out_of_stock %}
 
                 <div class="product-detail__quantity">
@@ -190,12 +207,14 @@
 
                         <button
                             type="button"
+                            class="quantity-decrease"
                             aria-label="Disminuir cantidad"
                         >
                             <i data-lucide="minus"></i>
                         </button>
 
                         <input
+                            id="product-quantity"
                             type="number"
                             value="1"
                             min="1"
@@ -205,6 +224,7 @@
 
                         <button
                             type="button"
+                            class="quantity-increase"
                             aria-label="Aumentar cantidad"
                         >
                             <i data-lucide="plus"></i>
@@ -219,11 +239,8 @@
                     class="product-detail__cart-button"
                     type="button"
                 >
-
                     <i data-lucide="shopping-bag"></i>
-
                     Agregar al carrito
-
                 </button>
 
             {% else %}
@@ -239,43 +256,26 @@
             {% endif %}
 
 
-            <!-- Beneficios -->
             <div class="product-detail__benefits">
 
                 <div>
-
                     <i data-lucide="truck"></i>
-
-                    <span>
-                        Envíos en Colombia
-                    </span>
-
+                    <span>Envíos en Colombia</span>
                 </div>
 
                 <div>
-
                     <i data-lucide="shield-check"></i>
-
-                    <span>
-                        Compra segura
-                    </span>
-
+                    <span>Compra segura</span>
                 </div>
 
                 <div>
-
                     <i data-lucide="message-circle"></i>
-
-                    <span>
-                        Atención por WhatsApp
-                    </span>
-
+                    <span>Atención por WhatsApp</span>
                 </div>
 
             </div>
 
 
-            <!-- Descripción completa -->
             {% if product.description %}
 
                 <div class="product-detail__full-description">
@@ -297,5 +297,65 @@
     </div>
 
 </section>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const mainImage = document.getElementById('main-product-image');
+    const thumbnails = document.querySelectorAll('.product-thumbnail');
+
+    thumbnails.forEach(function (thumbnail) {
+
+        thumbnail.addEventListener('click', function () {
+
+            if (!mainImage) {
+                return;
+            }
+
+            const imageUrl = this.dataset.image;
+
+            if (imageUrl) {
+                mainImage.src = imageUrl;
+            }
+
+        });
+
+    });
+
+
+    const quantityInput = document.getElementById('product-quantity');
+    const decreaseButton = document.querySelector('.quantity-decrease');
+    const increaseButton = document.querySelector('.quantity-increase');
+
+    if (quantityInput && decreaseButton && increaseButton) {
+
+        decreaseButton.addEventListener('click', function () {
+
+            const currentValue = parseInt(quantityInput.value) || 1;
+            const minimum = parseInt(quantityInput.min) || 1;
+
+            if (currentValue > minimum) {
+                quantityInput.value = currentValue - 1;
+            }
+
+        });
+
+
+        increaseButton.addEventListener('click', function () {
+
+            const currentValue = parseInt(quantityInput.value) || 1;
+            const maximum = parseInt(quantityInput.max);
+
+            if (!maximum || currentValue < maximum) {
+                quantityInput.value = currentValue + 1;
+            }
+
+        });
+
+    }
+
+});
+</script>
 
 {% endblock %}
