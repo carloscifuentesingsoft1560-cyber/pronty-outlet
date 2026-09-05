@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from catalog.models import InventoryMovement, Product
@@ -127,10 +128,6 @@ def checkout(request):
 
                 validated_items = []
 
-                # --------------------------------
-                # VALIDAR Y BLOQUEAR INVENTARIO
-                # --------------------------------
-
                 for item in cart_items:
 
                     product = Product.objects.select_for_update().get(
@@ -158,10 +155,6 @@ def checkout(request):
                         }
                     )
 
-                # --------------------------------
-                # CREAR PEDIDO
-                # --------------------------------
-
                 order = Order.objects.create(
                     customer_name=checkout_data['name'],
                     email=checkout_data['email'],
@@ -175,10 +168,6 @@ def checkout(request):
                     carrier=checkout_data['carrier'],
                     total=cart.get_total_price(),
                 )
-
-                # --------------------------------
-                # CREAR PRODUCTOS DEL PEDIDO
-                # --------------------------------
 
                 for item in validated_items:
 
@@ -194,10 +183,6 @@ def checkout(request):
                         unit_price=item['unit_price'],
                         subtotal=item['subtotal'],
                     )
-
-                    # ----------------------------
-                    # DESCONTAR INVENTARIO
-                    # ----------------------------
 
                     InventoryMovement.objects.create(
                         product=product,
@@ -238,15 +223,7 @@ def checkout(request):
                 }
             )
 
-        # ----------------------------------------
-        # GUARDAR PEDIDO RECIENTE EN SESIÓN
-        # ----------------------------------------
-
         request.session['last_order_id'] = order.pk
-
-        # ----------------------------------------
-        # VACIAR CARRITO
-        # ----------------------------------------
 
         cart.clear()
 
@@ -287,6 +264,148 @@ def order_confirmation(request):
         'cart/order_confirmation.html',
         {
             'order': order
+        }
+    )
+
+
+def order_payment(request, order_number):
+
+    order = get_object_or_404(
+        Order,
+        order_number=order_number
+    )
+
+    allowed_statuses = [
+        Order.Status.PENDING_PAYMENT,
+        Order.Status.PROOF_RECEIVED,
+        Order.Status.PAYMENT_DECLINED,
+    ]
+
+    if order.status not in allowed_statuses:
+        request.session['last_order_id'] = order.pk
+
+        return redirect(
+            'cart:order_confirmation'
+        )
+
+    if request.method == 'POST':
+
+        payment_method = request.POST.get(
+            'payment_method',
+            ''
+        ).strip()
+
+        payment_proof = request.FILES.get(
+            'payment_proof'
+        )
+
+        valid_methods = [
+            Order.PaymentMethod.NEQUI,
+            Order.PaymentMethod.BRE_B,
+            Order.PaymentMethod.BANCOLOMBIA,
+        ]
+
+        if payment_method not in valid_methods:
+            messages.error(
+                request,
+                'Selecciona un método de pago válido.'
+            )
+
+            return render(
+                request,
+                'cart/order_payment.html',
+                {
+                    'order': order,
+                    'selected_payment_method': payment_method,
+                }
+            )
+
+        if not payment_proof:
+            messages.error(
+                request,
+                'Debes adjuntar el comprobante de pago.'
+            )
+
+            return render(
+                request,
+                'cart/order_payment.html',
+                {
+                    'order': order,
+                    'selected_payment_method': payment_method,
+                }
+            )
+
+        allowed_content_types = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ]
+
+        if payment_proof.content_type not in allowed_content_types:
+            messages.error(
+                request,
+                'El comprobante debe ser una imagen JPG, PNG o WEBP.'
+            )
+
+            return render(
+                request,
+                'cart/order_payment.html',
+                {
+                    'order': order,
+                    'selected_payment_method': payment_method,
+                }
+            )
+
+        max_size = 5 * 1024 * 1024
+
+        if payment_proof.size > max_size:
+            messages.error(
+                request,
+                'El comprobante no puede superar 5 MB.'
+            )
+
+            return render(
+                request,
+                'cart/order_payment.html',
+                {
+                    'order': order,
+                    'selected_payment_method': payment_method,
+                }
+            )
+
+        order.payment_method = payment_method
+        order.payment_proof = payment_proof
+        order.payment_proof_uploaded_at = timezone.now()
+        order.status = Order.Status.PROOF_RECEIVED
+
+        order.save(
+            update_fields=[
+                'payment_method',
+                'payment_proof',
+                'payment_proof_uploaded_at',
+                'status',
+                'updated_at',
+            ]
+        )
+
+        request.session['last_order_id'] = order.pk
+
+        messages.success(
+            request,
+            'Comprobante recibido correctamente. '
+            'Nuestro equipo validará el pago.'
+        )
+
+        return redirect(
+            'cart:order_confirmation'
+        )
+
+    return render(
+        request,
+        'cart/order_payment.html',
+        {
+            'order': order,
+            'selected_payment_method': order.payment_method,
         }
     )
 
@@ -347,7 +466,6 @@ def cart_add(request, product_id):
     )
 
     if quantity > 0:
-
         cart.add(
             product=product,
             quantity=quantity

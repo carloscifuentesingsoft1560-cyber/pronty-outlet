@@ -26,6 +26,12 @@ urlpatterns = [
     ),
 
     path(
+        'pedido/<str:order_number>/pago/',
+        views.order_payment,
+        name='order_payment'
+    ),
+
+    path(
         'agregar/<int:product_id>/',
         views.cart_add,
         name='cart_add'

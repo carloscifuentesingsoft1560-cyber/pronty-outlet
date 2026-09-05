@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% load pronty_filters %}
+
+{% block title %}
+Pago del pedido | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="cart-page">
+
+    <div class="container">
+
+        <div class="payment-page">
+
+            <div class="payment-page__header">
+
+                <span class="section-heading__eyebrow">
+                    <i data-lucide="wallet-cards"></i>
+                    Pago del pedido
+                </span>
+
+                <h1>
+                    Realizar pago
+                </h1>
+
+                <p>
+                    Pedido
+                    <strong>
+                        {{ order.order_number }}
+                    </strong>
+                </p>
+
+            </div>
+
+
+            {% if messages %}
+
+                <div class="checkout-messages">
+
+                    {% for message in messages %}
+
+                        <div class="checkout-message checkout-message--{{ message.tags }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+
+            <div class="payment-layout">
+
+                <div class="payment-card">
+
+                    <form
+                        method="post"
+                        enctype="multipart/form-data"
+                    >
+
+                        {% csrf_token %}
+
+
+                        <div class="payment-section">
+
+                            <h2>
+                                1. Selecciona el método de pago
+                            </h2>
+
+                            <p class="payment-help">
+                                Realiza el pago por uno de los medios disponibles
+                                y luego adjunta el comprobante.
+                            </p>
+
+
+                            <label class="payment-option">
+
+                                <input
+                                    type="radio"
+                                    name="payment_method"
+                                    value="NEQUI"
+                                    {% if selected_payment_method == 'NEQUI' %}
+                                        checked
+                                    {% endif %}
+                                    required
+                                >
+
+                                <div>
+
+                                    <strong>
+                                        Nequi
+                                    </strong>
+
+                                    <span>
+                                        Realiza el pago a la cuenta Nequi
+                                        indicada por Pronty Outlet.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+
+                            <label class="payment-option">
+
+                                <input
+                                    type="radio"
+                                    name="payment_method"
+                                    value="BRE_B"
+                                    {% if selected_payment_method == 'BRE_B' %}
+                                        checked
+                                    {% endif %}
+                                    required
+                                >
+
+                                <div>
+
+                                    <strong>
+                                        Llave Bre-B
+                                    </strong>
+
+                                    <span>
+                                        Realiza la transferencia utilizando
+                                        la llave Bre-B indicada por Pronty Outlet.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+
+                            <label class="payment-option">
+
+                                <input
+                                    type="radio"
+                                    name="payment_method"
+                                    value="BANCOLOMBIA"
+                                    {% if selected_payment_method == 'BANCOLOMBIA' %}
+                                        checked
+                                    {% endif %}
+                                    required
+                                >
+
+                                <div>
+
+                                    <strong>
+                                        Bancolombia
+                                    </strong>
+
+                                    <span>
+                                        Realiza una transferencia a la cuenta
+                                        Bancolombia indicada por Pronty Outlet.
+                                    </span>
+
+                                </div>
+
+                            </label>
+
+                        </div>
+
+
+                        <div class="payment-section">
+
+                            <h2>
+                                2. Adjunta el comprobante
+                            </h2>
+
+                            <p class="payment-help">
+                                El comprobante será verificado manualmente
+                                antes de confirmar el pago.
+                            </p>
+
+                            <p class="payment-help">
+                                Formatos permitidos: JPG, PNG o WEBP.
+                                Tamaño máximo: 5 MB.
+                            </p>
+
+
+                            <label
+                                for="payment_proof"
+                                class="payment-upload"
+                            >
+
+                                <i data-lucide="upload-cloud"></i>
+
+                                <strong>
+                                    Seleccionar comprobante
+                                </strong>
+
+                                <span id="payment-file-name">
+                                    Ningún archivo seleccionado
+                                </span>
+
+                            </label>
+
+
+                            <input
+                                id="payment_proof"
+                                class="payment-upload__input"
+                                type="file"
+                                name="payment_proof"
+                                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                                required
+                            >
+
+                        </div>
+
+
+                        <div class="payment-notice">
+
+                            <i data-lucide="shield-check"></i>
+
+                            <div>
+
+                                <strong>
+                                    Verificación manual
+                                </strong>
+
+                                <p>
+                                    Subir el comprobante no significa que
+                                    el pago haya sido aprobado.
+                                    Pronty Outlet verificará la transacción
+                                    antes de marcar el pedido como pagado.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            class="payment-submit"
+                        >
+                            <i data-lucide="send"></i>
+                            Enviar comprobante
+                        </button>
+
+                    </form>
+
+                </div>
+
+
+                <aside class="payment-summary">
+
+                    <h2>
+                        Resumen
+                    </h2>
+
+
+                    <div class="payment-summary__number">
+
+                        <span>
+                            Pedido
+                        </span>
+
+                        <strong>
+                            {{ order.order_number }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="payment-summary__row">
+
+                        <span>
+                            Total a pagar
+                        </span>
+
+                        <strong>
+                            ${{ order.total|currency_co }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="payment-summary__status">
+
+                        <span>
+                            Estado
+                        </span>
+
+                        <strong>
+                            {{ order.get_status_display }}
+                        </strong>
+
+                    </div>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const input =
+            document.getElementById('payment_proof');
+
+        const fileName =
+            document.getElementById('payment-file-name');
+
+
+        if (!input || !fileName) {
+            return;
+        }
+
+
+        input.addEventListener(
+            'change',
+            function () {
+
+                if (
+                    this.files &&
+                    this.files.length > 0
+                ) {
+
+                    fileName.textContent =
+                        this.files[0].name;
+
+                } else {
+
+                    fileName.textContent =
+                        'Ningún archivo seleccionado';
+
+                }
+
+            }
+        );
+
+    }
+);
+
+</script>
+
+{% endblock %}

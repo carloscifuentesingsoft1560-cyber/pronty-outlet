@@ -10,13 +10,23 @@ class Order(models.Model):
     class Status(models.TextChoices):
         PENDING_PAYMENT = 'PENDING_PAYMENT', 'Pendiente de pago'
         PROOF_RECEIVED = 'PROOF_RECEIVED', 'Comprobante recibido'
+        PAYMENT_PROCESSING = 'PAYMENT_PROCESSING', 'Pago en proceso'
         PAYMENT_CONFIRMED = 'PAYMENT_CONFIRMED', 'Pago confirmado'
+        PAYMENT_DECLINED = 'PAYMENT_DECLINED', 'Pago rechazado'
         PREPARING = 'PREPARING', 'Preparando pedido'
         SHIPPED = 'SHIPPED', 'Enviado'
         DELIVERED = 'DELIVERED', 'Entregado'
         CHANGE_REQUESTED = 'CHANGE_REQUESTED', 'Cambio solicitado'
         CANCELED = 'CANCELED', 'Cancelado'
         RESERVATION_EXPIRED = 'RESERVATION_EXPIRED', 'Reserva vencida'
+
+    class PaymentMethod(models.TextChoices):
+        NEQUI = 'NEQUI', 'Nequi'
+        BRE_B = 'BRE_B', 'Llave Bre-B'
+        BANCOLOMBIA = 'BANCOLOMBIA', 'Bancolombia'
+
+    class PaymentGateway(models.TextChoices):
+        WOMPI = 'WOMPI', 'Wompi'
 
     order_number = models.CharField(
         max_length=30,
@@ -61,8 +71,110 @@ class Order(models.Model):
 
     carrier = models.CharField(
         max_length=60,
-        verbose_name='Transportadora'
+        verbose_name='Transportadora solicitada'
     )
+
+    # =========================================
+    # PAGO MANUAL
+    # =========================================
+
+    payment_method = models.CharField(
+        max_length=30,
+        choices=PaymentMethod.choices,
+        blank=True,
+        verbose_name='Método de pago'
+    )
+
+    payment_proof = models.ImageField(
+        upload_to='payment_proofs/',
+        blank=True,
+        null=True,
+        verbose_name='Comprobante de pago'
+    )
+
+    payment_proof_uploaded_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de carga del comprobante'
+    )
+
+    # =========================================
+    # PASARELA FUTURA
+    # =========================================
+
+    payment_gateway = models.CharField(
+        max_length=30,
+        choices=PaymentGateway.choices,
+        blank=True,
+        default='',
+        verbose_name='Pasarela de pago'
+    )
+
+    payment_reference = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name='Referencia de pago'
+    )
+
+    payment_transaction_id = models.CharField(
+        max_length=150,
+        blank=True,
+        default='',
+        verbose_name='ID de transacción'
+    )
+
+    payment_status = models.CharField(
+        max_length=50,
+        blank=True,
+        default='',
+        verbose_name='Estado en la pasarela'
+    )
+
+    payment_confirmed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de confirmación del pago'
+    )
+
+    # =========================================
+    # DESPACHO
+    # =========================================
+
+    shipping_carrier = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        verbose_name='Transportadora de despacho'
+    )
+
+    tracking_number = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        verbose_name='Número de guía'
+    )
+
+    shipping_notes = models.TextField(
+        blank=True,
+        verbose_name='Observaciones de despacho'
+    )
+
+    shipped_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de envío'
+    )
+
+    delivered_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de entrega'
+    )
+
+    # =========================================
+    # ESTADO Y TOTAL
+    # =========================================
 
     status = models.CharField(
         max_length=30,
@@ -102,6 +214,7 @@ class Order(models.Model):
         super().save(*args, **kwargs)
 
         if is_new and not self.order_number:
+
             self.order_number = (
                 f'PRY-{self.created_at.year}-{self.pk:06d}'
             )
