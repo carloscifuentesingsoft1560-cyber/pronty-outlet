@@ -1,0 +1,670 @@
+{% extends 'base.html' %}
+{% load pronty_filters %}
+
+{% block title %}
+Checkout | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="cart-page">
+
+    <div class="container">
+
+        <div class="cart-header">
+
+            <div>
+
+                <span class="section-heading__eyebrow">
+                    <i data-lucide="credit-card"></i>
+                    Finalizar compra
+                </span>
+
+                <h1>
+                    Checkout
+                </h1>
+
+                <p>
+                    Completa tus datos para continuar con el pedido.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if messages %}
+
+            <div class="checkout-messages">
+
+                {% for message in messages %}
+
+                    <div class="checkout-message checkout-message--{{ message.tags }}">
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <div class="cart-layout">
+
+            <!-- FORMULARIO -->
+            <div class="checkout-form-card">
+
+                <form method="post">
+
+                    {% csrf_token %}
+
+                    <div class="checkout-form-grid">
+
+                        <!-- NOMBRE -->
+                        <div class="checkout-field checkout-field--full">
+
+                            <label for="name">
+                                Nombre completo *
+                            </label>
+
+                            <input
+                                id="name"
+                                type="text"
+                                name="name"
+                                value="{{ checkout_data.name }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- CORREO -->
+                        <div class="checkout-field">
+
+                            <label for="email">
+                                Correo electrónico *
+                            </label>
+
+                            <input
+                                id="email"
+                                type="email"
+                                name="email"
+                                value="{{ checkout_data.email }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- WHATSAPP -->
+                        <div class="checkout-field">
+
+                            <label for="whatsapp">
+                                WhatsApp *
+                            </label>
+
+                            <input
+                                id="whatsapp"
+                                type="tel"
+                                name="whatsapp"
+                                value="{{ checkout_data.whatsapp }}"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- DEPARTAMENTO -->
+                        <div class="checkout-field">
+
+                            <label for="department">
+                                Departamento *
+                            </label>
+
+                            <select
+                                id="department"
+                                name="department"
+                                required
+                            >
+
+                                <option value="">
+                                    Cargando departamentos...
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- MUNICIPIO -->
+                        <div class="checkout-field">
+
+                            <label for="city">
+                                Ciudad / municipio *
+                            </label>
+
+                            <select
+                                id="city"
+                                name="city"
+                                required
+                                disabled
+                            >
+
+                                <option value="">
+                                    Primero selecciona un departamento
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <!-- DIRECCIÓN -->
+                        <div class="checkout-field checkout-field--full">
+
+                            <label for="address">
+                                Dirección de entrega *
+                            </label>
+
+                            <input
+                                id="address"
+                                type="text"
+                                name="address"
+                                value="{{ checkout_data.address }}"
+                                placeholder="Ejemplo: Calle 123 # 45-67"
+                                required
+                            >
+
+                        </div>
+
+
+                        <!-- INDICACIONES -->
+                        <div class="checkout-field checkout-field--full">
+
+                            <label for="delivery_notes">
+
+                                Indicaciones de entrega
+
+                                <span>
+                                    (opcional)
+                                </span>
+
+                            </label>
+
+                            <textarea
+                                id="delivery_notes"
+                                name="delivery_notes"
+                                rows="4"
+                                placeholder="Ejemplo: dejar en portería, llamar antes de llegar, casa esquinera..."
+                            >{{ checkout_data.delivery_notes }}</textarea>
+
+                        </div>
+
+
+                        <!-- TRANSPORTADORA -->
+                        <div class="checkout-field checkout-field--full">
+
+                            <label for="carrier">
+                                Transportadora *
+                            </label>
+
+                            <select
+                                id="carrier"
+                                name="carrier"
+                                required
+                            >
+
+                                <option value="">
+                                    Selecciona una transportadora
+                                </option>
+
+                                <option
+                                    value="servientrega"
+                                    {% if checkout_data.carrier == 'servientrega' %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    Servientrega
+                                </option>
+
+                                <option
+                                    value="envia"
+                                    {% if checkout_data.carrier == 'envia' %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    Envía
+                                </option>
+
+                                <option
+                                    value="interrapidisimo"
+                                    {% if checkout_data.carrier == 'interrapidisimo' %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    Interrapidísimo
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="checkout-form-actions">
+
+                        <a
+                            href="{% url 'cart:cart_detail' %}"
+                            class="checkout-back"
+                        >
+                            Volver al carrito
+                        </a>
+
+
+                        <button
+                            type="submit"
+                            class="cart-summary__checkout"
+                        >
+                            Continuar con el pedido
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+
+            <!-- RESUMEN -->
+            <aside class="cart-summary">
+
+                <h2>
+                    Resumen del pedido
+                </h2>
+
+
+                {% for item in cart %}
+
+                    <div class="checkout-summary-item">
+
+                        <div>
+
+                            <strong>
+                                {{ item.product.name }}
+                            </strong>
+
+                            <span>
+
+                                {{ item.quantity }} x
+
+                                ${{ item.price|currency_co }}
+
+                            </span>
+
+                        </div>
+
+
+                        <strong>
+                            ${{ item.total_price|currency_co }}
+                        </strong>
+
+                    </div>
+
+                {% endfor %}
+
+
+                <div class="cart-summary__row">
+
+                    <span>
+                        Productos
+                    </span>
+
+                    <strong>
+                        {{ cart|length }}
+                    </strong>
+
+                </div>
+
+
+                <div class="cart-summary__row cart-summary__row--total">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong>
+                        ${{ cart.get_total_price|currency_co }}
+                    </strong>
+
+                </div>
+
+            </aside>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- ============================================ -->
+<!-- DEPARTAMENTOS Y MUNICIPIOS DE COLOMBIA -->
+<!-- ============================================ -->
+
+<script>
+
+document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+
+        const departmentSelect =
+            document.getElementById('department');
+
+        const citySelect =
+            document.getElementById('city');
+
+
+        const savedDepartment =
+            "{{ checkout_data.department|escapejs }}";
+
+        const savedCity =
+            "{{ checkout_data.city|escapejs }}";
+
+
+        const API_BASE =
+            'https://api-colombia.com/api/v1';
+
+
+        // ========================================
+        // CARGAR DEPARTAMENTOS
+        // ========================================
+
+        async function loadDepartments() {
+
+            departmentSelect.disabled = true;
+
+            departmentSelect.innerHTML = `
+                <option value="">
+                    Cargando departamentos...
+                </option>
+            `;
+
+
+            try {
+
+                const response = await fetch(
+                    `${API_BASE}/Department`
+                );
+
+
+                if (!response.ok) {
+                    throw new Error(
+                        'No se pudieron cargar los departamentos.'
+                    );
+                }
+
+
+                const departments =
+                    await response.json();
+
+
+                departments.sort(
+                    function (a, b) {
+
+                        return a.name.localeCompare(
+                            b.name,
+                            'es'
+                        );
+
+                    }
+                );
+
+
+                departmentSelect.innerHTML = `
+                    <option value="">
+                        Selecciona un departamento
+                    </option>
+                `;
+
+
+                departments.forEach(
+                    function (department) {
+
+                        const option =
+                            document.createElement('option');
+
+
+                        option.value =
+                            department.name;
+
+
+                        option.textContent =
+                            department.name;
+
+
+                        option.dataset.departmentId =
+                            department.id;
+
+
+                        if (
+                            savedDepartment ===
+                            department.name
+                        ) {
+                            option.selected = true;
+                        }
+
+
+                        departmentSelect.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+
+                departmentSelect.disabled = false;
+
+
+                if (savedDepartment) {
+
+                    const selectedOption =
+                        departmentSelect.options[
+                            departmentSelect.selectedIndex
+                        ];
+
+
+                    const departmentId =
+                        selectedOption.dataset.departmentId;
+
+
+                    if (departmentId) {
+
+                        await loadCities(
+                            departmentId,
+                            savedCity
+                        );
+
+                    }
+
+                }
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                departmentSelect.innerHTML = `
+                    <option value="">
+                        No fue posible cargar los departamentos
+                    </option>
+                `;
+
+            }
+
+        }
+
+
+        // ========================================
+        // CARGAR MUNICIPIOS
+        // ========================================
+
+        async function loadCities(
+            departmentId,
+            selectedCity = ''
+        ) {
+
+            citySelect.disabled = true;
+
+
+            citySelect.innerHTML = `
+                <option value="">
+                    Cargando municipios...
+                </option>
+            `;
+
+
+            try {
+
+                const response = await fetch(
+                    `${API_BASE}/Department/${departmentId}/cities`
+                );
+
+
+                if (!response.ok) {
+
+                    throw new Error(
+                        'No se pudieron cargar los municipios.'
+                    );
+
+                }
+
+
+                const cities =
+                    await response.json();
+
+
+                cities.sort(
+                    function (a, b) {
+
+                        return a.name.localeCompare(
+                            b.name,
+                            'es'
+                        );
+
+                    }
+                );
+
+
+                citySelect.innerHTML = `
+                    <option value="">
+                        Selecciona una ciudad o municipio
+                    </option>
+                `;
+
+
+                cities.forEach(
+                    function (city) {
+
+                        const option =
+                            document.createElement('option');
+
+
+                        option.value =
+                            city.name;
+
+
+                        option.textContent =
+                            city.name;
+
+
+                        if (
+                            selectedCity ===
+                            city.name
+                        ) {
+                            option.selected = true;
+                        }
+
+
+                        citySelect.appendChild(
+                            option
+                        );
+
+                    }
+                );
+
+
+                citySelect.disabled = false;
+
+
+            } catch (error) {
+
+                console.error(error);
+
+
+                citySelect.innerHTML = `
+                    <option value="">
+                        No fue posible cargar los municipios
+                    </option>
+                `;
+
+            }
+
+        }
+
+
+        // ========================================
+        // CAMBIO DE DEPARTAMENTO
+        // ========================================
+
+        departmentSelect.addEventListener(
+            'change',
+            function () {
+
+                const selectedOption =
+                    this.options[
+                        this.selectedIndex
+                    ];
+
+
+                const departmentId =
+                    selectedOption.dataset.departmentId;
+
+
+                if (!departmentId) {
+
+                    citySelect.disabled = true;
+
+                    citySelect.innerHTML = `
+                        <option value="">
+                            Primero selecciona un departamento
+                        </option>
+                    `;
+
+                    return;
+
+                }
+
+
+                loadCities(
+                    departmentId
+                );
+
+            }
+        );
+
+
+        // ========================================
+        // INICIO
+        // ========================================
+
+        loadDepartments();
+
+    }
+);
+
+</script>
+
+{% endblock %}

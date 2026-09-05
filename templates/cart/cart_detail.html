@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load pronty_filters %}
+
+{% block title %}
+Carrito | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="cart-page">
+
+    <div class="container">
+
+        <div class="cart-header">
+
+            <div>
+
+                <span class="section-heading__eyebrow">
+                    <i data-lucide="shopping-cart"></i>
+                    Tu compra
+                </span>
+
+                <h1>
+                    Carrito de compras
+                </h1>
+
+                <p>
+                    Revisa tus productos antes de continuar con el pedido.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if cart|length > 0 %}
+
+            <div class="cart-layout">
+
+                <div class="cart-items">
+
+                    {% for item in cart %}
+
+                        <article class="cart-item">
+
+                            <div class="cart-item__image">
+
+                                {% if item.product.image %}
+
+                                    <img
+                                        src="{{ item.product.image.url }}"
+                                        alt="{{ item.product.name }}"
+                                    >
+
+                                {% else %}
+
+                                    <div class="cart-item__placeholder">
+                                        <i data-lucide="image"></i>
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+
+                            <div class="cart-item__info">
+
+                                <span class="cart-item__category">
+                                    {{ item.product.category.name }}
+                                </span>
+
+                                <h2>
+
+                                    <a href="{% url 'product_detail' item.product.slug %}">
+                                        {{ item.product.name }}
+                                    </a>
+
+                                </h2>
+
+
+                                {% if item.product.brand %}
+
+                                    <span class="cart-item__brand">
+                                        {{ item.product.brand.name }}
+                                    </span>
+
+                                {% endif %}
+
+
+                                <div class="cart-item__price">
+
+                                    Precio unitario:
+
+                                    <strong>
+                                        ${{ item.price|currency_co }}
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="cart-item__actions">
+
+                                <form
+                                    method="post"
+                                    action="{% url 'cart:cart_update' item.product.pk %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <label>
+                                        Cantidad
+                                    </label>
+
+                                    <input
+                                        type="number"
+                                        name="quantity"
+                                        value="{{ item.quantity }}"
+                                        min="1"
+                                        max="{{ item.product.stock }}"
+                                    >
+
+                                    <button type="submit">
+                                        Actualizar
+                                    </button>
+
+                                </form>
+
+
+                                <div class="cart-item__subtotal">
+
+                                    <span>
+                                        Subtotal
+                                    </span>
+
+                                    <strong>
+                                        ${{ item.total_price|currency_co }}
+                                    </strong>
+
+                                </div>
+
+
+                                <form
+                                    method="post"
+                                    action="{% url 'cart:cart_remove' item.product.pk %}"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        class="cart-item__remove"
+                                        type="submit"
+                                    >
+                                        <i data-lucide="trash-2"></i>
+                                        Eliminar
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+                        </article>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <aside class="cart-summary">
+
+                    <h2>
+                        Resumen
+                    </h2>
+
+
+                    <div class="cart-summary__row">
+
+                        <span>
+                            Productos
+                        </span>
+
+                        <strong>
+                            {{ cart|length }}
+                        </strong>
+
+                    </div>
+
+
+                    <div class="cart-summary__row cart-summary__row--total">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong>
+                            ${{ cart.get_total_price|currency_co }}
+                        </strong>
+
+                    </div>
+
+
+                    <a
+                        class="cart-summary__checkout"
+                        href="{% url 'cart:checkout' %}"
+                    >
+                        Continuar compra
+                    </a>
+
+
+                    <a
+                        class="cart-summary__continue"
+                        href="{% url 'product_list' %}"
+                    >
+                        Seguir comprando
+                    </a>
+
+
+                    <form
+                        method="post"
+                        action="{% url 'cart:cart_clear' %}"
+                    >
+                        {% csrf_token %}
+
+                        <button
+                            class="cart-summary__clear"
+                            type="submit"
+                        >
+                            Vaciar carrito
+                        </button>
+
+                    </form>
+
+                </aside>
+
+            </div>
+
+
+        {% else %}
+
+            <div class="cart-empty">
+
+                <i data-lucide="shopping-cart"></i>
+
+                <h2>
+                    Tu carrito está vacío
+                </h2>
+
+                <p>
+                    Agrega algunos productos para comenzar tu compra.
+                </p>
+
+                <a href="{% url 'product_list' %}">
+                    Ver productos
+                </a>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -21,9 +21,7 @@ Productos | Pronty Outlet
                     Pronty Outlet
                 </span>
 
-                <h1>
-                    Nuestros productos
-                </h1>
+                <h1>Nuestros productos</h1>
 
                 <p>
                     Encuentra Beauty, Kawaii, cuidado personal,
@@ -62,9 +60,7 @@ Productos | Pronty Outlet
                     <!-- Categorías -->
                     <div class="filter-group">
 
-                        <h3>
-                            Categoría
-                        </h3>
+                        <h3>Categoría</h3>
 
                         {% for category in categories %}
 
@@ -97,9 +93,7 @@ Productos | Pronty Outlet
                     <!-- Marca -->
                     <div class="filter-group">
 
-                        <h3>
-                            Marca
-                        </h3>
+                        <h3>Marca</h3>
 
                         <select name="brand">
 
@@ -128,9 +122,7 @@ Productos | Pronty Outlet
                     <!-- Rango de precio -->
                     <div class="filter-group">
 
-                        <h3>
-                            Rango de precio
-                        </h3>
+                        <h3>Rango de precio</h3>
 
                         <div class="price-fields">
 
@@ -179,9 +171,7 @@ Productos | Pronty Outlet
                     <!-- Orden -->
                     <div class="filter-group">
 
-                        <h3>
-                            Ordenar por
-                        </h3>
+                        <h3>Ordenar por</h3>
 
                         <select name="ordering">
 
@@ -239,7 +229,8 @@ Productos | Pronty Outlet
                 <div class="catalog-toolbar">
 
                     <span>
-                        Mostrando {{ products|length }} producto{{ products|length|pluralize }}
+                        Mostrando {{ products|length }}
+                        producto{{ products|length|pluralize }}
                     </span>
 
                 </div>
@@ -250,7 +241,6 @@ Productos | Pronty Outlet
                     {% for product in products %}
 
                         <article class="product-card">
-
 
                             <!-- Imagen -->
                             <div class="product-card__image">
@@ -285,10 +275,10 @@ Productos | Pronty Outlet
                                             alt="{{ product.name }}"
                                         >
 
-                                    {% elif product.active_gallery %}
+                                    {% elif product.images.first %}
 
                                         <img
-                                            src="{{ product.active_gallery.0.image.url }}"
+                                            src="{{ product.images.first.image.url }}"
                                             alt="{{ product.name }}"
                                         >
 
@@ -336,9 +326,7 @@ Productos | Pronty Outlet
 
                                     <div class="product-card__price">
 
-                                        <span>
-                                            Detal
-                                        </span>
+                                        <span>Detal</span>
 
                                         <strong>
                                             ${{ product.retail_price|currency_co }}
@@ -349,9 +337,7 @@ Productos | Pronty Outlet
 
                                     <div class="product-card__price product-card__price--wholesale">
 
-                                        <span>
-                                            Mayorista
-                                        </span>
+                                        <span>Mayorista</span>
 
                                         <strong>
                                             ${{ product.wholesale_price|currency_co }}
@@ -362,7 +348,7 @@ Productos | Pronty Outlet
                                 </div>
 
 
-                                <!-- Botón -->
+                                <!-- Agregar al carrito -->
                                 {% if product.is_out_of_stock %}
 
                                     <button
@@ -375,16 +361,28 @@ Productos | Pronty Outlet
 
                                 {% else %}
 
-                                    <button
-                                        class="product-card__button"
-                                        type="button"
+                                    <form
+                                        method="post"
+                                        action="{% url 'cart:cart_add' product.pk %}"
                                     >
 
-                                        <i data-lucide="shopping-bag"></i>
+                                        {% csrf_token %}
 
-                                        Agregar al carrito
+                                        <input
+                                            type="hidden"
+                                            name="quantity"
+                                            value="1"
+                                        >
 
-                                    </button>
+                                        <button
+                                            class="product-card__button"
+                                            type="submit"
+                                        >
+                                            <i data-lucide="shopping-bag"></i>
+                                            Agregar al carrito
+                                        </button>
+
+                                    </form>
 
                                 {% endif %}
 

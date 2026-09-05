@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load pronty_filters %}
+
+{% block title %}
+Pedido confirmado | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="cart-page">
+
+    <div class="container">
+
+        <div class="order-confirmation">
+
+            <div class="order-confirmation__icon">
+                <i data-lucide="circle-check-big"></i>
+            </div>
+
+
+            <span class="section-heading__eyebrow">
+                Pedido recibido
+            </span>
+
+
+            <h1>
+                ¡Gracias por tu compra!
+            </h1>
+
+
+            <p class="order-confirmation__intro">
+                Hemos recibido correctamente la información de tu pedido.
+            </p>
+
+
+            <div class="order-confirmation__number">
+
+                <span>
+                    Número de pedido
+                </span>
+
+                <strong>
+                    {{ order.order_number }}
+                </strong>
+
+            </div>
+
+
+            <div class="order-confirmation__grid">
+
+                <!-- DATOS DE ENTREGA -->
+                <div class="order-confirmation__card">
+
+                    <h2>
+                        Datos de entrega
+                    </h2>
+
+                    <p>
+                        <strong>
+                            {{ order.customer_name }}
+                        </strong>
+                    </p>
+
+                    <p>
+                        {{ order.whatsapp }}
+                    </p>
+
+                    <p>
+                        {{ order.email }}
+                    </p>
+
+                    <p>
+                        {{ order.address }}
+                    </p>
+
+                    <p>
+                        {{ order.city }}, {{ order.department }}
+                    </p>
+
+
+                    {% if order.delivery_notes %}
+
+                        <div class="order-confirmation__notes">
+
+                            <strong>
+                                Indicaciones:
+                            </strong>
+
+                            <span>
+                                {{ order.delivery_notes }}
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <!-- RESUMEN -->
+                <div class="order-confirmation__card">
+
+                    <h2>
+                        Resumen
+                    </h2>
+
+
+                    {% for item in order.items.all %}
+
+                        <div class="order-confirmation__item">
+
+                            <div>
+
+                                <strong>
+                                    {{ item.product_name }}
+                                </strong>
+
+                                <span>
+                                    {{ item.quantity }}
+                                    x
+                                    ${{ item.unit_price|currency_co }}
+                                </span>
+
+                            </div>
+
+
+                            <strong>
+                                ${{ item.subtotal|currency_co }}
+                            </strong>
+
+                        </div>
+
+                    {% endfor %}
+
+
+                    <div class="order-confirmation__total">
+
+                        <span>
+                            Total
+                        </span>
+
+                        <strong>
+                            ${{ order.total|currency_co }}
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ESTADO -->
+            <div class="order-confirmation__status">
+
+                <i data-lucide="clock-3"></i>
+
+                <div>
+
+                    <strong>
+                        Estado del pedido:
+                        {{ order.get_status_display }}
+                    </strong>
+
+                    <p>
+                        Ahora deberás continuar con el proceso
+                        de pago para confirmar tu compra.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACCIONES -->
+            <div class="order-confirmation__actions">
+
+                <a
+                    href="{% url 'product_list' %}"
+                    class="order-confirmation__button order-confirmation__button--primary"
+                >
+                    <i data-lucide="shopping-bag"></i>
+                    Seguir comprando
+                </a>
+
+
+                <a
+                    href="{% url 'home' %}"
+                    class="order-confirmation__button order-confirmation__button--secondary"
+                >
+                    <i data-lucide="house"></i>
+                    Ir al inicio
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

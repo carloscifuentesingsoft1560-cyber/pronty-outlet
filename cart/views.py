@@ -1,0 +1,429 @@
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+
+from catalog.models import InventoryMovement, Product
+
+from .cart import Cart
+from .models import Order, OrderItem
+
+
+def cart_detail(request):
+    cart = Cart(request)
+
+    return render(
+        request,
+        'cart/cart_detail.html',
+        {
+            'cart': cart
+        }
+    )
+
+
+def checkout(request):
+    cart = Cart(request)
+
+    if len(cart) == 0:
+        return redirect(
+            'cart:cart_detail'
+        )
+
+    checkout_data = {
+        'name': '',
+        'email': '',
+        'whatsapp': '',
+        'department': '',
+        'city': '',
+        'address': '',
+        'delivery_notes': '',
+        'carrier': '',
+    }
+
+    if request.method == 'POST':
+
+        checkout_data = {
+            'name': request.POST.get('name', '').strip(),
+            'email': request.POST.get('email', '').strip(),
+            'whatsapp': request.POST.get('whatsapp', '').strip(),
+            'department': request.POST.get('department', '').strip(),
+            'city': request.POST.get('city', '').strip(),
+            'address': request.POST.get('address', '').strip(),
+            'delivery_notes': request.POST.get(
+                'delivery_notes',
+                ''
+            ).strip(),
+            'carrier': request.POST.get('carrier', '').strip(),
+        }
+
+        required_fields = [
+            'name',
+            'email',
+            'whatsapp',
+            'department',
+            'city',
+            'address',
+            'carrier',
+        ]
+
+        missing_fields = [
+            field
+            for field in required_fields
+            if not checkout_data[field]
+        ]
+
+        if missing_fields:
+            messages.error(
+                request,
+                'Completa todos los campos obligatorios.'
+            )
+
+            return render(
+                request,
+                'cart/checkout.html',
+                {
+                    'cart': cart,
+                    'checkout_data': checkout_data,
+                }
+            )
+
+        try:
+            validate_email(
+                checkout_data['email']
+            )
+
+        except ValidationError:
+            messages.error(
+                request,
+                'Ingresa un correo electrónico válido.'
+            )
+
+            return render(
+                request,
+                'cart/checkout.html',
+                {
+                    'cart': cart,
+                    'checkout_data': checkout_data,
+                }
+            )
+
+        try:
+
+            with transaction.atomic():
+
+                cart_items = list(cart)
+
+                if not cart_items:
+                    messages.error(
+                        request,
+                        'Tu carrito está vacío.'
+                    )
+
+                    return redirect(
+                        'cart:cart_detail'
+                    )
+
+                validated_items = []
+
+                # --------------------------------
+                # VALIDAR Y BLOQUEAR INVENTARIO
+                # --------------------------------
+
+                for item in cart_items:
+
+                    product = Product.objects.select_for_update().get(
+                        pk=item['product'].pk,
+                        is_active=True
+                    )
+
+                    quantity = item['quantity']
+
+                    if quantity > product.stock:
+                        raise ValidationError(
+                            (
+                                f'No hay suficientes unidades de '
+                                f'"{product.name}". '
+                                f'Disponibles: {product.stock}.'
+                            )
+                        )
+
+                    validated_items.append(
+                        {
+                            'product': product,
+                            'quantity': quantity,
+                            'unit_price': item['price'],
+                            'subtotal': item['total_price'],
+                        }
+                    )
+
+                # --------------------------------
+                # CREAR PEDIDO
+                # --------------------------------
+
+                order = Order.objects.create(
+                    customer_name=checkout_data['name'],
+                    email=checkout_data['email'],
+                    whatsapp=checkout_data['whatsapp'],
+                    department=checkout_data['department'],
+                    city=checkout_data['city'],
+                    address=checkout_data['address'],
+                    delivery_notes=checkout_data[
+                        'delivery_notes'
+                    ],
+                    carrier=checkout_data['carrier'],
+                    total=cart.get_total_price(),
+                )
+
+                # --------------------------------
+                # CREAR PRODUCTOS DEL PEDIDO
+                # --------------------------------
+
+                for item in validated_items:
+
+                    product = item['product']
+                    quantity = item['quantity']
+
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        product_name=product.name,
+                        sku=product.sku,
+                        quantity=quantity,
+                        unit_price=item['unit_price'],
+                        subtotal=item['subtotal'],
+                    )
+
+                    # ----------------------------
+                    # DESCONTAR INVENTARIO
+                    # ----------------------------
+
+                    InventoryMovement.objects.create(
+                        product=product,
+                        movement_type=InventoryMovement.MovementType.SALE,
+                        quantity=quantity,
+                        reason=(
+                            f'Venta correspondiente al '
+                            f'pedido {order.order_number}'
+                        ),
+                        reference=order.order_number,
+                        created_by=(
+                            request.user
+                            if request.user.is_authenticated
+                            else None
+                        ),
+                    )
+
+        except ValidationError as error:
+
+            if hasattr(error, 'messages'):
+                error_message = ' '.join(
+                    error.messages
+                )
+            else:
+                error_message = str(error)
+
+            messages.error(
+                request,
+                error_message
+            )
+
+            return render(
+                request,
+                'cart/checkout.html',
+                {
+                    'cart': cart,
+                    'checkout_data': checkout_data,
+                }
+            )
+
+        # ----------------------------------------
+        # GUARDAR PEDIDO RECIENTE EN SESIÓN
+        # ----------------------------------------
+
+        request.session['last_order_id'] = order.pk
+
+        # ----------------------------------------
+        # VACIAR CARRITO
+        # ----------------------------------------
+
+        cart.clear()
+
+        return redirect(
+            'cart:order_confirmation'
+        )
+
+    return render(
+        request,
+        'cart/checkout.html',
+        {
+            'cart': cart,
+            'checkout_data': checkout_data,
+        }
+    )
+
+
+def order_confirmation(request):
+
+    order_id = request.session.get(
+        'last_order_id'
+    )
+
+    if not order_id:
+        return redirect(
+            'home'
+        )
+
+    order = get_object_or_404(
+        Order.objects.prefetch_related(
+            'items'
+        ),
+        pk=order_id
+    )
+
+    return render(
+        request,
+        'cart/order_confirmation.html',
+        {
+            'order': order
+        }
+    )
+
+
+@require_POST
+def cart_add(request, product_id):
+    cart = Cart(request)
+
+    product = get_object_or_404(
+        Product,
+        pk=product_id,
+        is_active=True
+    )
+
+    try:
+        quantity = int(
+            request.POST.get(
+                'quantity',
+                1
+            )
+        )
+    except (TypeError, ValueError):
+        quantity = 1
+
+    if quantity < 1:
+        quantity = 1
+
+    if product.stock <= 0:
+        return redirect(
+            'product_detail',
+            slug=product.slug
+        )
+
+    product_id_string = str(
+        product.pk
+    )
+
+    current_quantity = (
+        cart.cart
+        .get(
+            product_id_string,
+            {}
+        )
+        .get(
+            'quantity',
+            0
+        )
+    )
+
+    available_quantity = max(
+        product.stock - current_quantity,
+        0
+    )
+
+    quantity = min(
+        quantity,
+        available_quantity
+    )
+
+    if quantity > 0:
+
+        cart.add(
+            product=product,
+            quantity=quantity
+        )
+
+    return redirect(
+        'cart:cart_detail'
+    )
+
+
+@require_POST
+def cart_update(request, product_id):
+    cart = Cart(request)
+
+    product = get_object_or_404(
+        Product,
+        pk=product_id,
+        is_active=True
+    )
+
+    try:
+        quantity = int(
+            request.POST.get(
+                'quantity',
+                1
+            )
+        )
+    except (TypeError, ValueError):
+        quantity = 1
+
+    if quantity <= 0:
+        cart.remove(
+            product
+        )
+
+    else:
+        quantity = min(
+            quantity,
+            product.stock
+        )
+
+        cart.add(
+            product=product,
+            quantity=quantity,
+            override_quantity=True
+        )
+
+    return redirect(
+        'cart:cart_detail'
+    )
+
+
+@require_POST
+def cart_remove(request, product_id):
+    cart = Cart(request)
+
+    product = get_object_or_404(
+        Product,
+        pk=product_id
+    )
+
+    cart.remove(
+        product
+    )
+
+    return redirect(
+        'cart:cart_detail'
+    )
+
+
+@require_POST
+def cart_clear(request):
+    cart = Cart(request)
+
+    cart.clear()
+
+    return redirect(
+        'cart:cart_detail'
+    )
