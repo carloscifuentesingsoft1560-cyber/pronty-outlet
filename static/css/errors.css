@@ -1,0 +1,396 @@
+.error-page {
+    min-height: 560px;
+    padding: 70px 0 90px;
+    background:
+        radial-gradient(
+            circle at 15% 15%,
+            rgba(240, 76, 139, 0.07),
+            transparent 30%
+        ),
+        radial-gradient(
+            circle at 85% 80%,
+            rgba(31, 104, 79, 0.08),
+            transparent 30%
+        ),
+        #fffaf5;
+}
+
+
+.error-page__card {
+    display: grid;
+    grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+    align-items: center;
+
+    max-width: 900px;
+    min-height: 430px;
+
+    margin: 0 auto;
+
+    overflow: hidden;
+
+    border: 1px solid rgba(31, 92, 74, 0.12);
+    border-radius: 28px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 20px 60px rgba(31, 92, 74, 0.08);
+}
+
+
+/* =========================================================
+   VISUAL
+   ========================================================= */
+
+.error-page__visual {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 430px;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            145deg,
+            #eef9f4,
+            #f8fffb
+        );
+}
+
+
+.error-page__visual::before {
+    content: "";
+
+    position: absolute;
+
+    width: 240px;
+    height: 240px;
+
+    border-radius: 50%;
+
+    background: rgba(31, 104, 79, 0.06);
+}
+
+
+.error-page__visual::after {
+    content: "";
+
+    position: absolute;
+    right: -40px;
+    bottom: -40px;
+
+    width: 150px;
+    height: 150px;
+
+    border-radius: 50%;
+
+    background: rgba(240, 76, 139, 0.08);
+}
+
+
+.error-page__number {
+    position: absolute;
+
+    color: rgba(31, 104, 79, 0.08);
+
+    font-size: 9rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -8px;
+
+    user-select: none;
+}
+
+
+.error-page__icon {
+    position: relative;
+    z-index: 2;
+
+    display: grid;
+    place-items: center;
+
+    width: 110px;
+    height: 110px;
+
+    border-radius: 30px;
+
+    background: #ffffff;
+    color: #1f684f;
+
+    box-shadow:
+        0 15px 40px rgba(31, 104, 79, 0.14);
+
+    transform: rotate(-4deg);
+}
+
+
+.error-page__icon svg {
+    width: 56px;
+    height: 56px;
+}
+
+
+/* =========================================================
+   CONTENIDO
+   ========================================================= */
+
+.error-page__content {
+    padding: 50px;
+}
+
+
+.error-page__eyebrow {
+    display: inline-block;
+
+    margin-bottom: 8px;
+
+    color: #f04c8b;
+
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+}
+
+
+.error-page__content h1 {
+    margin: 0 0 14px;
+
+    color: #1f5c4a;
+
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    line-height: 1.12;
+}
+
+
+.error-page__content > p {
+    max-width: 520px;
+
+    margin: 0;
+
+    color: #666666;
+
+    font-size: 0.98rem;
+    line-height: 1.65;
+}
+
+
+/* =========================================================
+   AVISO
+   ========================================================= */
+
+.error-page__notice {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-top: 24px;
+    padding: 14px 16px;
+
+    border-radius: 14px;
+
+    background: #eef9f4;
+    color: #1f684f;
+
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+
+
+.error-page__notice svg {
+    width: 19px;
+    height: 19px;
+
+    flex-shrink: 0;
+
+    margin-top: 1px;
+}
+
+
+/* =========================================================
+   BOTONES
+   ========================================================= */
+
+.error-page__actions {
+    display: flex;
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-top: 28px;
+}
+
+
+.error-page__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    min-height: 46px;
+
+    padding: 0 20px;
+
+    border-radius: 999px;
+
+    font-size: 0.88rem;
+    font-weight: 750;
+    text-decoration: none;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.error-page__button svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+.error-page__button:hover {
+    transform: translateY(-2px);
+}
+
+
+.error-page__button--primary {
+    background: #1f684f;
+    color: #ffffff;
+
+    box-shadow:
+        0 8px 20px rgba(31, 104, 79, 0.16);
+}
+
+
+.error-page__button--primary:hover {
+    background: #18553f;
+}
+
+
+.error-page__button--secondary {
+    border: 1px solid rgba(31, 104, 79, 0.2);
+
+    background: #ffffff;
+    color: #1f684f;
+}
+
+
+.error-page__button--secondary:hover {
+    background: #f5fbf8;
+}
+
+
+/* =========================================================
+   VOLVER AL INICIO
+   ========================================================= */
+
+.error-page__home {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    margin-top: 24px;
+
+    color: #777777;
+
+    font-size: 0.82rem;
+    font-weight: 650;
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+
+.error-page__home:hover {
+    color: #f04c8b;
+}
+
+
+.error-page__home svg {
+    width: 16px;
+    height: 16px;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 800px) {
+
+    .error-page {
+        padding: 40px 0 60px;
+    }
+
+
+    .error-page__card {
+        grid-template-columns: 1fr;
+    }
+
+
+    .error-page__visual {
+        min-height: 220px;
+    }
+
+
+    .error-page__number {
+        font-size: 7rem;
+    }
+
+
+    .error-page__icon {
+        width: 90px;
+        height: 90px;
+
+        border-radius: 25px;
+    }
+
+
+    .error-page__icon svg {
+        width: 46px;
+        height: 46px;
+    }
+
+
+    .error-page__content {
+        padding: 34px;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .error-page {
+        padding: 25px 0 45px;
+    }
+
+
+    .error-page__card {
+        border-radius: 20px;
+    }
+
+
+    .error-page__content {
+        padding: 26px 20px 30px;
+    }
+
+
+    .error-page__actions {
+        display: grid;
+    }
+
+
+    .error-page__button {
+        width: 100%;
+    }
+
+}

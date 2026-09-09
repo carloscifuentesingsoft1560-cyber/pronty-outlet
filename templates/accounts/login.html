@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Ingresar | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="auth-page">
+
+    <div class="container">
+
+        <div class="auth-card">
+
+            <div class="auth-card__icon">
+                <i data-lucide="user-round"></i>
+            </div>
+
+            <span class="section-heading__eyebrow">
+                Mi cuenta
+            </span>
+
+            <h1>
+                Iniciar sesión
+            </h1>
+
+            <p class="auth-card__intro">
+                Ingresa para consultar tus pedidos,
+                pagos y envíos.
+            </p>
+
+
+            {% if messages %}
+
+                <div class="checkout-messages">
+
+                    {% for message in messages %}
+
+                        <div class="checkout-message checkout-message--{{ message.tags }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+
+            <form method="post" class="auth-form">
+
+                {% csrf_token %}
+
+                <div class="auth-field">
+
+                    <label for="email">
+                        Correo electrónico
+                    </label>
+
+                    <input
+                        id="email"
+                        type="email"
+                        name="email"
+                        value="{{ email }}"
+                        autocomplete="email"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="auth-field">
+
+                    <label for="password">
+                        Contraseña
+                    </label>
+
+                    <input
+                        id="password"
+                        type="password"
+                        name="password"
+                        autocomplete="current-password"
+                        required
+                    >
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="auth-button"
+                >
+                    <i data-lucide="log-in"></i>
+                    Ingresar
+                </button>
+
+            </form>
+
+
+            <div class="auth-card__footer">
+
+                <span>
+                    ¿Aún no tienes cuenta?
+                </span>
+
+                <a href="{% url 'accounts:register' %}">
+                    Crear cuenta
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

@@ -1,0 +1,1206 @@
+.account-page {
+  padding: 3rem 0 5rem;
+  background: #fffaf5;
+}
+
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+
+.account-layout {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+
+  gap: 2rem;
+
+  align-items: start;
+}
+
+.account-main {
+  display: grid;
+
+  gap: 1.5rem;
+
+  min-width: 0;
+}
+
+.account-sidebar,
+.account-content {
+  background: #fff;
+
+  border: 1px solid rgba(31, 92, 74, 0.1);
+  border-radius: 20px;
+}
+
+.account-sidebar {
+  padding: 1rem;
+
+  min-width: 0;
+}
+
+.account-content {
+  padding: 1.5rem;
+
+  min-width: 0;
+}
+
+
+/* =========================================================
+   PERFIL
+   ========================================================= */
+
+.account-profile {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  align-items: center;
+
+  gap: 0.8rem;
+
+  padding: 0.8rem;
+}
+
+.account-profile__icon {
+  display: grid;
+  place-items: center;
+
+  width: 46px;
+  height: 46px;
+
+  border-radius: 50%;
+
+  background: #eef9f4;
+  color: #1f684f;
+}
+
+.account-profile > div:last-child {
+  display: grid;
+
+  gap: 0.15rem;
+
+  min-width: 0;
+}
+
+.account-profile strong {
+  color: #222;
+}
+
+.account-profile span {
+  display: block;
+
+  max-width: 100%;
+
+  color: #777;
+
+  font-size: 0.78rem;
+  line-height: 1.35;
+
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+
+/* =========================================================
+   NAVEGACIÓN
+   ========================================================= */
+
+.account-nav {
+  display: grid;
+
+  gap: 0.5rem;
+
+  margin-top: 1rem;
+}
+
+.account-nav__link {
+  display: flex;
+  align-items: center;
+
+  gap: 0.6rem;
+
+  width: 100%;
+
+  padding: 0.8rem 1rem;
+
+  border-radius: 12px;
+
+  color: #1f5c4a;
+
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.account-nav__link svg {
+  width: 19px;
+  height: 19px;
+}
+
+.account-nav__link:hover {
+  background: #f4faf7;
+}
+
+.account-nav__link--active {
+  background: #eef9f4;
+}
+
+.account-nav__logout-form {
+  margin: 0;
+}
+
+.account-nav__logout {
+  width: 100%;
+
+  border: 0;
+
+  background: transparent;
+
+  font: inherit;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.account-nav__logout:hover {
+  background: #fff1f1;
+  color: #b24343;
+}
+
+
+/* =========================================================
+   ESTADO COMERCIAL
+   ========================================================= */
+
+.commercial-status-card {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+
+  gap: 1.1rem;
+
+  padding: 1.5rem;
+
+  border: 1px solid rgba(31, 104, 79, 0.12);
+  border-radius: 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      #ffffff,
+      #f7fcf9
+    );
+
+  box-shadow:
+    0 10px 35px rgba(31, 104, 79, 0.05);
+}
+
+.commercial-status-card__icon {
+  display: grid;
+  place-items: center;
+
+  width: 64px;
+  height: 64px;
+
+  border-radius: 18px;
+
+  background: #eef9f4;
+  color: #1f684f;
+}
+
+.commercial-status-card__icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.commercial-status-card__content {
+  min-width: 0;
+}
+
+.commercial-status-card__eyebrow {
+  display: block;
+
+  margin-bottom: 0.25rem;
+
+  color: #f04c8b;
+
+  font-size: 0.77rem;
+  font-weight: 800;
+}
+
+.commercial-status-card__heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 1rem;
+}
+
+.commercial-status-card__heading h2 {
+  margin: 0;
+
+  color: #1f5c4a;
+
+  font-size: 1.25rem;
+}
+
+.commercial-status-card__badge {
+  flex-shrink: 0;
+
+  padding: 0.45rem 0.75rem;
+
+  border-radius: 999px;
+
+  background: #f4f4f4;
+  color: #666;
+
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.commercial-status-card__badge--active {
+  background: #e8f7ef;
+  color: #1f684f;
+}
+
+.commercial-status-card__content > p {
+  max-width: 760px;
+
+  margin: 0.8rem 0 0;
+
+  color: #666;
+
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.commercial-status-card__content > p strong {
+  color: #1f5c4a;
+}
+
+
+/* =========================================================
+   REQUISITO DE ACTIVACIÓN
+   ========================================================= */
+
+.commercial-status-card__requirement {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+
+  gap: 1rem;
+
+  margin-top: 1.1rem;
+  padding: 1rem;
+
+  border-radius: 14px;
+
+  background: #fffaf5;
+}
+
+.commercial-status-card__requirement > div {
+  display: grid;
+
+  gap: 0.2rem;
+}
+
+.commercial-status-card__requirement span {
+  color: #888;
+
+  font-size: 0.75rem;
+}
+
+.commercial-status-card__requirement strong {
+  color: #1f5c4a;
+
+  font-size: 0.95rem;
+}
+
+.commercial-status-card__requirement > svg {
+  width: 19px;
+  height: 19px;
+
+  color: #f04c8b;
+}
+
+
+/* =========================================================
+   MÉTRICAS MAYORISTAS
+   ========================================================= */
+
+.commercial-status-card__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  gap: 0.8rem;
+
+  margin-top: 1.1rem;
+}
+
+.commercial-status-card__metrics > div {
+  display: grid;
+
+  gap: 0.25rem;
+
+  padding: 0.9rem 1rem;
+
+  border-radius: 14px;
+
+  background: #eef9f4;
+}
+
+.commercial-status-card__metrics span {
+  color: #6f817a;
+
+  font-size: 0.74rem;
+}
+
+.commercial-status-card__metrics strong {
+  color: #1f5c4a;
+
+  font-size: 0.95rem;
+}
+
+
+/* =========================================================
+   ACCIÓN COMERCIAL
+   ========================================================= */
+
+.commercial-status-card__actions {
+  display: flex;
+
+  margin-top: 1rem;
+}
+
+.commercial-status-card__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.45rem;
+
+  min-height: 40px;
+
+  padding: 0.65rem 1rem;
+
+  border-radius: 999px;
+
+  background: #1f684f;
+  color: #fff;
+
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.commercial-status-card__button:hover {
+  background: #18553f;
+
+  transform: translateY(-1px);
+}
+
+.commercial-status-card__button svg {
+  width: 17px;
+  height: 17px;
+}
+
+
+/* =========================================================
+   ENCABEZADO PEDIDOS
+   ========================================================= */
+
+.account-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 1rem;
+
+  margin-bottom: 1.5rem;
+}
+
+.account-section-header span {
+  color: #f04c8b;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.account-section-header h2 {
+  margin: 0.2rem 0 0;
+
+  color: #1f5c4a;
+}
+
+.account-section-header > strong {
+  display: grid;
+  place-items: center;
+
+  min-width: 38px;
+  height: 38px;
+
+  padding: 0 0.6rem;
+
+  border-radius: 999px;
+
+  background: #1f684f;
+  color: #fff;
+}
+
+
+/* =========================================================
+   PEDIDOS
+   ========================================================= */
+
+.account-orders {
+  display: grid;
+
+  gap: 1rem;
+}
+
+.account-order {
+  padding: 1.2rem;
+
+  border: 1px solid rgba(31, 92, 74, 0.1);
+  border-radius: 16px;
+
+  background: #fff;
+}
+
+.account-order__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap: 1rem;
+}
+
+.account-order__top > div:first-child {
+  display: grid;
+
+  gap: 0.2rem;
+}
+
+.account-order__top span {
+  color: #777;
+
+  font-size: 0.78rem;
+}
+
+.account-order__top strong {
+  color: #1f5c4a;
+}
+
+.account-order__status {
+  padding: 0.45rem 0.8rem;
+
+  border-radius: 999px;
+
+  background: #eef9f4;
+  color: #1f684f;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.account-order__meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 1rem;
+
+  margin: 1rem 0;
+}
+
+.account-order__meta div {
+  display: grid;
+
+  gap: 0.2rem;
+}
+
+.account-order__meta span {
+  color: #888;
+
+  font-size: 0.75rem;
+}
+
+.account-order__meta strong {
+  color: #333;
+
+  font-size: 0.9rem;
+}
+
+.account-order__items {
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.account-order__item {
+  display: flex;
+  justify-content: space-between;
+
+  gap: 1rem;
+
+  padding: 0.7rem 0;
+}
+
+.account-order__item span {
+  color: #555;
+}
+
+.account-order__item strong {
+  color: #1f5c4a;
+}
+
+.account-order__shipping {
+  display: flex;
+  align-items: center;
+
+  gap: 0.7rem;
+
+  margin-top: 1rem;
+  padding: 0.8rem;
+
+  border-radius: 12px;
+
+  background: #f7fbf9;
+}
+
+.account-order__shipping svg {
+  color: #1f684f;
+}
+
+.account-order__shipping div {
+  display: grid;
+
+  gap: 0.2rem;
+}
+
+.account-order__shipping span {
+  color: #777;
+
+  font-size: 0.8rem;
+}
+
+
+/* =========================================================
+   ACCIONES PEDIDO
+   ========================================================= */
+
+.account-order__actions {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: 1rem;
+}
+
+.account-order__detail-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.45rem;
+
+  min-height: 40px;
+
+  padding: 0.65rem 1rem;
+
+  border-radius: 999px;
+
+  background: #1f684f;
+  color: #fff;
+
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.account-order__detail-link:hover {
+  background: #18553f;
+
+  transform: translateY(-1px);
+}
+
+.account-order__detail-link svg {
+  width: 17px;
+  height: 17px;
+}
+
+
+/* =========================================================
+   ESTADO VACÍO
+   ========================================================= */
+
+.account-empty {
+  display: grid;
+  place-items: center;
+
+  gap: 0.7rem;
+
+  min-height: 300px;
+
+  text-align: center;
+}
+
+.account-empty svg {
+  width: 48px;
+  height: 48px;
+
+  color: #1f684f;
+}
+
+.account-empty h2 {
+  margin: 0;
+
+  color: #1f5c4a;
+}
+
+.account-empty p {
+  margin: 0;
+
+  color: #666;
+}
+
+.account-empty a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+
+  padding: 0 1.2rem;
+
+  border-radius: 999px;
+
+  background: #1f684f;
+  color: #fff;
+
+  font-weight: 700;
+  text-decoration: none;
+}
+
+
+/* =========================================================
+   DETALLE DEL PEDIDO
+   ========================================================= */
+
+.order-detail-page {
+  width: 100%;
+}
+
+.order-detail__back {
+  margin-bottom: 1.4rem;
+}
+
+.order-detail__back a {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 0.45rem;
+
+  color: #1f684f;
+
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.order-detail__back a:hover {
+  color: #f04c8b;
+}
+
+.order-detail__back svg {
+  width: 18px;
+  height: 18px;
+}
+
+.order-detail__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap: 2rem;
+
+  margin-bottom: 1.6rem;
+  padding: 1.5rem 1.6rem;
+
+  border: 1px solid rgba(31, 92, 74, 0.1);
+  border-radius: 20px;
+
+  background: #fff;
+}
+
+.order-detail__header > div:first-child {
+  min-width: 0;
+}
+
+.order-detail__eyebrow {
+  display: block;
+
+  margin-bottom: 0.25rem;
+
+  color: #f04c8b;
+
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.order-detail__header h1 {
+  margin: 0;
+
+  color: #1f5c4a;
+
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.order-detail__header p {
+  margin: 0.45rem 0 0;
+
+  color: #777;
+
+  font-size: 0.9rem;
+}
+
+.order-detail__status {
+  flex-shrink: 0;
+
+  padding: 0.55rem 0.9rem;
+
+  border-radius: 999px;
+
+  background: #eef9f4;
+  color: #1f684f;
+
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.order-detail__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+
+  gap: 1.5rem;
+
+  align-items: start;
+}
+
+.order-detail__main {
+  display: grid;
+
+  gap: 1.5rem;
+
+  min-width: 0;
+}
+
+.order-detail__sidebar {
+  min-width: 0;
+}
+
+.order-detail-card {
+  padding: 1.5rem;
+
+  border: 1px solid rgba(31, 92, 74, 0.1);
+  border-radius: 20px;
+
+  background: #fff;
+
+  box-shadow:
+    0 8px 28px rgba(35, 71, 58, 0.04);
+}
+
+.order-detail-card__title {
+  display: flex;
+  align-items: center;
+
+  gap: 0.65rem;
+
+  margin-bottom: 1.25rem;
+}
+
+.order-detail-card__title svg {
+  width: 21px;
+  height: 21px;
+
+  color: #1f684f;
+}
+
+.order-detail-card__title h2 {
+  margin: 0;
+
+  color: #1f5c4a;
+
+  font-size: 1.05rem;
+}
+
+.order-detail-products {
+  display: grid;
+}
+
+.order-detail-product {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 1.5rem;
+
+  padding: 1rem 0;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.order-detail-product:first-child {
+  padding-top: 0;
+}
+
+.order-detail-product > div:first-child {
+  display: grid;
+
+  gap: 0.25rem;
+}
+
+.order-detail-product strong {
+  color: #333;
+}
+
+.order-detail-product span {
+  color: #777;
+
+  font-size: 0.8rem;
+}
+
+.order-detail-product__price {
+  display: grid;
+
+  gap: 0.2rem;
+
+  flex-shrink: 0;
+
+  text-align: right;
+}
+
+.order-detail-product__price strong {
+  color: #1f684f;
+
+  font-size: 1rem;
+}
+
+.order-detail-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 1rem;
+
+  padding-top: 1.25rem;
+}
+
+.order-detail-total span {
+  color: #555;
+
+  font-weight: 700;
+}
+
+.order-detail-total strong {
+  color: #1f684f;
+
+  font-size: 1.25rem;
+}
+
+.order-detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 1rem 1.5rem;
+}
+
+.order-detail-info-grid > div {
+  display: grid;
+
+  gap: 0.25rem;
+
+  min-width: 0;
+
+  padding: 0.8rem;
+
+  border-radius: 12px;
+
+  background: #fafdfb;
+}
+
+.order-detail-info-grid span {
+  color: #888;
+
+  font-size: 0.76rem;
+}
+
+.order-detail-info-grid strong {
+  color: #333;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  overflow-wrap: anywhere;
+}
+
+.order-detail-info-grid__full {
+  grid-column: 1 / -1;
+}
+
+.order-detail-shipping {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+
+  gap: 1rem;
+}
+
+.order-detail-shipping > div {
+  display: grid;
+
+  gap: 0.25rem;
+
+  padding: 0.8rem;
+
+  border-radius: 12px;
+
+  background: #f7fbf9;
+}
+
+.order-detail-shipping span {
+  color: #888;
+
+  font-size: 0.76rem;
+}
+
+.order-detail-shipping strong {
+  color: #333;
+
+  font-size: 0.9rem;
+
+  overflow-wrap: anywhere;
+}
+
+.order-detail-shipping__full {
+  grid-column: 1 / -1;
+}
+
+.order-detail-payment {
+  display: grid;
+
+  gap: 0.9rem;
+}
+
+.order-detail-payment > div {
+  display: grid;
+
+  gap: 0.2rem;
+
+  padding-bottom: 0.9rem;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.order-detail-payment > div:last-child {
+  padding-bottom: 0;
+
+  border-bottom: 0;
+}
+
+.order-detail-payment span {
+  color: #888;
+
+  font-size: 0.76rem;
+}
+
+.order-detail-payment strong {
+  color: #333;
+
+  font-size: 0.9rem;
+}
+
+.order-detail-payment__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.5rem;
+
+  width: 100%;
+  min-height: 44px;
+
+  margin-top: 1.25rem;
+  padding: 0.7rem 1rem;
+
+  border-radius: 999px;
+
+  background: #1f684f;
+  color: #fff;
+
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.order-detail-payment__button:hover {
+  background: #18553f;
+}
+
+.order-detail-payment__button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.order-detail-payment__notice {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 0.65rem;
+
+  margin-top: 1.2rem;
+  padding: 0.85rem;
+
+  border-radius: 12px;
+
+  background: #eef9f4;
+  color: #1f684f;
+
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.order-detail-payment__notice svg {
+  width: 18px;
+  height: 18px;
+
+  flex-shrink: 0;
+
+  margin-top: 0.08rem;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1000px) {
+
+  .order-detail__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .commercial-status-card__metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+
+}
+
+@media (max-width: 900px) {
+
+  .account-layout {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+@media (max-width: 700px) {
+
+  .commercial-status-card {
+    grid-template-columns: 1fr;
+  }
+
+  .commercial-status-card__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .commercial-status-card__requirement {
+    grid-template-columns: 1fr;
+  }
+
+  .commercial-status-card__requirement > svg {
+    transform: rotate(90deg);
+  }
+
+  .commercial-status-card__metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .order-detail__header {
+    flex-direction: column;
+  }
+
+  .order-detail-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .order-detail-info-grid__full {
+    grid-column: auto;
+  }
+
+  .order-detail-shipping {
+    grid-template-columns: 1fr;
+  }
+
+  .order-detail-shipping__full {
+    grid-column: auto;
+  }
+
+  .order-detail-product {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .order-detail-product__price {
+    width: 100%;
+
+    text-align: left;
+  }
+
+}
+
+@media (max-width: 620px) {
+
+  .account-page {
+    padding: 2rem 0 4rem;
+  }
+
+  .account-content,
+  .order-detail-card,
+  .order-detail__header {
+    padding: 1.1rem;
+  }
+
+  .account-order__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .account-order__top {
+    flex-direction: column;
+  }
+
+  .account-profile {
+    grid-template-columns: 42px minmax(0, 1fr);
+  }
+
+  .account-profile__icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .account-order__actions {
+    justify-content: stretch;
+  }
+
+  .account-order__detail-link {
+    width: 100%;
+  }
+
+}

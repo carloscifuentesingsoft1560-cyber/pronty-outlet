@@ -1,22 +1,17 @@
 from django.contrib import admin, messages
 from django.utils import timezone
 
+from accounts.services import process_wholesale_benefit
+
 from .models import Order, OrderItem
 
 
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
-    extra = 0
-    can_delete = False
 
-    fields = (
-        'product',
-        'product_name',
-        'sku',
-        'quantity',
-        'unit_price',
-        'subtotal',
-    )
+    extra = 0
+
+    can_delete = False
 
     readonly_fields = (
         'product',
@@ -26,12 +21,6 @@ class OrderItemInline(admin.TabularInline):
         'unit_price',
         'subtotal',
     )
-
-    def has_add_permission(self, request, obj=None):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False
 
 
 @admin.register(Order)
@@ -40,21 +29,18 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = (
         'order_number',
         'customer_name',
-        'whatsapp',
         'city',
         'payment_method',
         'status',
-        'tracking_number',
         'total',
+        'wholesale_activation_qualified',
         'created_at',
     )
 
     list_filter = (
         'status',
         'payment_method',
-        'department',
-        'carrier',
-        'shipping_carrier',
+        'wholesale_activation_qualified',
         'created_at',
     )
 
@@ -63,42 +49,39 @@ class OrderAdmin(admin.ModelAdmin):
         'customer_name',
         'email',
         'whatsapp',
-        'city',
-        'address',
         'tracking_number',
-        'shipping_carrier',
     )
 
     readonly_fields = (
         'order_number',
-        'customer_name',
-        'email',
-        'whatsapp',
-        'department',
-        'city',
-        'address',
-        'delivery_notes',
-        'carrier',
+        'customer',
+        'total',
+        'retail_reference_total',
+        'wholesale_activation_qualified',
+        'commercial_benefit_processed_at',
+        'commercial_benefit_result',
         'payment_proof_uploaded_at',
         'payment_confirmed_at',
         'shipped_at',
         'delivered_at',
-        'total',
         'created_at',
         'updated_at',
     )
 
     fieldsets = (
+
         (
             'Pedido',
             {
                 'fields': (
                     'order_number',
+                    'customer',
                     'status',
                     'total',
                 )
             }
         ),
+
         (
             'Cliente',
             {
@@ -109,6 +92,7 @@ class OrderAdmin(admin.ModelAdmin):
                 )
             }
         ),
+
         (
             'Entrega solicitada',
             {
@@ -121,6 +105,7 @@ class OrderAdmin(admin.ModelAdmin):
                 )
             }
         ),
+
         (
             'Pago manual',
             {
@@ -132,6 +117,27 @@ class OrderAdmin(admin.ModelAdmin):
                 )
             }
         ),
+
+        (
+            'Activación mayorista',
+            {
+                'fields': (
+                    'retail_reference_total',
+                    'wholesale_activation_qualified',
+                )
+            }
+        ),
+
+        (
+            'Beneficio comercial',
+            {
+                'fields': (
+                    'commercial_benefit_processed_at',
+                    'commercial_benefit_result',
+                )
+            }
+        ),
+
         (
             'Despacho',
             {
@@ -144,6 +150,7 @@ class OrderAdmin(admin.ModelAdmin):
                 )
             }
         ),
+
         (
             'Fechas',
             {
@@ -153,38 +160,56 @@ class OrderAdmin(admin.ModelAdmin):
                 )
             }
         ),
+
     )
 
-    inlines = [
+    inlines = (
         OrderItemInline,
-    ]
-
-    ordering = (
-        '-created_at',
     )
 
-    actions = [
+    actions = (
         'confirm_payment',
         'reject_payment',
-        'mark_preparing',
-        'mark_shipped',
-        'mark_delivered',
-    ]
+        'mark_as_preparing',
+        'mark_as_shipped',
+        'mark_as_delivered',
+    )
+
+
+    # =========================================================
+    # CONFIRMAR PAGO
+    # =========================================================
 
     @admin.action(
         description='Confirmar pago de pedidos seleccionados'
     )
-    def confirm_payment(self, request, queryset):
+    def confirm_payment(
+        self,
+        request,
+        queryset
+    ):
 
-        updated = 0
+        confirmed = 0
+
+        skipped = 0
 
         for order in queryset:
 
-            if order.status != Order.Status.PROOF_RECEIVED:
+            if (
+                order.status
+                != Order.Status.PROOF_RECEIVED
+            ):
+
+                skipped += 1
                 continue
 
-            order.status = Order.Status.PAYMENT_CONFIRMED
-            order.payment_confirmed_at = timezone.now()
+            order.status = (
+                Order.Status.PAYMENT_CONFIRMED
+            )
+
+            order.payment_confirmed_at = (
+                timezone.now()
+            )
 
             order.save(
                 update_fields=[
@@ -194,38 +219,67 @@ class OrderAdmin(admin.ModelAdmin):
                 ]
             )
 
-            updated += 1
-
-        if updated:
-            self.message_user(
-                request,
-                f'{updated} pedido(s) marcado(s) como pago confirmado.',
-                level=messages.SUCCESS
+            process_wholesale_benefit(
+                order
             )
-        else:
+
+            confirmed += 1
+
+        if confirmed:
+
             self.message_user(
                 request,
                 (
-                    'No se modificaron pedidos. '
-                    'Solo se pueden confirmar pedidos con '
-                    'estado "Comprobante recibido".'
+                    f'{confirmed} pedido(s) '
+                    f'confirmado(s) correctamente.'
+                ),
+                level=messages.SUCCESS
+            )
+
+        if skipped:
+
+            self.message_user(
+                request,
+                (
+                    f'{skipped} pedido(s) '
+                    f'no estaban en estado '
+                    f'"Comprobante recibido".'
                 ),
                 level=messages.WARNING
             )
 
+
+    # =========================================================
+    # RECHAZAR PAGO
+    # =========================================================
+
     @admin.action(
         description='Rechazar pago de pedidos seleccionados'
     )
-    def reject_payment(self, request, queryset):
+    def reject_payment(
+        self,
+        request,
+        queryset
+    ):
 
         updated = 0
 
+        skipped = 0
+
         for order in queryset:
 
-            if order.status != Order.Status.PROOF_RECEIVED:
+            if (
+                order.status
+                != Order.Status.PROOF_RECEIVED
+            ):
+
+                skipped += 1
                 continue
 
-            order.status = Order.Status.PAYMENT_DECLINED
+            order.status = (
+                Order.Status.PAYMENT_DECLINED
+            )
+
             order.payment_confirmed_at = None
 
             order.save(
@@ -239,81 +293,101 @@ class OrderAdmin(admin.ModelAdmin):
             updated += 1
 
         if updated:
-            self.message_user(
-                request,
-                f'{updated} pedido(s) marcado(s) como pago rechazado.',
-                level=messages.SUCCESS
-            )
-        else:
+
             self.message_user(
                 request,
                 (
-                    'No se modificaron pedidos. '
-                    'Solo se pueden rechazar pedidos con '
-                    'estado "Comprobante recibido".'
+                    f'{updated} pedido(s) '
+                    f'marcado(s) como pago rechazado.'
+                ),
+                level=messages.SUCCESS
+            )
+
+        if skipped:
+
+            self.message_user(
+                request,
+                (
+                    f'{skipped} pedido(s) '
+                    f'no estaban en estado '
+                    f'"Comprobante recibido".'
                 ),
                 level=messages.WARNING
             )
+
+
+    # =========================================================
+    # PREPARANDO
+    # =========================================================
 
     @admin.action(
         description='Marcar pedidos seleccionados como preparando'
     )
-    def mark_preparing(self, request, queryset):
+    def mark_as_preparing(
+        self,
+        request,
+        queryset
+    ):
 
-        updated = 0
+        updated = queryset.filter(
+            status=Order.Status.PAYMENT_CONFIRMED
+        ).update(
+            status=Order.Status.PREPARING,
+            updated_at=timezone.now()
+        )
 
-        for order in queryset:
+        self.message_user(
+            request,
+            (
+                f'{updated} pedido(s) '
+                f'marcado(s) como preparando.'
+            ),
+            level=messages.SUCCESS
+        )
 
-            if order.status != Order.Status.PAYMENT_CONFIRMED:
-                continue
 
-            order.status = Order.Status.PREPARING
-
-            order.save(
-                update_fields=[
-                    'status',
-                    'updated_at',
-                ]
-            )
-
-            updated += 1
-
-        if updated:
-            self.message_user(
-                request,
-                f'{updated} pedido(s) marcado(s) como preparando.',
-                level=messages.SUCCESS
-            )
-        else:
-            self.message_user(
-                request,
-                (
-                    'No se modificaron pedidos. '
-                    'Solo se pueden preparar pedidos con '
-                    'estado "Pago confirmado".'
-                ),
-                level=messages.WARNING
-            )
+    # =========================================================
+    # ENVIADO
+    # =========================================================
 
     @admin.action(
         description='Marcar pedidos seleccionados como enviados'
     )
-    def mark_shipped(self, request, queryset):
+    def mark_as_shipped(
+        self,
+        request,
+        queryset
+    ):
 
         updated = 0
-        missing_shipping_data = 0
+
+        skipped = 0
 
         for order in queryset:
 
-            if order.status != Order.Status.PREPARING:
+            if (
+                order.status
+                != Order.Status.PREPARING
+            ):
+
+                skipped += 1
                 continue
 
-            if not order.shipping_carrier or not order.tracking_number:
-                missing_shipping_data += 1
+            if (
+                not order.shipping_carrier
+                or not order.tracking_number
+            ):
+
+                skipped += 1
                 continue
 
-            order.status = Order.Status.SHIPPED
-            order.shipped_at = timezone.now()
+            order.status = (
+                Order.Status.SHIPPED
+            )
+
+            order.shipped_at = (
+                timezone.now()
+            )
 
             order.save(
                 update_fields=[
@@ -326,48 +400,64 @@ class OrderAdmin(admin.ModelAdmin):
             updated += 1
 
         if updated:
+
             self.message_user(
                 request,
-                f'{updated} pedido(s) marcado(s) como enviados.',
+                (
+                    f'{updated} pedido(s) '
+                    f'marcado(s) como enviado(s).'
+                ),
                 level=messages.SUCCESS
             )
 
-        if missing_shipping_data:
+        if skipped:
+
             self.message_user(
                 request,
                 (
-                    f'{missing_shipping_data} pedido(s) no se enviaron '
-                    'porque les falta transportadora de despacho '
-                    'o número de guía.'
+                    f'{skipped} pedido(s) '
+                    f'no pudieron marcarse como enviados. '
+                    f'Deben estar en "Preparando pedido" '
+                    f'y tener transportadora y guía.'
                 ),
                 level=messages.WARNING
             )
 
-        if not updated and not missing_shipping_data:
-            self.message_user(
-                request,
-                (
-                    'No se modificaron pedidos. '
-                    'Solo se pueden enviar pedidos con '
-                    'estado "Preparando pedido".'
-                ),
-                level=messages.WARNING
-            )
+
+    # =========================================================
+    # ENTREGADO
+    # =========================================================
 
     @admin.action(
         description='Marcar pedidos seleccionados como entregados'
     )
-    def mark_delivered(self, request, queryset):
+    def mark_as_delivered(
+        self,
+        request,
+        queryset
+    ):
 
         updated = 0
 
+        skipped = 0
+
         for order in queryset:
 
-            if order.status != Order.Status.SHIPPED:
+            if (
+                order.status
+                != Order.Status.SHIPPED
+            ):
+
+                skipped += 1
                 continue
 
-            order.status = Order.Status.DELIVERED
-            order.delivered_at = timezone.now()
+            order.status = (
+                Order.Status.DELIVERED
+            )
+
+            order.delivered_at = (
+                timezone.now()
+            )
 
             order.save(
                 update_fields=[
@@ -380,21 +470,31 @@ class OrderAdmin(admin.ModelAdmin):
             updated += 1
 
         if updated:
-            self.message_user(
-                request,
-                f'{updated} pedido(s) marcado(s) como entregados.',
-                level=messages.SUCCESS
-            )
-        else:
+
             self.message_user(
                 request,
                 (
-                    'No se modificaron pedidos. '
-                    'Solo se pueden entregar pedidos con '
-                    'estado "Enviado".'
+                    f'{updated} pedido(s) '
+                    f'marcado(s) como entregado(s).'
+                ),
+                level=messages.SUCCESS
+            )
+
+        if skipped:
+
+            self.message_user(
+                request,
+                (
+                    f'{skipped} pedido(s) '
+                    f'no estaban en estado "Enviado".'
                 ),
                 level=messages.WARNING
             )
+
+
+    # =========================================================
+    # GUARDADO MANUAL
+    # =========================================================
 
     def save_model(
         self,
@@ -408,36 +508,82 @@ class OrderAdmin(admin.ModelAdmin):
 
         if change and obj.pk:
 
-            previous_order = Order.objects.filter(
-                pk=obj.pk
-            ).first()
+            previous_status = (
+                Order.objects
+                .filter(
+                    pk=obj.pk
+                )
+                .values_list(
+                    'status',
+                    flat=True
+                )
+                .first()
+            )
 
-            if previous_order:
-                previous_status = previous_order.status
+        # -----------------------------------------------------
+        # CONFIRMACIÓN MANUAL DE PAGO
+        # -----------------------------------------------------
 
         if (
-            obj.status == Order.Status.PAYMENT_CONFIRMED
-            and previous_status != Order.Status.PAYMENT_CONFIRMED
+            obj.status
+            == Order.Status.PAYMENT_CONFIRMED
+            and previous_status
+            != Order.Status.PAYMENT_CONFIRMED
         ):
-            obj.payment_confirmed_at = timezone.now()
+
+            if not obj.payment_confirmed_at:
+
+                obj.payment_confirmed_at = (
+                    timezone.now()
+                )
+
+        # -----------------------------------------------------
+        # LIMPIAR CONFIRMACIÓN SOLO CUANDO CORRESPONDE
+        # -----------------------------------------------------
+
+        statuses_without_confirmed_payment = {
+            Order.Status.PENDING_PAYMENT,
+            Order.Status.PROOF_RECEIVED,
+            Order.Status.PAYMENT_PROCESSING,
+            Order.Status.PAYMENT_DECLINED,
+            Order.Status.CANCELED,
+            Order.Status.RESERVATION_EXPIRED,
+        }
 
         if (
-            obj.status != Order.Status.PAYMENT_CONFIRMED
-            and previous_status == Order.Status.PAYMENT_CONFIRMED
+            obj.status
+            in statuses_without_confirmed_payment
         ):
+
             obj.payment_confirmed_at = None
 
-        if (
-            obj.status == Order.Status.SHIPPED
-            and previous_status != Order.Status.SHIPPED
-        ):
-            obj.shipped_at = timezone.now()
+        # -----------------------------------------------------
+        # FECHA DE ENVÍO
+        # -----------------------------------------------------
 
         if (
-            obj.status == Order.Status.DELIVERED
-            and previous_status != Order.Status.DELIVERED
+            obj.status
+            == Order.Status.SHIPPED
+            and not obj.shipped_at
         ):
-            obj.delivered_at = timezone.now()
+
+            obj.shipped_at = (
+                timezone.now()
+            )
+
+        # -----------------------------------------------------
+        # FECHA DE ENTREGA
+        # -----------------------------------------------------
+
+        if (
+            obj.status
+            == Order.Status.DELIVERED
+            and not obj.delivered_at
+        ):
+
+            obj.delivered_at = (
+                timezone.now()
+            )
 
         super().save_model(
             request,
@@ -445,6 +591,21 @@ class OrderAdmin(admin.ModelAdmin):
             form,
             change
         )
+
+        # -----------------------------------------------------
+        # PROCESAR BENEFICIO COMERCIAL
+        # -----------------------------------------------------
+
+        if (
+            obj.status
+            == Order.Status.PAYMENT_CONFIRMED
+            and previous_status
+            != Order.Status.PAYMENT_CONFIRMED
+        ):
+
+            process_wholesale_benefit(
+                obj
+            )
 
 
 @admin.register(OrderItem)
@@ -475,9 +636,3 @@ class OrderItemAdmin(admin.ModelAdmin):
         'subtotal',
         'created_at',
     )
-
-    def has_add_permission(self, request):
-        return False
-
-    def has_delete_permission(self, request, obj=None):
-        return False

@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.conf import settings
 from django.db import models
 
 from catalog.models import Product
@@ -8,25 +9,91 @@ from catalog.models import Product
 class Order(models.Model):
 
     class Status(models.TextChoices):
-        PENDING_PAYMENT = 'PENDING_PAYMENT', 'Pendiente de pago'
-        PROOF_RECEIVED = 'PROOF_RECEIVED', 'Comprobante recibido'
-        PAYMENT_PROCESSING = 'PAYMENT_PROCESSING', 'Pago en proceso'
-        PAYMENT_CONFIRMED = 'PAYMENT_CONFIRMED', 'Pago confirmado'
-        PAYMENT_DECLINED = 'PAYMENT_DECLINED', 'Pago rechazado'
-        PREPARING = 'PREPARING', 'Preparando pedido'
-        SHIPPED = 'SHIPPED', 'Enviado'
-        DELIVERED = 'DELIVERED', 'Entregado'
-        CHANGE_REQUESTED = 'CHANGE_REQUESTED', 'Cambio solicitado'
-        CANCELED = 'CANCELED', 'Cancelado'
-        RESERVATION_EXPIRED = 'RESERVATION_EXPIRED', 'Reserva vencida'
+        PENDING_PAYMENT = (
+            'PENDING_PAYMENT',
+            'Pendiente de pago'
+        )
+
+        PROOF_RECEIVED = (
+            'PROOF_RECEIVED',
+            'Comprobante recibido'
+        )
+
+        PAYMENT_PROCESSING = (
+            'PAYMENT_PROCESSING',
+            'Pago en proceso'
+        )
+
+        PAYMENT_CONFIRMED = (
+            'PAYMENT_CONFIRMED',
+            'Pago confirmado'
+        )
+
+        PAYMENT_DECLINED = (
+            'PAYMENT_DECLINED',
+            'Pago rechazado'
+        )
+
+        PREPARING = (
+            'PREPARING',
+            'Preparando pedido'
+        )
+
+        SHIPPED = (
+            'SHIPPED',
+            'Enviado'
+        )
+
+        DELIVERED = (
+            'DELIVERED',
+            'Entregado'
+        )
+
+        CHANGE_REQUESTED = (
+            'CHANGE_REQUESTED',
+            'Cambio solicitado'
+        )
+
+        CANCELED = (
+            'CANCELED',
+            'Cancelado'
+        )
+
+        RESERVATION_EXPIRED = (
+            'RESERVATION_EXPIRED',
+            'Reserva vencida'
+        )
 
     class PaymentMethod(models.TextChoices):
-        NEQUI = 'NEQUI', 'Nequi'
-        BRE_B = 'BRE_B', 'Llave Bre-B'
-        BANCOLOMBIA = 'BANCOLOMBIA', 'Bancolombia'
+        NEQUI = (
+            'NEQUI',
+            'Nequi'
+        )
+
+        BRE_B = (
+            'BRE_B',
+            'Llave Bre-B'
+        )
+
+        BANCOLOMBIA = (
+            'BANCOLOMBIA',
+            'Bancolombia'
+        )
 
     class PaymentGateway(models.TextChoices):
-        WOMPI = 'WOMPI', 'Wompi'
+        WOMPI = (
+            'WOMPI',
+            'Wompi'
+        )
+
+    customer = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='orders',
+        blank=True,
+        null=True,
+        verbose_name='Cuenta del cliente'
+    )
 
     order_number = models.CharField(
         max_length=30,
@@ -74,9 +141,9 @@ class Order(models.Model):
         verbose_name='Transportadora solicitada'
     )
 
-    # =========================================
+    # =========================================================
     # PAGO MANUAL
-    # =========================================
+    # =========================================================
 
     payment_method = models.CharField(
         max_length=30,
@@ -98,9 +165,9 @@ class Order(models.Model):
         verbose_name='Fecha de carga del comprobante'
     )
 
-    # =========================================
+    # =========================================================
     # PASARELA FUTURA
-    # =========================================
+    # =========================================================
 
     payment_gateway = models.CharField(
         max_length=30,
@@ -137,9 +204,42 @@ class Order(models.Model):
         verbose_name='Fecha de confirmación del pago'
     )
 
-    # =========================================
+    # =========================================================
+    # ACTIVACIÓN MAYORISTA EN LA MISMA COMPRA
+    # =========================================================
+
+    retail_reference_total = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Total de referencia a precio detal'
+    )
+
+    wholesale_activation_qualified = models.BooleanField(
+        default=False,
+        verbose_name='Calificó para activación mayorista'
+    )
+
+    # =========================================================
+    # BENEFICIO COMERCIAL
+    # =========================================================
+
+    commercial_benefit_processed_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de procesamiento comercial'
+    )
+
+    commercial_benefit_result = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        verbose_name='Resultado comercial'
+    )
+
+    # =========================================================
     # DESPACHO
-    # =========================================
+    # =========================================================
 
     shipping_carrier = models.CharField(
         max_length=100,
@@ -172,9 +272,9 @@ class Order(models.Model):
         verbose_name='Fecha de entrega'
     )
 
-    # =========================================
+    # =========================================================
     # ESTADO Y TOTAL
-    # =========================================
+    # =========================================================
 
     status = models.CharField(
         max_length=30,
@@ -203,20 +303,37 @@ class Order(models.Model):
     class Meta:
         verbose_name = 'Pedido'
         verbose_name_plural = 'Pedidos'
-        ordering = ['-created_at']
+        ordering = [
+            '-created_at'
+        ]
 
     def __str__(self):
-        return self.order_number or f'Pedido {self.pk}'
+
+        return (
+            self.order_number
+            or f'Pedido {self.pk}'
+        )
 
     def save(self, *args, **kwargs):
-        is_new = self.pk is None
 
-        super().save(*args, **kwargs)
+        is_new = (
+            self.pk is None
+        )
 
-        if is_new and not self.order_number:
+        super().save(
+            *args,
+            **kwargs
+        )
+
+        if (
+            is_new
+            and not self.order_number
+        ):
 
             self.order_number = (
-                f'PRY-{self.created_at.year}-{self.pk:06d}'
+                f'PRY-'
+                f'{self.created_at.year}-'
+                f'{self.pk:06d}'
             )
 
             super().save(
@@ -275,9 +392,12 @@ class OrderItem(models.Model):
     class Meta:
         verbose_name = 'Producto del pedido'
         verbose_name_plural = 'Productos del pedido'
-        ordering = ['id']
+        ordering = [
+            'id'
+        ]
 
     def __str__(self):
+
         return (
             f'{self.product_name} '
             f'x {self.quantity}'

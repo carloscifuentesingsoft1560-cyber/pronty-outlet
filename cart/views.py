@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
@@ -12,8 +13,40 @@ from .cart import Cart
 from .models import Order, OrderItem
 
 
+def get_order_for_payment(request, order_number):
+
+    if request.user.is_authenticated:
+
+        return get_object_or_404(
+            Order,
+            order_number=order_number,
+            customer=request.user
+        )
+
+    order = get_object_or_404(
+        Order,
+        order_number=order_number,
+        customer__isnull=True
+    )
+
+    session_order_id = request.session.get(
+        'last_order_id'
+    )
+
+    if session_order_id != order.pk:
+
+        raise Http404(
+            'Pedido no encontrado.'
+        )
+
+    return order
+
+
 def cart_detail(request):
-    cart = Cart(request)
+
+    cart = Cart(
+        request
+    )
 
     return render(
         request,
@@ -25,9 +58,13 @@ def cart_detail(request):
 
 
 def checkout(request):
-    cart = Cart(request)
+
+    cart = Cart(
+        request
+    )
 
     if len(cart) == 0:
+
         return redirect(
             'cart:cart_detail'
         )
@@ -43,20 +80,60 @@ def checkout(request):
         'carrier': '',
     }
 
+    if request.user.is_authenticated:
+
+        checkout_data['name'] = (
+            request.user.get_full_name()
+            or request.user.username
+        )
+
+        checkout_data['email'] = (
+            request.user.email
+            or ''
+        )
+
     if request.method == 'POST':
 
         checkout_data = {
-            'name': request.POST.get('name', '').strip(),
-            'email': request.POST.get('email', '').strip(),
-            'whatsapp': request.POST.get('whatsapp', '').strip(),
-            'department': request.POST.get('department', '').strip(),
-            'city': request.POST.get('city', '').strip(),
-            'address': request.POST.get('address', '').strip(),
+            'name': request.POST.get(
+                'name',
+                ''
+            ).strip(),
+
+            'email': request.POST.get(
+                'email',
+                ''
+            ).strip(),
+
+            'whatsapp': request.POST.get(
+                'whatsapp',
+                ''
+            ).strip(),
+
+            'department': request.POST.get(
+                'department',
+                ''
+            ).strip(),
+
+            'city': request.POST.get(
+                'city',
+                ''
+            ).strip(),
+
+            'address': request.POST.get(
+                'address',
+                ''
+            ).strip(),
+
             'delivery_notes': request.POST.get(
                 'delivery_notes',
                 ''
             ).strip(),
-            'carrier': request.POST.get('carrier', '').strip(),
+
+            'carrier': request.POST.get(
+                'carrier',
+                ''
+            ).strip(),
         }
 
         required_fields = [
@@ -76,6 +153,7 @@ def checkout(request):
         ]
 
         if missing_fields:
+
             messages.error(
                 request,
                 'Completa todos los campos obligatorios.'
@@ -91,11 +169,13 @@ def checkout(request):
             )
 
         try:
+
             validate_email(
                 checkout_data['email']
             )
 
         except ValidationError:
+
             messages.error(
                 request,
                 'Ingresa un correo electrónico válido.'
@@ -110,13 +190,32 @@ def checkout(request):
                 }
             )
 
+        # =====================================================
+        # FOTO COMERCIAL DEL CARRITO
+        # =====================================================
+
+        retail_reference_total = (
+            cart.get_retail_reference_total()
+        )
+
+        wholesale_activation_qualified = (
+            cart.qualifies_for_wholesale_activation()
+        )
+
+        final_order_total = (
+            cart.get_total_price()
+        )
+
         try:
 
             with transaction.atomic():
 
-                cart_items = list(cart)
+                cart_items = list(
+                    cart
+                )
 
                 if not cart_items:
+
                     messages.error(
                         request,
                         'Tu carrito está vacío.'
@@ -130,14 +229,21 @@ def checkout(request):
 
                 for item in cart_items:
 
-                    product = Product.objects.select_for_update().get(
-                        pk=item['product'].pk,
-                        is_active=True
+                    product = (
+                        Product.objects
+                        .select_for_update()
+                        .get(
+                            pk=item['product'].pk,
+                            is_active=True
+                        )
                     )
 
-                    quantity = item['quantity']
+                    quantity = item[
+                        'quantity'
+                    ]
 
                     if quantity > product.stock:
+
                         raise ValidationError(
                             (
                                 f'No hay suficientes unidades de '
@@ -155,24 +261,66 @@ def checkout(request):
                         }
                     )
 
+                customer = None
+
+                if request.user.is_authenticated:
+                    customer = request.user
+
                 order = Order.objects.create(
-                    customer_name=checkout_data['name'],
-                    email=checkout_data['email'],
-                    whatsapp=checkout_data['whatsapp'],
-                    department=checkout_data['department'],
-                    city=checkout_data['city'],
-                    address=checkout_data['address'],
+                    customer=customer,
+
+                    customer_name=checkout_data[
+                        'name'
+                    ],
+
+                    email=checkout_data[
+                        'email'
+                    ],
+
+                    whatsapp=checkout_data[
+                        'whatsapp'
+                    ],
+
+                    department=checkout_data[
+                        'department'
+                    ],
+
+                    city=checkout_data[
+                        'city'
+                    ],
+
+                    address=checkout_data[
+                        'address'
+                    ],
+
                     delivery_notes=checkout_data[
                         'delivery_notes'
                     ],
-                    carrier=checkout_data['carrier'],
-                    total=cart.get_total_price(),
+
+                    carrier=checkout_data[
+                        'carrier'
+                    ],
+
+                    retail_reference_total=(
+                        retail_reference_total
+                    ),
+
+                    wholesale_activation_qualified=(
+                        wholesale_activation_qualified
+                    ),
+
+                    total=final_order_total,
                 )
 
                 for item in validated_items:
 
-                    product = item['product']
-                    quantity = item['quantity']
+                    product = item[
+                        'product'
+                    ]
+
+                    quantity = item[
+                        'quantity'
+                    ]
 
                     OrderItem.objects.create(
                         order=order,
@@ -180,19 +328,34 @@ def checkout(request):
                         product_name=product.name,
                         sku=product.sku,
                         quantity=quantity,
-                        unit_price=item['unit_price'],
-                        subtotal=item['subtotal'],
+                        unit_price=item[
+                            'unit_price'
+                        ],
+                        subtotal=item[
+                            'subtotal'
+                        ],
                     )
 
                     InventoryMovement.objects.create(
                         product=product,
-                        movement_type=InventoryMovement.MovementType.SALE,
+
+                        movement_type=(
+                            InventoryMovement
+                            .MovementType
+                            .SALE
+                        ),
+
                         quantity=quantity,
+
                         reason=(
                             f'Venta correspondiente al '
                             f'pedido {order.order_number}'
                         ),
-                        reference=order.order_number,
+
+                        reference=(
+                            order.order_number
+                        ),
+
                         created_by=(
                             request.user
                             if request.user.is_authenticated
@@ -200,14 +363,39 @@ def checkout(request):
                         ),
                     )
 
+        except Product.DoesNotExist:
+
+            messages.error(
+                request,
+                'Uno de los productos del carrito '
+                'ya no está disponible.'
+            )
+
+            return render(
+                request,
+                'cart/checkout.html',
+                {
+                    'cart': cart,
+                    'checkout_data': checkout_data,
+                }
+            )
+
         except ValidationError as error:
 
-            if hasattr(error, 'messages'):
+            if hasattr(
+                error,
+                'messages'
+            ):
+
                 error_message = ' '.join(
                     error.messages
                 )
+
             else:
-                error_message = str(error)
+
+                error_message = str(
+                    error
+                )
 
             messages.error(
                 request,
@@ -223,7 +411,9 @@ def checkout(request):
                 }
             )
 
-        request.session['last_order_id'] = order.pk
+        request.session[
+            'last_order_id'
+        ] = order.pk
 
         cart.clear()
 
@@ -248,16 +438,30 @@ def order_confirmation(request):
     )
 
     if not order_id:
+
         return redirect(
             'home'
         )
 
-    order = get_object_or_404(
-        Order.objects.prefetch_related(
-            'items'
-        ),
-        pk=order_id
-    )
+    if request.user.is_authenticated:
+
+        order = get_object_or_404(
+            Order.objects.prefetch_related(
+                'items'
+            ),
+            pk=order_id,
+            customer=request.user
+        )
+
+    else:
+
+        order = get_object_or_404(
+            Order.objects.prefetch_related(
+                'items'
+            ),
+            pk=order_id,
+            customer__isnull=True
+        )
 
     return render(
         request,
@@ -270,9 +474,9 @@ def order_confirmation(request):
 
 def order_payment(request, order_number):
 
-    order = get_object_or_404(
-        Order,
-        order_number=order_number
+    order = get_order_for_payment(
+        request,
+        order_number
     )
 
     allowed_statuses = [
@@ -282,7 +486,10 @@ def order_payment(request, order_number):
     ]
 
     if order.status not in allowed_statuses:
-        request.session['last_order_id'] = order.pk
+
+        request.session[
+            'last_order_id'
+        ] = order.pk
 
         return redirect(
             'cart:order_confirmation'
@@ -306,6 +513,7 @@ def order_payment(request, order_number):
         ]
 
         if payment_method not in valid_methods:
+
             messages.error(
                 request,
                 'Selecciona un método de pago válido.'
@@ -321,6 +529,7 @@ def order_payment(request, order_number):
             )
 
         if not payment_proof:
+
             messages.error(
                 request,
                 'Debes adjuntar el comprobante de pago.'
@@ -341,10 +550,15 @@ def order_payment(request, order_number):
             'image/webp',
         ]
 
-        if payment_proof.content_type not in allowed_content_types:
+        if (
+            payment_proof.content_type
+            not in allowed_content_types
+        ):
+
             messages.error(
                 request,
-                'El comprobante debe ser una imagen JPG, PNG o WEBP.'
+                'El comprobante debe ser una imagen '
+                'JPG, PNG o WEBP.'
             )
 
             return render(
@@ -356,9 +570,14 @@ def order_payment(request, order_number):
                 }
             )
 
-        max_size = 5 * 1024 * 1024
+        max_size = (
+            5
+            * 1024
+            * 1024
+        )
 
         if payment_proof.size > max_size:
+
             messages.error(
                 request,
                 'El comprobante no puede superar 5 MB.'
@@ -373,10 +592,21 @@ def order_payment(request, order_number):
                 }
             )
 
-        order.payment_method = payment_method
-        order.payment_proof = payment_proof
-        order.payment_proof_uploaded_at = timezone.now()
-        order.status = Order.Status.PROOF_RECEIVED
+        order.payment_method = (
+            payment_method
+        )
+
+        order.payment_proof = (
+            payment_proof
+        )
+
+        order.payment_proof_uploaded_at = (
+            timezone.now()
+        )
+
+        order.status = (
+            Order.Status.PROOF_RECEIVED
+        )
 
         order.save(
             update_fields=[
@@ -388,7 +618,9 @@ def order_payment(request, order_number):
             ]
         )
 
-        request.session['last_order_id'] = order.pk
+        request.session[
+            'last_order_id'
+        ] = order.pk
 
         messages.success(
             request,
@@ -405,14 +637,19 @@ def order_payment(request, order_number):
         'cart/order_payment.html',
         {
             'order': order,
-            'selected_payment_method': order.payment_method,
+            'selected_payment_method': (
+                order.payment_method
+            ),
         }
     )
 
 
 @require_POST
 def cart_add(request, product_id):
-    cart = Cart(request)
+
+    cart = Cart(
+        request
+    )
 
     product = get_object_or_404(
         Product,
@@ -421,19 +658,26 @@ def cart_add(request, product_id):
     )
 
     try:
+
         quantity = int(
             request.POST.get(
                 'quantity',
                 1
             )
         )
-    except (TypeError, ValueError):
+
+    except (
+        TypeError,
+        ValueError
+    ):
+
         quantity = 1
 
     if quantity < 1:
         quantity = 1
 
     if product.stock <= 0:
+
         return redirect(
             'product_detail',
             slug=product.slug
@@ -456,7 +700,8 @@ def cart_add(request, product_id):
     )
 
     available_quantity = max(
-        product.stock - current_quantity,
+        product.stock
+        - current_quantity,
         0
     )
 
@@ -466,6 +711,7 @@ def cart_add(request, product_id):
     )
 
     if quantity > 0:
+
         cart.add(
             product=product,
             quantity=quantity
@@ -478,7 +724,10 @@ def cart_add(request, product_id):
 
 @require_POST
 def cart_update(request, product_id):
-    cart = Cart(request)
+
+    cart = Cart(
+        request
+    )
 
     product = get_object_or_404(
         Product,
@@ -487,21 +736,29 @@ def cart_update(request, product_id):
     )
 
     try:
+
         quantity = int(
             request.POST.get(
                 'quantity',
                 1
             )
         )
-    except (TypeError, ValueError):
+
+    except (
+        TypeError,
+        ValueError
+    ):
+
         quantity = 1
 
     if quantity <= 0:
+
         cart.remove(
             product
         )
 
     else:
+
         quantity = min(
             quantity,
             product.stock
@@ -520,7 +777,10 @@ def cart_update(request, product_id):
 
 @require_POST
 def cart_remove(request, product_id):
-    cart = Cart(request)
+
+    cart = Cart(
+        request
+    )
 
     product = get_object_or_404(
         Product,
@@ -538,7 +798,10 @@ def cart_remove(request, product_id):
 
 @require_POST
 def cart_clear(request):
-    cart = Cart(request)
+
+    cart = Cart(
+        request
+    )
 
     cart.clear()
 

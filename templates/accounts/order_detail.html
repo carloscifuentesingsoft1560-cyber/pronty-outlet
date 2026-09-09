@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+{% load pronty_filters %}
+
+{% block title %}
+{{ order.order_number }} | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="account-page">
+
+    <div class="container">
+
+        <div class="order-detail-page">
+
+            <div class="order-detail__back">
+
+                <a href="{% url 'accounts:dashboard' %}">
+
+                    <i data-lucide="arrow-left"></i>
+
+                    Volver a mis pedidos
+
+                </a>
+
+            </div>
+
+
+            <div class="order-detail__header">
+
+                <div>
+
+                    <span class="order-detail__eyebrow">
+                        Pedido
+                    </span>
+
+                    <h1>
+                        {{ order.order_number }}
+                    </h1>
+
+                    <p>
+                        Realizado el
+                        {{ order.created_at|date:"d/m/Y" }}
+                        a las
+                        {{ order.created_at|date:"H:i" }}
+                    </p>
+
+                </div>
+
+
+                <div class="order-detail__status">
+                    {{ order.get_status_display }}
+                </div>
+
+            </div>
+
+
+            <div class="order-detail__grid">
+
+                <div class="order-detail__main">
+
+                    <section class="order-detail-card">
+
+                        <div class="order-detail-card__title">
+
+                            <i data-lucide="package"></i>
+
+                            <h2>
+                                Productos
+                            </h2>
+
+                        </div>
+
+
+                        <div class="order-detail-products">
+
+                            {% for item in order.items.all %}
+
+                                <div class="order-detail-product">
+
+                                    <div>
+
+                                        <strong>
+                                            {{ item.product_name }}
+                                        </strong>
+
+                                        <span>
+                                            SKU: {{ item.sku }}
+                                        </span>
+
+                                        <span>
+                                            Cantidad: {{ item.quantity }}
+                                        </span>
+
+                                    </div>
+
+                                    <div class="order-detail-product__price">
+
+                                        <span>
+                                            ${{ item.unit_price|currency_co }} c/u
+                                        </span>
+
+                                        <strong>
+                                            ${{ item.subtotal|currency_co }}
+                                        </strong>
+
+                                    </div>
+
+                                </div>
+
+                            {% endfor %}
+
+                        </div>
+
+
+                        <div class="order-detail-total">
+
+                            <span>
+                                Total del pedido
+                            </span>
+
+                            <strong>
+                                ${{ order.total|currency_co }}
+                            </strong>
+
+                        </div>
+
+                    </section>
+
+
+                    <section class="order-detail-card">
+
+                        <div class="order-detail-card__title">
+
+                            <i data-lucide="map-pin"></i>
+
+                            <h2>
+                                Información de entrega
+                            </h2>
+
+                        </div>
+
+
+                        <div class="order-detail-info-grid">
+
+                            <div>
+
+                                <span>
+                                    Cliente
+                                </span>
+
+                                <strong>
+                                    {{ order.customer_name }}
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    WhatsApp
+                                </span>
+
+                                <strong>
+                                    {{ order.whatsapp }}
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Departamento
+                                </span>
+
+                                <strong>
+                                    {{ order.department }}
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Ciudad
+                                </span>
+
+                                <strong>
+                                    {{ order.city }}
+                                </strong>
+
+                            </div>
+
+
+                            <div class="order-detail-info-grid__full">
+
+                                <span>
+                                    Dirección
+                                </span>
+
+                                <strong>
+                                    {{ order.address }}
+                                </strong>
+
+                            </div>
+
+
+                            {% if order.delivery_notes %}
+
+                                <div class="order-detail-info-grid__full">
+
+                                    <span>
+                                        Indicaciones de entrega
+                                    </span>
+
+                                    <strong>
+                                        {{ order.delivery_notes }}
+                                    </strong>
+
+                                </div>
+
+                            {% endif %}
+
+
+                            <div>
+
+                                <span>
+                                    Transportadora solicitada
+                                </span>
+
+                                <strong>
+                                    {{ order.carrier }}
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </section>
+
+
+                    {% if order.status == 'SHIPPED' or order.status == 'DELIVERED' %}
+
+                        <section class="order-detail-card">
+
+                            <div class="order-detail-card__title">
+
+                                <i data-lucide="truck"></i>
+
+                                <h2>
+                                    Información de envío
+                                </h2>
+
+                            </div>
+
+
+                            <div class="order-detail-shipping">
+
+                                {% if order.shipping_carrier %}
+
+                                    <div>
+
+                                        <span>
+                                            Transportadora
+                                        </span>
+
+                                        <strong>
+                                            {{ order.shipping_carrier }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if order.tracking_number %}
+
+                                    <div>
+
+                                        <span>
+                                            Número de guía
+                                        </span>
+
+                                        <strong>
+                                            {{ order.tracking_number }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if order.shipped_at %}
+
+                                    <div>
+
+                                        <span>
+                                            Fecha de envío
+                                        </span>
+
+                                        <strong>
+                                            {{ order.shipped_at|date:"d/m/Y H:i" }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if order.delivered_at %}
+
+                                    <div>
+
+                                        <span>
+                                            Fecha de entrega
+                                        </span>
+
+                                        <strong>
+                                            {{ order.delivered_at|date:"d/m/Y H:i" }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if order.shipping_notes %}
+
+                                    <div class="order-detail-shipping__full">
+
+                                        <span>
+                                            Observaciones
+                                        </span>
+
+                                        <strong>
+                                            {{ order.shipping_notes }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        </section>
+
+                    {% endif %}
+
+                </div>
+
+
+                <aside class="order-detail__sidebar">
+
+                    <section class="order-detail-card">
+
+                        <div class="order-detail-card__title">
+
+                            <i data-lucide="credit-card"></i>
+
+                            <h2>
+                                Pago
+                            </h2>
+
+                        </div>
+
+
+                        <div class="order-detail-payment">
+
+                            <div>
+
+                                <span>
+                                    Estado
+                                </span>
+
+                                <strong>
+                                    {{ order.get_status_display }}
+                                </strong>
+
+                            </div>
+
+
+                            {% if order.payment_method %}
+
+                                <div>
+
+                                    <span>
+                                        Método
+                                    </span>
+
+                                    <strong>
+                                        {{ order.get_payment_method_display }}
+                                    </strong>
+
+                                </div>
+
+                            {% endif %}
+
+
+                            {% if order.payment_proof_uploaded_at %}
+
+                                <div>
+
+                                    <span>
+                                        Comprobante enviado
+                                    </span>
+
+                                    <strong>
+                                        {{ order.payment_proof_uploaded_at|date:"d/m/Y H:i" }}
+                                    </strong>
+
+                                </div>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        {% if order.status == 'PENDING_PAYMENT' or order.status == 'PAYMENT_DECLINED' %}
+
+                            <a
+                                href="{% url 'cart:order_payment' order.order_number %}"
+                                class="order-detail-payment__button"
+                            >
+
+                                <i data-lucide="upload"></i>
+
+                                {% if order.status == 'PAYMENT_DECLINED' %}
+                                    Enviar nuevo comprobante
+                                {% else %}
+                                    Cargar comprobante
+                                {% endif %}
+
+                            </a>
+
+                        {% endif %}
+
+
+                        {% if order.status == 'PROOF_RECEIVED' %}
+
+                            <div class="order-detail-payment__notice">
+
+                                <i data-lucide="clock-3"></i>
+
+                                <span>
+                                    Recibimos tu comprobante.
+                                    Nuestro equipo está validando el pago.
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if order.status == 'PAYMENT_CONFIRMED' %}
+
+                            <div class="order-detail-payment__notice">
+
+                                <i data-lucide="circle-check"></i>
+
+                                <span>
+                                    Tu pago fue confirmado correctamente.
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if order.status == 'PREPARING' %}
+
+                            <div class="order-detail-payment__notice">
+
+                                <i data-lucide="package-check"></i>
+
+                                <span>
+                                    Estamos preparando tu pedido para despacho.
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if order.status == 'SHIPPED' %}
+
+                            <div class="order-detail-payment__notice">
+
+                                <i data-lucide="truck"></i>
+
+                                <span>
+                                    Tu pedido ya fue enviado.
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        {% if order.status == 'DELIVERED' %}
+
+                            <div class="order-detail-payment__notice">
+
+                                <i data-lucide="badge-check"></i>
+
+                                <span>
+                                    Tu pedido aparece como entregado.
+                                </span>
+
+                            </div>
+
+                        {% endif %}
+
+                    </section>
+
+                </aside>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

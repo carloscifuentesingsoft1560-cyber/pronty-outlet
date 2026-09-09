@@ -1,0 +1,177 @@
+.auth-page {
+  min-height: 70vh;
+  padding: 4rem 0 5rem;
+  background: #fffaf5;
+}
+
+.auth-card {
+  width: min(100%, 500px);
+  margin: 0 auto;
+  padding: 2rem;
+
+  border: 1px solid rgba(31, 92, 74, 0.12);
+  border-radius: 24px;
+
+  background: #fff;
+}
+
+.auth-card--register {
+  width: min(100%, 650px);
+}
+
+.auth-card__icon {
+  display: grid;
+  place-items: center;
+
+  width: 64px;
+  height: 64px;
+
+  margin-bottom: 1rem;
+
+  border-radius: 50%;
+
+  background: #eef9f4;
+  color: #1f684f;
+}
+
+.auth-card__icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.auth-card h1 {
+  margin: 0.5rem 0;
+
+  color: #1f5c4a;
+}
+
+.auth-card__intro {
+  margin: 0 0 1.5rem;
+
+  color: #666;
+
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: grid;
+
+  gap: 1rem;
+}
+
+.auth-form__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 1rem;
+}
+
+.auth-field {
+  display: grid;
+
+  gap: 0.4rem;
+}
+
+.auth-field--full {
+  grid-column: 1 / -1;
+}
+
+.auth-field label {
+  color: #1f5c4a;
+
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.auth-field input {
+  width: 100%;
+  min-height: 48px;
+
+  padding: 0 0.9rem;
+
+  border: 1px solid rgba(31, 92, 74, 0.18);
+  border-radius: 12px;
+
+  background: #fff;
+
+  outline: none;
+}
+
+.auth-field input:focus {
+  border-color: #1f684f;
+}
+
+.auth-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 0.5rem;
+
+  width: 100%;
+  min-height: 50px;
+
+  margin-top: 0.4rem;
+
+  border: 0;
+  border-radius: 999px;
+
+  background: #1f684f;
+  color: #fff;
+
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.auth-button:hover {
+  background: #185541;
+}
+
+.auth-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.auth-card__footer {
+  display: flex;
+  justify-content: center;
+
+  gap: 0.4rem;
+
+  margin-top: 1.5rem;
+
+  color: #666;
+
+  font-size: 0.9rem;
+}
+
+.auth-card__footer a {
+  color: #f04c8b;
+
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 620px) {
+  .auth-page {
+    padding: 2.5rem 0 4rem;
+  }
+
+  .auth-card {
+    padding: 1.4rem;
+  }
+
+  .auth-form__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-field--full {
+    grid-column: auto;
+  }
+
+  .auth-card__footer {
+    flex-direction: column;
+    align-items: center;
+  }
+}

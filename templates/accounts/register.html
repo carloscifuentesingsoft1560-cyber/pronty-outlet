@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Crear cuenta | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="auth-page">
+
+    <div class="container">
+
+        <div class="auth-card auth-card--register">
+
+            <div class="auth-card__icon">
+                <i data-lucide="user-plus"></i>
+            </div>
+
+            <span class="section-heading__eyebrow">
+                Pronty Outlet
+            </span>
+
+            <h1>
+                Crear cuenta
+            </h1>
+
+            <p class="auth-card__intro">
+                Regístrate para consultar tus pedidos
+                y acceder a los beneficios de Pronty.
+            </p>
+
+
+            {% if messages %}
+
+                <div class="checkout-messages">
+
+                    {% for message in messages %}
+
+                        <div class="checkout-message checkout-message--{{ message.tags }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+
+            <form method="post" class="auth-form">
+
+                {% csrf_token %}
+
+                <div class="auth-form__grid">
+
+                    <div class="auth-field">
+
+                        <label for="first_name">
+                            Nombre *
+                        </label>
+
+                        <input
+                            id="first_name"
+                            type="text"
+                            name="first_name"
+                            value="{{ register_data.first_name }}"
+                            autocomplete="given-name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="auth-field">
+
+                        <label for="last_name">
+                            Apellido
+                        </label>
+
+                        <input
+                            id="last_name"
+                            type="text"
+                            name="last_name"
+                            value="{{ register_data.last_name }}"
+                            autocomplete="family-name"
+                        >
+
+                    </div>
+
+
+                    <div class="auth-field auth-field--full">
+
+                        <label for="email">
+                            Correo electrónico *
+                        </label>
+
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            value="{{ register_data.email }}"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="auth-field">
+
+                        <label for="password">
+                            Contraseña *
+                        </label>
+
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            autocomplete="new-password"
+                            minlength="8"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="auth-field">
+
+                        <label for="password_confirm">
+                            Confirmar contraseña *
+                        </label>
+
+                        <input
+                            id="password_confirm"
+                            type="password"
+                            name="password_confirm"
+                            autocomplete="new-password"
+                            minlength="8"
+                            required
+                        >
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="auth-button"
+                >
+                    <i data-lucide="user-plus"></i>
+                    Crear mi cuenta
+                </button>
+
+            </form>
+
+
+            <div class="auth-card__footer">
+
+                <span>
+                    ¿Ya tienes una cuenta?
+                </span>
+
+                <a href="{% url 'accounts:login' %}">
+                    Iniciar sesión
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

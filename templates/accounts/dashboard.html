@@ -1,0 +1,674 @@
+{% extends 'base.html' %}
+{% load pronty_filters %}
+
+{% block title %}
+Mi cuenta | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<section class="account-page">
+
+    <div class="container">
+
+        <div class="account-layout">
+
+            <aside class="account-sidebar">
+
+                <div class="account-profile">
+
+                    <div class="account-profile__icon">
+                        <i data-lucide="user"></i>
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            {{ request.user.get_full_name|default:request.user.username }}
+                        </strong>
+
+                        <span>
+                            {{ request.user.email }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <nav class="account-nav">
+
+                    <a
+                        href="{% url 'accounts:dashboard' %}"
+                        class="account-nav__link account-nav__link--active"
+                    >
+
+                        <i data-lucide="package"></i>
+
+                        Mis pedidos
+
+                    </a>
+
+
+                    <form
+                        method="post"
+                        action="{% url 'accounts:logout' %}"
+                        class="account-nav__logout-form"
+                    >
+
+                        {% csrf_token %}
+
+                        <button
+                            type="submit"
+                            class="account-nav__link account-nav__logout"
+                        >
+
+                            <i data-lucide="log-out"></i>
+
+                            Cerrar sesión
+
+                        </button>
+
+                    </form>
+
+                </nav>
+
+            </aside>
+
+
+            <div class="account-main">
+
+                <!-- ==========================================
+                     ESTADO COMERCIAL DEL CLIENTE
+                     ========================================== -->
+
+                <section class="commercial-status-card">
+
+                    <div class="commercial-status-card__icon">
+
+                        {% if customer_profile.has_wholesale_prices %}
+
+                            <i data-lucide="badge-percent"></i>
+
+                        {% else %}
+
+                            <i data-lucide="shopping-bag"></i>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="commercial-status-card__content">
+
+                        <span class="commercial-status-card__eyebrow">
+                            Beneficios Pronty
+                        </span>
+
+
+                        <div class="commercial-status-card__heading">
+
+                            <div>
+
+                                <h2>
+                                    {{ customer_profile.get_commercial_status_display }}
+                                </h2>
+
+                            </div>
+
+
+                            {% if customer_profile.has_wholesale_prices %}
+
+                                <span
+                                    class="commercial-status-card__badge commercial-status-card__badge--active"
+                                >
+                                    Precio mayorista activo
+                                </span>
+
+                            {% else %}
+
+                                <span class="commercial-status-card__badge">
+                                    Precio detal
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- ==================================
+                             CLIENTE DETAL
+                             ================================== -->
+
+                        {% if customer_profile.commercial_status == 'RETAIL' %}
+
+                            <p>
+                                Activa tus precios mayoristas realizando
+                                una compra desde
+                                <strong>
+                                    $300.000
+                                </strong>.
+                            </p>
+
+
+                            <div class="commercial-status-card__requirement">
+
+                                <div>
+
+                                    <span>
+                                        Compra de activación
+                                    </span>
+
+                                    <strong>
+                                        $300.000
+                                    </strong>
+
+                                </div>
+
+
+                                <i data-lucide="arrow-right"></i>
+
+
+                                <div>
+
+                                    <span>
+                                        Beneficio
+                                    </span>
+
+                                    <strong>
+                                        Precio mayorista
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- ==================================
+                             MAYORISTA EN MANTENIMIENTO
+                             ================================== -->
+
+                        {% if customer_profile.commercial_status == 'WHOLESALE_MAINTENANCE' %}
+
+                            <p>
+                                Tu categoría mayorista está activa.
+                                Para conservarla debes realizar una compra
+                                mínima de
+                                <strong>
+                                    $50.000
+                                </strong>
+                                dentro de tu período de mantenimiento.
+                            </p>
+
+
+                            <div class="commercial-status-card__metrics">
+
+                                <div>
+
+                                    <span>
+                                        Compra mínima
+                                    </span>
+
+                                    <strong>
+                                        $50.000
+                                    </strong>
+
+                                </div>
+
+
+                                {% if customer_profile.maintenance_deadline %}
+
+                                    <div>
+
+                                        <span>
+                                            Fecha límite
+                                        </span>
+
+                                        <strong>
+                                            {{ customer_profile.maintenance_deadline|date:"d/m/Y" }}
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <span>
+                                            Días restantes
+                                        </span>
+
+                                        <strong>
+                                            {{ customer_profile.days_until_maintenance_deadline }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- ==================================
+                             MAYORISTA ACTIVO
+                             ================================== -->
+
+                        {% if customer_profile.commercial_status == 'WHOLESALE_ACTIVE' %}
+
+                            <p>
+                                Tienes acceso a precios mayoristas.
+                                Mantén activa tu categoría realizando
+                                compras de al menos
+                                <strong>
+                                    $50.000
+                                </strong>
+                                dentro de cada período de 30 días.
+                            </p>
+
+
+                            <div class="commercial-status-card__metrics">
+
+                                {% if customer_profile.last_wholesale_purchase_total %}
+
+                                    <div>
+
+                                        <span>
+                                            Última compra válida
+                                        </span>
+
+                                        <strong>
+                                            ${{ customer_profile.last_wholesale_purchase_total|currency_co }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+
+                                {% if customer_profile.maintenance_deadline %}
+
+                                    <div>
+
+                                        <span>
+                                            Próxima fecha límite
+                                        </span>
+
+                                        <strong>
+                                            {{ customer_profile.maintenance_deadline|date:"d/m/Y" }}
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <span>
+                                            Días restantes
+                                        </span>
+
+                                        <strong>
+                                            {{ customer_profile.days_until_maintenance_deadline }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- ==================================
+                             PERÍODO DE GRACIA
+                             ================================== -->
+
+                        {% if customer_profile.commercial_status == 'WHOLESALE_GRACE' %}
+
+                            <p>
+                                Estás en período de gracia.
+                                Conservas temporalmente tus precios mayoristas
+                                y tienes 30 días adicionales para realizar
+                                una compra mínima de
+                                <strong>
+                                    $150.000
+                                </strong>.
+                            </p>
+
+
+                            <div class="commercial-status-card__metrics">
+
+                                <div>
+
+                                    <span>
+                                        Compra para conservar categoría
+                                    </span>
+
+                                    <strong>
+                                        $150.000
+                                    </strong>
+
+                                </div>
+
+
+                                {% if customer_profile.grace_deadline %}
+
+                                    <div>
+
+                                        <span>
+                                            Fecha límite
+                                        </span>
+
+                                        <strong>
+                                            {{ customer_profile.grace_deadline|date:"d/m/Y" }}
+                                        </strong>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <span>
+                                            Días restantes
+                                        </span>
+
+                                        <strong>
+                                            {{ customer_profile.days_until_grace_deadline }}
+                                        </strong>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <!-- ==================================
+                             MAYORISTA VENCIDO
+                             ================================== -->
+
+                        {% if customer_profile.commercial_status == 'WHOLESALE_EXPIRED' %}
+
+                            <p>
+                                Tu beneficio mayorista venció.
+                                Puedes volver a activarlo realizando
+                                una nueva compra desde
+                                <strong>
+                                    $300.000
+                                </strong>.
+                            </p>
+
+
+                            <div class="commercial-status-card__requirement">
+
+                                <div>
+
+                                    <span>
+                                        Nueva activación
+                                    </span>
+
+                                    <strong>
+                                        $300.000
+                                    </strong>
+
+                                </div>
+
+
+                                <i data-lucide="refresh-cw"></i>
+
+
+                                <div>
+
+                                    <span>
+                                        Recuperas
+                                    </span>
+
+                                    <strong>
+                                        Precio mayorista
+                                    </strong>
+
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
+
+                        <div class="commercial-status-card__actions">
+
+                            <a
+                                href="{% url 'product_list' %}"
+                                class="commercial-status-card__button"
+                            >
+
+                                <i data-lucide="shopping-bag"></i>
+
+                                Ver productos
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ==========================================
+                     HISTORIAL DE PEDIDOS
+                     ========================================== -->
+
+                <div class="account-content">
+
+                    <div class="account-section-header">
+
+                        <div>
+
+                            <span>
+                                Historial
+                            </span>
+
+                            <h2>
+                                Mis pedidos
+                            </h2>
+
+                        </div>
+
+
+                        <strong>
+                            {{ orders|length }}
+                        </strong>
+
+                    </div>
+
+
+                    {% if orders %}
+
+                        <div class="account-orders">
+
+                            {% for order in orders %}
+
+                                <article class="account-order">
+
+                                    <div class="account-order__top">
+
+                                        <div>
+
+                                            <span>
+                                                Pedido
+                                            </span>
+
+                                            <strong>
+                                                {{ order.order_number }}
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div class="account-order__status">
+                                            {{ order.get_status_display }}
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="account-order__meta">
+
+                                        <div>
+
+                                            <span>
+                                                Fecha
+                                            </span>
+
+                                            <strong>
+                                                {{ order.created_at|date:"d/m/Y H:i" }}
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Total
+                                            </span>
+
+                                            <strong>
+                                                ${{ order.total|currency_co }}
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Ciudad
+                                            </span>
+
+                                            <strong>
+                                                {{ order.city }}
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="account-order__items">
+
+                                        {% for item in order.items.all %}
+
+                                            <div class="account-order__item">
+
+                                                <span>
+                                                    {{ item.quantity }}
+                                                    x
+                                                    {{ item.product_name }}
+                                                </span>
+
+                                                <strong>
+                                                    ${{ item.subtotal|currency_co }}
+                                                </strong>
+
+                                            </div>
+
+                                        {% endfor %}
+
+                                    </div>
+
+
+                                    {% if order.status == 'SHIPPED' or order.status == 'DELIVERED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="truck"></i>
+
+
+                                            <div>
+
+                                                {% if order.shipping_carrier %}
+
+                                                    <strong>
+                                                        {{ order.shipping_carrier }}
+                                                    </strong>
+
+                                                {% endif %}
+
+
+                                                {% if order.tracking_number %}
+
+                                                    <span>
+                                                        Guía:
+                                                        {{ order.tracking_number }}
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    <div class="account-order__actions">
+
+                                        <a
+                                            href="{% url 'accounts:order_detail' order.order_number %}"
+                                            class="account-order__detail-link"
+                                        >
+
+                                            <i data-lucide="eye"></i>
+
+                                            Ver detalle del pedido
+
+                                        </a>
+
+                                    </div>
+
+                                </article>
+
+                            {% endfor %}
+
+                        </div>
+
+                    {% else %}
+
+                        <div class="account-empty">
+
+                            <i data-lucide="package-open"></i>
+
+                            <h2>
+                                Aún no tienes pedidos
+                            </h2>
+
+                            <p>
+                                Cuando realices una compra,
+                                aparecerá aquí.
+                            </p>
+
+                            <a href="{% url 'product_list' %}">
+                                Ver productos
+                            </a>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

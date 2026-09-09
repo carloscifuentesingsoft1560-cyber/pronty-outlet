@@ -2,13 +2,26 @@
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{% block title %}Pronty Outlet{% endblock %}</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <title>
+        {% block title %}
+        Pronty Outlet
+        {% endblock %}
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="{% static 'css/main.css' %}"
+    >
 
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -16,6 +29,7 @@
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     >
+
 </head>
 
 <body>
@@ -24,7 +38,11 @@
 
         <div class="site-header__top container">
 
-            <a href="/" class="site-header__brand" aria-label="Pronty Outlet - Inicio">
+            <a
+                href="{% url 'home' %}"
+                class="site-header__brand"
+                aria-label="Pronty Outlet - Inicio"
+            >
 
                 <img
                     src="{% static 'images/logo/logo-pronty-horizontal.png' %}"
@@ -34,7 +52,13 @@
 
             </a>
 
-            <form class="site-header__search" action="#" method="get">
+
+            <form
+                class="site-header__search"
+                action="{% url 'product_list' %}"
+                method="get"
+            >
+
                 <i data-lucide="search"></i>
 
                 <input
@@ -44,58 +68,145 @@
                     aria-label="Buscar productos"
                 >
 
-                <button type="submit" aria-label="Buscar">
+                <button
+                    type="submit"
+                    aria-label="Buscar"
+                >
                     Buscar
                 </button>
+
             </form>
+
 
             <div class="site-header__actions">
 
-                <a href="#" class="site-header__action" aria-label="Mi cuenta">
-                    <i data-lucide="user-round"></i>
-                    <span>Mi cuenta</span>
-                </a>
+                {% if request.user.is_authenticated %}
 
-                <a href="#" class="site-header__action site-header__cart" aria-label="Carrito">
+                    {% if request.user.is_staff or request.user.is_superuser %}
+
+                        <a
+                            href="/admin/"
+                            class="site-header__action"
+                            aria-label="Administración"
+                        >
+
+                            <i data-lucide="shield-check"></i>
+
+                            <span>
+                                Administración
+                            </span>
+
+                        </a>
+
+                    {% else %}
+
+                        <a
+                            href="{% url 'accounts:dashboard' %}"
+                            class="site-header__action"
+                            aria-label="Mi cuenta"
+                        >
+
+                            <i data-lucide="user-round"></i>
+
+                            <span>
+                                Mi cuenta
+                            </span>
+
+                        </a>
+
+                    {% endif %}
+
+                {% else %}
+
+                    <a
+                        href="{% url 'accounts:login' %}"
+                        class="site-header__action"
+                        aria-label="Ingresar"
+                    >
+
+                        <i data-lucide="user-round"></i>
+
+                        <span>
+                            Ingresar
+                        </span>
+
+                    </a>
+
+                {% endif %}
+
+
+                <a
+                    href="{% url 'cart:cart_detail' %}"
+                    class="site-header__action site-header__cart"
+                    aria-label="Carrito"
+                >
+
                     <i data-lucide="shopping-bag"></i>
-                    <span>Carrito</span>
+
+                    <span>
+                        Carrito
+                    </span>
 
                     <span class="site-header__cart-count">
                         {{ cart_global|length }}
                     </span>
+
                 </a>
 
             </div>
 
         </div>
 
+
         <nav class="main-nav">
 
             <div class="container main-nav__inner">
 
-                <a href="#">
+                <a href="{% url 'product_list' %}?category=maquillaje">
+
                     <i data-lucide="sparkles"></i>
+
                     Maquillaje
+
                 </a>
 
-                <a href="#">
+
+                <a href="{% url 'product_list' %}?category=kawaii">
+
                     <i data-lucide="heart"></i>
+
                     Kawaii
+
                 </a>
 
-                <a href="#">
+
+                <a href="{% url 'product_list' %}?category=cuidado-facial-y-corporal">
+
                     <i data-lucide="droplets"></i>
+
                     Cuidado facial y corporal
+
                 </a>
 
-                <a href="#">
+
+                <a href="{% url 'product_list' %}?category=moda-shein">
+
                     <i data-lucide="shirt"></i>
+
                     Moda SHEIN
+
                 </a>
 
-                <a href="#" class="main-nav__promotion">
+
+                <a
+                    href="{% url 'product_list' %}?category=promociones"
+                    class="main-nav__promotion"
+                >
+
                     <i data-lucide="badge-percent"></i>
+
                     Promociones
+
                 </a>
 
             </div>
@@ -103,162 +214,278 @@
         </nav>
 
     </header>
+
+
     <section class="commercial-bar">
-    <div class="container commercial-bar__inner">
 
-        <div class="commercial-bar__item">
-            <i data-lucide="badge-dollar-sign"></i>
-            <span>
-                Mayorista desde <strong>$300.000</strong>
-            </span>
+        <div class="container commercial-bar__inner">
+
+            <div class="commercial-bar__item">
+
+                <i data-lucide="badge-dollar-sign"></i>
+
+                <span>
+                    Mayorista desde
+                    <strong>
+                        $300.000
+                    </strong>
+                </span>
+
+            </div>
+
+
+            <div class="commercial-bar__item">
+
+                <i data-lucide="truck"></i>
+
+                <span>
+                    Envío gratis desde
+                    <strong>
+                        $1.000.000
+                    </strong>
+                </span>
+
+            </div>
+
+
+            <div class="commercial-bar__item">
+
+                <i data-lucide="wallet-cards"></i>
+
+                <span>
+                    Pagos por Nequi y Llave
+                </span>
+
+            </div>
+
         </div>
 
-        <div class="commercial-bar__item">
-            <i data-lucide="truck"></i>
-            <span>
-                Envío gratis desde <strong>$1.000.000</strong>
-            </span>
-        </div>
-
-        <div class="commercial-bar__item">
-            <i data-lucide="wallet-cards"></i>
-            <span>
-                Pagos por Nequi y Llave
-            </span>
-        </div>
-
-    </div>
     </section>
 
+
     <main>
+
         {% block content %}
         {% endblock %}
+
     </main>
+
+
     <a
-        href="#"
+        href="https://wa.me/573183473482"
         class="whatsapp-float"
+        target="_blank"
+        rel="noopener noreferrer"
         aria-label="Contactar por WhatsApp"
     >
+
         <i class="fa-brands fa-whatsapp"></i>
+
     </a>
+
+
     <footer class="site-footer">
 
-    <div class="container site-footer__grid">
+        <div class="container site-footer__grid">
 
-        <div class="site-footer__brand">
+            <div class="site-footer__brand">
 
-            <h2>PRONTY <span>OUTLET</span></h2>
+                <h2>
+                    PRONTY
+                    <span>
+                        OUTLET
+                    </span>
+                </h2>
 
-            <p>
-                Calidad, tendencia y precio para tus compras
-                y para hacer crecer tu emprendimiento.
-            </p>
+                <p>
+                    Calidad, tendencia y precio para tus compras
+                    y para hacer crecer tu emprendimiento.
+                </p>
 
-            <div class="site-footer__social">
 
-                <a href="#" aria-label="Instagram">
-                    <i class="fa-brands fa-instagram"></i>
+                <div class="site-footer__social">
+
+                    <a
+                        href="#"
+                        aria-label="Instagram"
+                    >
+                        <i class="fa-brands fa-instagram"></i>
+                    </a>
+
+                    <a
+                        href="#"
+                        aria-label="Facebook"
+                    >
+                        <i class="fa-brands fa-facebook-f"></i>
+                    </a>
+
+                    <a
+                        href="#"
+                        aria-label="TikTok"
+                    >
+                        <i class="fa-brands fa-tiktok"></i>
+                    </a>
+
+                    <a
+                        href="https://wa.me/573183473482"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="WhatsApp"
+                    >
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <div class="site-footer__column">
+
+                <h3>
+                    Tienda
+                </h3>
+
+                <a href="{% url 'product_list' %}">
+                    Maquillaje
                 </a>
 
-                <a href="#" aria-label="Facebook">
-                    <i class="fa-brands fa-facebook-f"></i>
+                <a href="{% url 'product_list' %}">
+                    Kawaii
                 </a>
 
-                <a href="#" aria-label="TikTok">
-                    <i class="fa-brands fa-tiktok"></i>
+                <a href="{% url 'product_list' %}">
+                    Cuidado facial y corporal
                 </a>
 
-                <a href="#" aria-label="WhatsApp">
-                    <i class="fa-brands fa-whatsapp"></i>
+                <a href="{% url 'product_list' %}">
+                    Moda SHEIN
                 </a>
+
+                <a href="{% url 'product_list' %}">
+                    Promociones
+                </a>
+
+            </div>
+
+
+            <div class="site-footer__column">
+
+                <h3>
+                    Ayuda
+                </h3>
+
+                <a href="#">
+                    Cómo comprar
+                </a>
+
+                <a href="#">
+                    Contáctanos
+                </a>
+
+                <a href="#">
+                    Envíos
+                </a>
+
+                <a href="#">
+                    Cambios y devoluciones
+                </a>
+
+                <a href="#">
+                    Preguntas frecuentes
+                </a>
+
+            </div>
+
+
+            <div class="site-footer__column">
+
+                <h3>
+                    Información legal
+                </h3>
+
+                <a href="#">
+                    Términos y condiciones
+                </a>
+
+                <a href="#">
+                    Política de privacidad
+                </a>
+
+                <a href="#">
+                    Tratamiento de datos
+                </a>
+
+                <a href="#">
+                    Política de cookies
+                </a>
+
+            </div>
+
+
+            <div class="site-footer__column">
+
+                <h3>
+                    Medios de pago
+                </h3>
+
+                <div class="site-footer__payments">
+
+                    <div>
+
+                        <i data-lucide="smartphone"></i>
+
+                        <span>
+                            Nequi
+                        </span>
+
+                    </div>
+
+                    <div>
+
+                        <i data-lucide="key-round"></i>
+
+                        <span>
+                            Llave
+                        </span>
+
+                    </div>
+
+                </div>
 
             </div>
 
         </div>
 
 
-        <div class="site-footer__column">
+        <div class="site-footer__bottom">
 
-            <h3>Tienda</h3>
+            <div class="container">
 
-            <a href="#">Maquillaje</a>
-            <a href="#">Kawaii</a>
-            <a href="#">Cuidado facial y corporal</a>
-            <a href="#">Moda SHEIN</a>
-            <a href="#">Promociones</a>
+                <p>
+                    © 2026 Pronty Outlet.
+                    Todos los derechos reservados.
+                </p>
 
-        </div>
-
-
-        <div class="site-footer__column">
-
-            <h3>Ayuda</h3>
-
-            <a href="#">Cómo comprar</a>
-            <a href="#">Contáctanos</a>
-            <a href="#">Envíos</a>
-            <a href="#">Cambios y devoluciones</a>
-            <a href="#">Preguntas frecuentes</a>
-
-        </div>
-
-
-        <div class="site-footer__column">
-
-            <h3>Información legal</h3>
-
-            <a href="#">Términos y condiciones</a>
-            <a href="#">Política de privacidad</a>
-            <a href="#">Tratamiento de datos</a>
-            <a href="#">Política de cookies</a>
-
-        </div>
-
-
-        <div class="site-footer__column">
-
-            <h3>Medios de pago</h3>
-
-            <div class="site-footer__payments">
-
-                <div>
-                    <i data-lucide="smartphone"></i>
-                    <span>Nequi</span>
-                </div>
-
-                <div>
-                    <i data-lucide="key-round"></i>
-                    <span>Llave</span>
-                </div>
+                <span>
+                    Colombia
+                </span>
 
             </div>
 
         </div>
-
-    </div>
-
-
-    <div class="site-footer__bottom">
-
-        <div class="container">
-
-            <p>
-                © 2026 Pronty Outlet. Todos los derechos reservados.
-            </p>
-
-            <span>
-                Colombia
-            </span>
-
-        </div>
-
-    </div>
 
     </footer>
+
+
     <script>
         lucide.createIcons();
     </script>
-    <script src="{% static 'js/main.js' %}"></script>
+
+    <script
+        src="{% static 'js/main.js' %}"
+    ></script>
 
 </body>
+
 </html>

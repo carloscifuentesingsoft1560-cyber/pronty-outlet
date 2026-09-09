@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Página no encontrada | Pronty Outlet
+{% endblock %}
+
+{% block content %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/errors.css' %}"
+>
+
+<section class="error-page">
+
+    <div class="container">
+
+        <div class="error-page__card">
+
+            <div class="error-page__visual">
+
+                <div class="error-page__number">
+                    404
+                </div>
+
+                <div class="error-page__icon">
+
+                    <i data-lucide="package-search"></i>
+
+                </div>
+
+            </div>
+
+
+            <div class="error-page__content">
+
+                <span class="error-page__eyebrow">
+                    Pronty Outlet
+                </span>
+
+                <h1>
+                    No encontramos esta página
+                </h1>
+
+                <p>
+                    Puede que el contenido que buscas no exista,
+                    haya cambiado de dirección o no tengas permiso
+                    para acceder a él.
+                </p>
+
+
+                <div class="error-page__notice">
+
+                    <i data-lucide="shield-check"></i>
+
+                    <span>
+                        Si estabas intentando consultar un pedido,
+                        verifica que hayas iniciado sesión con la
+                        cuenta a la que pertenece.
+                    </span>
+
+                </div>
+
+
+                <div class="error-page__actions">
+
+                    {% if request.user.is_authenticated %}
+
+                        <a
+                            href="{% url 'accounts:dashboard' %}"
+                            class="error-page__button error-page__button--primary"
+                        >
+
+                            <i data-lucide="user-round"></i>
+
+                            Ir a Mi cuenta
+
+                        </a>
+
+                    {% else %}
+
+                        <a
+                            href="{% url 'accounts:login' %}"
+                            class="error-page__button error-page__button--primary"
+                        >
+
+                            <i data-lucide="log-in"></i>
+
+                            Iniciar sesión
+
+                        </a>
+
+                    {% endif %}
+
+
+                    <a
+                        href="{% url 'product_list' %}"
+                        class="error-page__button error-page__button--secondary"
+                    >
+
+                        <i data-lucide="shopping-bag"></i>
+
+                        Ir a la tienda
+
+                    </a>
+
+                </div>
+
+
+                <a
+                    href="{% url 'home' %}"
+                    class="error-page__home"
+                >
+
+                    <i data-lucide="arrow-left"></i>
+
+                    Volver al inicio
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
