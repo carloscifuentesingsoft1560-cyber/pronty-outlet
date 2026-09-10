@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
@@ -11,6 +13,9 @@ from catalog.models import InventoryMovement, Product
 
 from .cart import Cart
 from .models import Order, OrderItem
+
+
+FREE_SHIPPING_MINIMUM = Decimal('1000000.00')
 
 
 def get_order_for_payment(request, order_number):
@@ -44,9 +49,7 @@ def get_order_for_payment(request, order_number):
 
 def cart_detail(request):
 
-    cart = Cart(
-        request
-    )
+    cart = Cart(request)
 
     return render(
         request,
@@ -59,9 +62,7 @@ def cart_detail(request):
 
 def checkout(request):
 
-    cart = Cart(
-        request
-    )
+    cart = Cart(request)
 
     if len(cart) == 0:
 
@@ -191,7 +192,7 @@ def checkout(request):
             )
 
         # =====================================================
-        # FOTO COMERCIAL DEL CARRITO
+        # INFORMACIÓN COMERCIAL
         # =====================================================
 
         retail_reference_total = (
@@ -206,13 +207,25 @@ def checkout(request):
             cart.get_total_price()
         )
 
+        # =====================================================
+        # ENVÍO GRATIS DESDE $1.000.000
+        # =====================================================
+
+        free_shipping = (
+            final_order_total
+            >= FREE_SHIPPING_MINIMUM
+        )
+
+        if free_shipping:
+            shipping_cost = Decimal('0.00')
+        else:
+            shipping_cost = None
+
         try:
 
             with transaction.atomic():
 
-                cart_items = list(
-                    cart
-                )
+                cart_items = list(cart)
 
                 if not cart_items:
 
@@ -263,7 +276,11 @@ def checkout(request):
 
                 customer = None
 
-                if request.user.is_authenticated:
+                if (
+                    request.user.is_authenticated
+                    and not request.user.is_staff
+                    and not request.user.is_superuser
+                ):
                     customer = request.user
 
                 order = Order.objects.create(
@@ -309,7 +326,17 @@ def checkout(request):
                         wholesale_activation_qualified
                     ),
 
-                    total=final_order_total,
+                    free_shipping=(
+                        free_shipping
+                    ),
+
+                    shipping_cost=(
+                        shipping_cost
+                    ),
+
+                    total=(
+                        final_order_total
+                    ),
                 )
 
                 for item in validated_items:
@@ -358,7 +385,11 @@ def checkout(request):
 
                         created_by=(
                             request.user
-                            if request.user.is_authenticated
+                            if (
+                                request.user.is_authenticated
+                                and not request.user.is_staff
+                                and not request.user.is_superuser
+                            )
                             else None
                         ),
                     )
@@ -444,6 +475,15 @@ def order_confirmation(request):
         )
 
     if request.user.is_authenticated:
+
+        if (
+            request.user.is_staff
+            or request.user.is_superuser
+        ):
+
+            raise Http404(
+                'Pedido no encontrado.'
+            )
 
         order = get_object_or_404(
             Order.objects.prefetch_related(
@@ -647,9 +687,7 @@ def order_payment(request, order_number):
 @require_POST
 def cart_add(request, product_id):
 
-    cart = Cart(
-        request
-    )
+    cart = Cart(request)
 
     product = get_object_or_404(
         Product,
@@ -725,9 +763,7 @@ def cart_add(request, product_id):
 @require_POST
 def cart_update(request, product_id):
 
-    cart = Cart(
-        request
-    )
+    cart = Cart(request)
 
     product = get_object_or_404(
         Product,
@@ -778,9 +814,7 @@ def cart_update(request, product_id):
 @require_POST
 def cart_remove(request, product_id):
 
-    cart = Cart(
-        request
-    )
+    cart = Cart(request)
 
     product = get_object_or_404(
         Product,
@@ -799,9 +833,7 @@ def cart_remove(request, product_id):
 @require_POST
 def cart_clear(request):
 
-    cart = Cart(
-        request
-    )
+    cart = Cart(request)
 
     cart.clear()
 

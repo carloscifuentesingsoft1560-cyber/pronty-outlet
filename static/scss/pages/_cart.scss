@@ -1303,3 +1303,54 @@
     grid-template-columns: 1fr;
   }
 }
+.order-confirmation__shipping-free {
+    margin-top: 1.25rem;
+    padding: 1rem 1.1rem;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+
+    border: 1px solid rgba(22, 101, 75, 0.18);
+    border-radius: 14px;
+
+    background: rgba(34, 197, 94, 0.08);
+
+    color: #145c49;
+
+    &-icon {
+        width: 38px;
+        height: 38px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex-shrink: 0;
+
+        border-radius: 50%;
+
+        background: rgba(34, 197, 94, 0.14);
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+    }
+
+    div:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    strong {
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    span {
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+}

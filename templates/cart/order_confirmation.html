@@ -1,25 +1,26 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load pronty_filters %}
 
 {% block title %}
-Pedido confirmado | Pronty Outlet
+Pedido recibido | Pronty Outlet
 {% endblock %}
 
 {% block content %}
 
-<section class="cart-page">
+<section class="order-confirmation">
 
     <div class="container">
 
-        <div class="order-confirmation">
+        <div class="order-confirmation__header">
 
             <div class="order-confirmation__icon">
                 <i data-lucide="circle-check-big"></i>
             </div>
 
-            <span class="section-heading__eyebrow">
+            <p class="order-confirmation__eyebrow">
                 Pedido recibido
-            </span>
+            </p>
 
             <h1>
                 ¡Gracias por tu compra!
@@ -41,65 +42,71 @@ Pedido confirmado | Pronty Outlet
 
             </div>
 
-            <div class="order-confirmation__grid">
+        </div>
 
-                <!-- DATOS DE ENTREGA -->
-                <div class="order-confirmation__card">
 
-                    <h2>
-                        Datos de entrega
-                    </h2>
+        <div class="order-confirmation__grid">
 
-                    <p>
-                        <strong>
-                            {{ order.customer_name }}
-                        </strong>
-                    </p>
+            <article class="order-confirmation__card">
 
-                    <p>
+                <h2>
+                    Datos de entrega
+                </h2>
+
+                <div class="order-confirmation__customer">
+
+                    <strong>
+                        {{ order.customer_name }}
+                    </strong>
+
+                    <span>
                         {{ order.whatsapp }}
-                    </p>
+                    </span>
 
-                    <p>
+                    <span>
                         {{ order.email }}
-                    </p>
+                    </span>
 
-                    <p>
+                    <span>
                         {{ order.address }}
-                    </p>
+                    </span>
 
-                    <p>
+                    <span>
                         {{ order.city }}, {{ order.department }}
-                    </p>
-
-                    {% if order.delivery_notes %}
-
-                        <div class="order-confirmation__notes">
-
-                            <strong>
-                                Indicaciones:
-                            </strong>
-
-                            <span>
-                                {{ order.delivery_notes }}
-                            </span>
-
-                        </div>
-
-                    {% endif %}
+                    </span>
 
                 </div>
 
-                <!-- RESUMEN -->
-                <div class="order-confirmation__card">
+                {% if order.delivery_notes %}
 
-                    <h2>
-                        Resumen
-                    </h2>
+                    <div class="order-confirmation__notes">
+
+                        <strong>
+                            Indicaciones:
+                        </strong>
+
+                        <span>
+                            {{ order.delivery_notes }}
+                        </span>
+
+                    </div>
+
+                {% endif %}
+
+            </article>
+
+
+            <article class="order-confirmation__card">
+
+                <h2>
+                    Resumen
+                </h2>
+
+                <div class="order-confirmation__products">
 
                     {% for item in order.items.all %}
 
-                        <div class="order-confirmation__item">
+                        <div class="order-confirmation__product">
 
                             <div>
 
@@ -110,305 +117,284 @@ Pedido confirmado | Pronty Outlet
                                 <span>
                                     {{ item.quantity }}
                                     x
-                                    ${{ item.unit_price|currency_co }}
+                                    {{ item.unit_price|cop }}
                                 </span>
 
                             </div>
 
                             <strong>
-                                ${{ item.subtotal|currency_co }}
+                                {{ item.subtotal|cop }}
                             </strong>
 
                         </div>
 
                     {% endfor %}
 
-                    <div class="order-confirmation__total">
+                </div>
 
-                        <span>
-                            Total
-                        </span>
 
-                        <strong>
-                            ${{ order.total|currency_co }}
-                        </strong>
+                <div class="order-confirmation__total">
 
-                    </div>
+                    <span>
+                        Total
+                    </span>
+
+                    <strong>
+                        {{ order.total|cop }}
+                    </strong>
 
                 </div>
 
+
+                {% if order.free_shipping %}
+
+                    <div class="order-confirmation__shipping-free">
+
+                        <div class="order-confirmation__shipping-free-icon">
+
+                            <i data-lucide="truck"></i>
+
+                        </div>
+
+                        <div>
+
+                            <strong>
+                                ¡Envío gratis!
+                            </strong>
+
+                            <span>
+                                Tu compra alcanzó $1.000.000 o más.
+                                Pronty Outlet cubre el costo del envío.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+            </article>
+
+        </div>
+
+
+        <div class="order-confirmation__status">
+
+            <div class="order-confirmation__status-icon">
+                <i data-lucide="clock-3"></i>
             </div>
 
-            <!-- ESTADO DEL PEDIDO -->
-            <div class="order-confirmation__status">
+            <div>
 
-                <i data-lucide="clock-3"></i>
+                <strong>
+                    Estado del pedido:
+                    {{ order.get_status_display }}
+                </strong>
+
+                {% if order.status == 'PENDING_PAYMENT' %}
+
+                    <span>
+                        Ahora deberás continuar con el proceso de pago
+                        para confirmar tu compra.
+                    </span>
+
+                {% elif order.status == 'PROOF_RECEIVED' %}
+
+                    <span>
+                        Hemos recibido tu comprobante.
+                        El pago está pendiente de validación.
+                    </span>
+
+                {% elif order.status == 'PAYMENT_PROCESSING' %}
+
+                    <span>
+                        Estamos validando la información de tu pago.
+                    </span>
+
+                {% elif order.status == 'PAYMENT_CONFIRMED' %}
+
+                    <span>
+                        Tu pago fue confirmado correctamente.
+                    </span>
+
+                {% elif order.status == 'PAYMENT_DECLINED' %}
+
+                    <span>
+                        El comprobante de pago fue rechazado.
+                        Puedes cargar uno nuevo.
+                    </span>
+
+                {% elif order.status == 'PREPARING' %}
+
+                    <span>
+                        Estamos preparando tu pedido para despacho.
+                    </span>
+
+                {% elif order.status == 'SHIPPED' %}
+
+                    <span>
+                        Tu pedido ya fue enviado.
+                    </span>
+
+                {% elif order.status == 'DELIVERED' %}
+
+                    <span>
+                        Tu pedido fue entregado.
+                    </span>
+
+                {% elif order.status == 'CANCELED' %}
+
+                    <span>
+                        Este pedido fue cancelado.
+                    </span>
+
+                {% elif order.status == 'RESERVATION_EXPIRED' %}
+
+                    <span>
+                        La reserva de este pedido venció.
+                    </span>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        {% if order.status == 'PENDING_PAYMENT' or order.status == 'PAYMENT_DECLINED' %}
+
+            <div class="order-confirmation__payment-action">
+
+                <div class="order-confirmation__payment-action-icon">
+                    <i data-lucide="wallet-cards"></i>
+                </div>
 
                 <div>
 
                     <strong>
-                        Estado del pedido:
-                        {{ order.get_status_display }}
+                        Completa tu pago
                     </strong>
 
-                    {% if order.status == 'PENDING_PAYMENT' %}
-
-                        <p>
-                            Ahora deberás continuar con el proceso
-                            de pago para confirmar tu compra.
-                        </p>
-
-                    {% elif order.status == 'PROOF_RECEIVED' %}
-
-                        <p>
-                            Hemos recibido tu comprobante.
-                            El pago está pendiente de validación.
-                        </p>
-
-                    {% elif order.status == 'PAYMENT_CONFIRMED' %}
-
-                        <p>
-                            Tu pago fue confirmado correctamente.
-                        </p>
-
-                    {% elif order.status == 'PREPARING' %}
-
-                        <p>
-                            Tu pedido se encuentra en preparación.
-                        </p>
-
-                    {% elif order.status == 'SHIPPED' %}
-
-                        <p>
-                            Tu pedido ya fue enviado.
-                        </p>
-
-                    {% elif order.status == 'DELIVERED' %}
-
-                        <p>
-                            Tu pedido fue entregado.
-                        </p>
-
-                    {% elif order.status == 'PAYMENT_DECLINED' %}
-
-                        <p>
-                            El comprobante fue rechazado.
-                            Puedes volver a enviar un nuevo comprobante.
-                        </p>
-
-                    {% elif order.status == 'CANCELED' %}
-
-                        <p>
-                            Este pedido fue cancelado.
-                        </p>
-
-                    {% elif order.status == 'RESERVATION_EXPIRED' %}
-
-                        <p>
-                            La reserva de este pedido venció.
-                        </p>
-
-                    {% endif %}
+                    <span>
+                        Selecciona el medio de pago y adjunta tu comprobante.
+                    </span>
 
                 </div>
 
+                <a
+                    href="{% url 'cart:order_payment' order.order_number %}"
+                    class="btn btn--primary"
+                >
+                    <i data-lucide="credit-card"></i>
+                    Ir al pago
+                </a>
+
             </div>
 
-            <!-- COMPROBANTE RECIBIDO -->
-            {% if order.status == 'PROOF_RECEIVED' %}
+        {% elif order.status == 'PROOF_RECEIVED' %}
 
-                <div class="order-confirmation__proof-received">
+            <div class="order-confirmation__payment-received">
+
+                <div class="order-confirmation__payment-received-icon">
 
                     <i data-lucide="file-check-2"></i>
 
-                    <div>
+                </div>
 
-                        <strong>
-                            Comprobante recibido
-                        </strong>
+                <div>
 
-                        <p>
-                            Tu pago está pendiente de validación
-                            por Pronty Outlet.
-                        </p>
+                    <strong>
+                        Comprobante recibido
+                    </strong>
 
-                    </div>
+                    <span>
+                        Tu pago está pendiente de validación por Pronty Outlet.
+                    </span>
 
                 </div>
 
-            {% endif %}
+            </div>
 
-            <!-- MÉTODO DE PAGO -->
-            {% if order.payment_method %}
+        {% endif %}
 
-                <div class="order-confirmation__payment-info">
 
-                    <i data-lucide="wallet-cards"></i>
+        {% if order.payment_method %}
 
-                    <div>
+            <div class="order-confirmation__payment-method">
+
+                <i data-lucide="credit-card"></i>
+
+                <div>
+
+                    <span>
+                        Método de pago
+                    </span>
+
+                    <strong>
+                        {{ order.get_payment_method_display }}
+                    </strong>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+
+        {% if order.status == 'SHIPPED' and order.tracking_number %}
+
+            <div class="order-confirmation__tracking">
+
+                <div class="order-confirmation__tracking-icon">
+
+                    <i data-lucide="package-check"></i>
+
+                </div>
+
+                <div>
+
+                    <strong>
+                        Tu pedido está en camino
+                    </strong>
+
+                    {% if order.shipping_carrier %}
 
                         <span>
-                            Método de pago
+                            Transportadora:
+                            {{ order.shipping_carrier }}
                         </span>
-
-                        <strong>
-                            {{ order.get_payment_method_display }}
-                        </strong>
-
-                    </div>
-
-                </div>
-
-            {% endif %}
-
-            <!-- INFORMACIÓN DE ENVÍO -->
-            {% if order.status == 'SHIPPED' or order.status == 'DELIVERED' %}
-
-                <div class="order-confirmation__shipping">
-
-                    <div class="order-confirmation__shipping-header">
-
-                        <i data-lucide="truck"></i>
-
-                        <div>
-
-                            <span>
-                                Información de envío
-                            </span>
-
-                            <strong>
-                                Tu pedido está en camino
-                            </strong>
-
-                        </div>
-
-                    </div>
-
-                    <div class="order-confirmation__shipping-grid">
-
-                        {% if order.shipping_carrier %}
-
-                            <div class="order-confirmation__shipping-item">
-
-                                <span>
-                                    Transportadora
-                                </span>
-
-                                <strong>
-                                    {{ order.shipping_carrier }}
-                                </strong>
-
-                            </div>
-
-                        {% endif %}
-
-                        {% if order.tracking_number %}
-
-                            <div class="order-confirmation__shipping-item">
-
-                                <span>
-                                    Número de guía
-                                </span>
-
-                                <strong>
-                                    {{ order.tracking_number }}
-                                </strong>
-
-                            </div>
-
-                        {% endif %}
-
-                        {% if order.shipped_at %}
-
-                            <div class="order-confirmation__shipping-item">
-
-                                <span>
-                                    Fecha de envío
-                                </span>
-
-                                <strong>
-                                    {{ order.shipped_at|date:"d/m/Y H:i" }}
-                                </strong>
-
-                            </div>
-
-                        {% endif %}
-
-                        {% if order.delivered_at %}
-
-                            <div class="order-confirmation__shipping-item">
-
-                                <span>
-                                    Fecha de entrega
-                                </span>
-
-                                <strong>
-                                    {{ order.delivered_at|date:"d/m/Y H:i" }}
-                                </strong>
-
-                            </div>
-
-                        {% endif %}
-
-                    </div>
-
-                    {% if order.shipping_notes %}
-
-                        <div class="order-confirmation__shipping-notes">
-
-                            <strong>
-                                Observaciones de despacho
-                            </strong>
-
-                            <p>
-                                {{ order.shipping_notes }}
-                            </p>
-
-                        </div>
 
                     {% endif %}
 
+                    <span>
+                        Número de guía:
+                        {{ order.tracking_number }}
+                    </span>
+
                 </div>
 
-            {% endif %}
-
-            <!-- ACCIONES -->
-            <div class="order-confirmation__actions">
-
-                {% if order.status == 'PENDING_PAYMENT' or order.status == 'PAYMENT_DECLINED' %}
-
-                    <a
-                        href="{% url 'cart:order_payment' order.order_number %}"
-                        class="order-confirmation__button order-confirmation__button--payment"
-                    >
-                        <i data-lucide="credit-card"></i>
-
-                        {% if order.status == 'PAYMENT_DECLINED' %}
-                            Enviar nuevo comprobante
-                        {% else %}
-                            Realizar pago
-                        {% endif %}
-                    </a>
-
-                {% endif %}
-
-                <a
-                    href="{% url 'product_list' %}"
-                    class="order-confirmation__button order-confirmation__button--primary"
-                >
-                    <i data-lucide="shopping-bag"></i>
-                    Seguir comprando
-                </a>
-
-                <a
-                    href="{% url 'home' %}"
-                    class="order-confirmation__button order-confirmation__button--secondary"
-                >
-                    <i data-lucide="house"></i>
-                    Ir al inicio
-                </a>
-
             </div>
+
+        {% endif %}
+
+
+        <div class="order-confirmation__actions">
+
+            <a
+                href="{% url 'product_list' %}"
+                class="btn btn--primary"
+            >
+                <i data-lucide="shopping-bag"></i>
+                Seguir comprando
+            </a>
+
+            <a
+                href="{% url 'home' %}"
+                class="btn btn--outline"
+            >
+                <i data-lucide="house"></i>
+                Ir al inicio
+            </a>
 
         </div>
 

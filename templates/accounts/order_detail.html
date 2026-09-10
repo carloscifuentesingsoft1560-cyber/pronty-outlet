@@ -125,6 +125,34 @@
 
                         </div>
 
+
+                        {% if order.free_shipping %}
+
+                            <div class="order-detail-free-shipping">
+
+                                <div class="order-detail-free-shipping__icon">
+
+                                    <i data-lucide="truck"></i>
+
+                                </div>
+
+                                <div>
+
+                                    <strong>
+                                        ¡Envío gratis!
+                                    </strong>
+
+                                    <span>
+                                        Tu compra alcanzó $1.000.000 o más.
+                                        Pronty Outlet cubre el costo del envío.
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        {% endif %}
+
                     </section>
 
 

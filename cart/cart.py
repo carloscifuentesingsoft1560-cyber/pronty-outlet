@@ -5,6 +5,7 @@ from catalog.models import Product
 
 
 WHOLESALE_ACTIVATION_MINIMUM = Decimal('300000.00')
+FREE_SHIPPING_MINIMUM = Decimal('1000000.00')
 
 
 class Cart:
@@ -21,11 +22,6 @@ class Cart:
 
         self.cart = cart
         self.customer_profile = None
-
-        # =====================================================
-        # PERFIL COMERCIAL
-        # SOLO PARA CLIENTES REALES
-        # =====================================================
 
         if (
             request.user.is_authenticated
@@ -123,7 +119,7 @@ class Cart:
 
 
     # =========================================================
-    # ¿USA PRECIO MAYORISTA?
+    # USA PRECIO MAYORISTA
     # =========================================================
 
     def uses_wholesale_prices(self):
@@ -164,7 +160,7 @@ class Cart:
 
 
     # =========================================================
-    # ACTUALIZAR PRECIOS
+    # ACTUALIZAR PRECIOS DEL CARRITO
     # =========================================================
 
     def refresh_prices(self):
@@ -358,7 +354,7 @@ class Cart:
 
 
     # =========================================================
-    # TOTAL
+    # TOTAL REAL DE PRODUCTOS
     # =========================================================
 
     def get_total_price(self):
@@ -374,7 +370,34 @@ class Cart:
 
 
     # =========================================================
-    # FALTA PARA MAYORISTA
+    # ENVÍO GRATIS
+    # =========================================================
+
+    def qualifies_for_free_shipping(self):
+
+        return (
+            self.get_total_price()
+            >= FREE_SHIPPING_MINIMUM
+        )
+
+
+    def get_amount_to_free_shipping(self):
+
+        total = self.get_total_price()
+
+        remaining = (
+            FREE_SHIPPING_MINIMUM
+            - total
+        )
+
+        return max(
+            remaining,
+            Decimal('0.00')
+        )
+
+
+    # =========================================================
+    # FALTA PARA ACTIVACIÓN MAYORISTA
     # =========================================================
 
     def get_amount_to_wholesale_activation(self):

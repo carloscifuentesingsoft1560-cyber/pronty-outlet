@@ -33,6 +33,7 @@ class OrderAdmin(admin.ModelAdmin):
         'payment_method',
         'status',
         'total',
+        'free_shipping',
         'wholesale_activation_qualified',
         'created_at',
     )
@@ -40,6 +41,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'payment_method',
+        'free_shipping',
         'wholesale_activation_qualified',
         'created_at',
     )
@@ -58,6 +60,7 @@ class OrderAdmin(admin.ModelAdmin):
         'total',
         'retail_reference_total',
         'wholesale_activation_qualified',
+        'free_shipping',
         'commercial_benefit_processed_at',
         'commercial_benefit_result',
         'payment_proof_uploaded_at',
@@ -129,6 +132,16 @@ class OrderAdmin(admin.ModelAdmin):
         ),
 
         (
+            'Beneficio de envío',
+            {
+                'fields': (
+                    'free_shipping',
+                    'shipping_cost',
+                )
+            }
+        ),
+
+        (
             'Beneficio comercial',
             {
                 'fields': (
@@ -176,10 +189,6 @@ class OrderAdmin(admin.ModelAdmin):
     )
 
 
-    # =========================================================
-    # CONFIRMAR PAGO
-    # =========================================================
-
     @admin.action(
         description='Confirmar pago de pedidos seleccionados'
     )
@@ -190,7 +199,6 @@ class OrderAdmin(admin.ModelAdmin):
     ):
 
         confirmed = 0
-
         skipped = 0
 
         for order in queryset:
@@ -249,10 +257,6 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
-    # =========================================================
-    # RECHAZAR PAGO
-    # =========================================================
-
     @admin.action(
         description='Rechazar pago de pedidos seleccionados'
     )
@@ -263,7 +267,6 @@ class OrderAdmin(admin.ModelAdmin):
     ):
 
         updated = 0
-
         skipped = 0
 
         for order in queryset:
@@ -316,10 +319,6 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
-    # =========================================================
-    # PREPARANDO
-    # =========================================================
-
     @admin.action(
         description='Marcar pedidos seleccionados como preparando'
     )
@@ -346,10 +345,6 @@ class OrderAdmin(admin.ModelAdmin):
         )
 
 
-    # =========================================================
-    # ENVIADO
-    # =========================================================
-
     @admin.action(
         description='Marcar pedidos seleccionados como enviados'
     )
@@ -360,7 +355,6 @@ class OrderAdmin(admin.ModelAdmin):
     ):
 
         updated = 0
-
         skipped = 0
 
         for order in queryset:
@@ -424,10 +418,6 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
-    # =========================================================
-    # ENTREGADO
-    # =========================================================
-
     @admin.action(
         description='Marcar pedidos seleccionados como entregados'
     )
@@ -438,7 +428,6 @@ class OrderAdmin(admin.ModelAdmin):
     ):
 
         updated = 0
-
         skipped = 0
 
         for order in queryset:
@@ -492,10 +481,6 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
-    # =========================================================
-    # GUARDADO MANUAL
-    # =========================================================
-
     def save_model(
         self,
         request,
@@ -520,10 +505,6 @@ class OrderAdmin(admin.ModelAdmin):
                 .first()
             )
 
-        # -----------------------------------------------------
-        # CONFIRMACIÓN MANUAL DE PAGO
-        # -----------------------------------------------------
-
         if (
             obj.status
             == Order.Status.PAYMENT_CONFIRMED
@@ -536,10 +517,6 @@ class OrderAdmin(admin.ModelAdmin):
                 obj.payment_confirmed_at = (
                     timezone.now()
                 )
-
-        # -----------------------------------------------------
-        # LIMPIAR CONFIRMACIÓN SOLO CUANDO CORRESPONDE
-        # -----------------------------------------------------
 
         statuses_without_confirmed_payment = {
             Order.Status.PENDING_PAYMENT,
@@ -557,10 +534,6 @@ class OrderAdmin(admin.ModelAdmin):
 
             obj.payment_confirmed_at = None
 
-        # -----------------------------------------------------
-        # FECHA DE ENVÍO
-        # -----------------------------------------------------
-
         if (
             obj.status
             == Order.Status.SHIPPED
@@ -570,10 +543,6 @@ class OrderAdmin(admin.ModelAdmin):
             obj.shipped_at = (
                 timezone.now()
             )
-
-        # -----------------------------------------------------
-        # FECHA DE ENTREGA
-        # -----------------------------------------------------
 
         if (
             obj.status
@@ -591,10 +560,6 @@ class OrderAdmin(admin.ModelAdmin):
             form,
             change
         )
-
-        # -----------------------------------------------------
-        # PROCESAR BENEFICIO COMERCIAL
-        # -----------------------------------------------------
 
         if (
             obj.status

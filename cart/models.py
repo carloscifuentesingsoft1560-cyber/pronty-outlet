@@ -13,52 +13,42 @@ class Order(models.Model):
             'PENDING_PAYMENT',
             'Pendiente de pago'
         )
-
         PROOF_RECEIVED = (
             'PROOF_RECEIVED',
             'Comprobante recibido'
         )
-
         PAYMENT_PROCESSING = (
             'PAYMENT_PROCESSING',
             'Pago en proceso'
         )
-
         PAYMENT_CONFIRMED = (
             'PAYMENT_CONFIRMED',
             'Pago confirmado'
         )
-
         PAYMENT_DECLINED = (
             'PAYMENT_DECLINED',
             'Pago rechazado'
         )
-
         PREPARING = (
             'PREPARING',
             'Preparando pedido'
         )
-
         SHIPPED = (
             'SHIPPED',
             'Enviado'
         )
-
         DELIVERED = (
             'DELIVERED',
             'Entregado'
         )
-
         CHANGE_REQUESTED = (
             'CHANGE_REQUESTED',
             'Cambio solicitado'
         )
-
         CANCELED = (
             'CANCELED',
             'Cancelado'
         )
-
         RESERVATION_EXPIRED = (
             'RESERVATION_EXPIRED',
             'Reserva vencida'
@@ -69,12 +59,10 @@ class Order(models.Model):
             'NEQUI',
             'Nequi'
         )
-
         BRE_B = (
             'BRE_B',
             'Llave Bre-B'
         )
-
         BANCOLOMBIA = (
             'BANCOLOMBIA',
             'Bancolombia'
@@ -205,7 +193,7 @@ class Order(models.Model):
     )
 
     # =========================================================
-    # ACTIVACIÓN MAYORISTA EN LA MISMA COMPRA
+    # ACTIVACIÓN MAYORISTA
     # =========================================================
 
     retail_reference_total = models.DecimalField(
@@ -235,6 +223,23 @@ class Order(models.Model):
         blank=True,
         default='',
         verbose_name='Resultado comercial'
+    )
+
+    # =========================================================
+    # BENEFICIO DE ENVÍO
+    # =========================================================
+
+    free_shipping = models.BooleanField(
+        default=False,
+        verbose_name='Envío gratis'
+    )
+
+    shipping_cost = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        blank=True,
+        null=True,
+        verbose_name='Costo de envío'
     )
 
     # =========================================================
@@ -287,7 +292,7 @@ class Order(models.Model):
         max_digits=14,
         decimal_places=2,
         default=Decimal('0.00'),
-        verbose_name='Total'
+        verbose_name='Total de productos'
     )
 
     created_at = models.DateTimeField(
@@ -308,7 +313,6 @@ class Order(models.Model):
         ]
 
     def __str__(self):
-
         return (
             self.order_number
             or f'Pedido {self.pk}'
@@ -397,7 +401,6 @@ class OrderItem(models.Model):
         ]
 
     def __str__(self):
-
         return (
             f'{self.product_name} '
             f'x {self.quantity}'
