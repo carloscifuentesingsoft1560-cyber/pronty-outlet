@@ -47,12 +47,42 @@
 
                 </div>
 
-
                 <div class="order-detail__status">
                     {{ order.get_status_display }}
                 </div>
 
             </div>
+
+
+            {% if order.reservation_expires_at and order.status == 'PENDING_PAYMENT' or order.reservation_expires_at and order.status == 'PROOF_RECEIVED' or order.reservation_expires_at and order.status == 'PAYMENT_PROCESSING' or order.reservation_expires_at and order.status == 'PAYMENT_DECLINED' %}
+
+                <div class="order-detail-reservation">
+
+                    <div class="order-detail-reservation__icon">
+
+                        <i data-lucide="calendar-clock"></i>
+
+                    </div>
+
+                    <div>
+
+                        <strong>
+                            Reserva activa hasta el
+                            {{ order.reservation_expires_at|date:"d/m/Y" }}
+                            a las
+                            {{ order.reservation_expires_at|date:"H:i" }}
+                        </strong>
+
+                        <span>
+                            Tus productos están apartados hasta esa fecha.
+                            Completa el pago para conservar la reserva.
+                        </span>
+
+                    </div>
+
+                </div>
+
+            {% endif %}
 
 
             <div class="order-detail__grid">

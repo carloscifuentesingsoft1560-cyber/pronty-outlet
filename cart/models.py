@@ -13,66 +13,85 @@ class Order(models.Model):
             'PENDING_PAYMENT',
             'Pendiente de pago'
         )
+
         PROOF_RECEIVED = (
             'PROOF_RECEIVED',
             'Comprobante recibido'
         )
+
         PAYMENT_PROCESSING = (
             'PAYMENT_PROCESSING',
             'Pago en proceso'
         )
+
         PAYMENT_CONFIRMED = (
             'PAYMENT_CONFIRMED',
             'Pago confirmado'
         )
+
         PAYMENT_DECLINED = (
             'PAYMENT_DECLINED',
             'Pago rechazado'
         )
+
         PREPARING = (
             'PREPARING',
             'Preparando pedido'
         )
+
         SHIPPED = (
             'SHIPPED',
             'Enviado'
         )
+
         DELIVERED = (
             'DELIVERED',
             'Entregado'
         )
+
         CHANGE_REQUESTED = (
             'CHANGE_REQUESTED',
             'Cambio solicitado'
         )
+
         CANCELED = (
             'CANCELED',
             'Cancelado'
         )
+
         RESERVATION_EXPIRED = (
             'RESERVATION_EXPIRED',
             'Reserva vencida'
         )
+
 
     class PaymentMethod(models.TextChoices):
         NEQUI = (
             'NEQUI',
             'Nequi'
         )
+
         BRE_B = (
             'BRE_B',
             'Llave Bre-B'
         )
+
         BANCOLOMBIA = (
             'BANCOLOMBIA',
             'Bancolombia'
         )
+
 
     class PaymentGateway(models.TextChoices):
         WOMPI = (
             'WOMPI',
             'Wompi'
         )
+
+
+    # =========================================================
+    # CUENTA DEL CLIENTE
+    # =========================================================
 
     customer = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -82,6 +101,11 @@ class Order(models.Model):
         null=True,
         verbose_name='Cuenta del cliente'
     )
+
+
+    # =========================================================
+    # PEDIDO
+    # =========================================================
 
     order_number = models.CharField(
         max_length=30,
@@ -103,6 +127,11 @@ class Order(models.Model):
         max_length=30,
         verbose_name='WhatsApp'
     )
+
+
+    # =========================================================
+    # ENTREGA
+    # =========================================================
 
     department = models.CharField(
         max_length=120,
@@ -129,6 +158,7 @@ class Order(models.Model):
         verbose_name='Transportadora solicitada'
     )
 
+
     # =========================================================
     # PAGO MANUAL
     # =========================================================
@@ -152,6 +182,7 @@ class Order(models.Model):
         null=True,
         verbose_name='Fecha de carga del comprobante'
     )
+
 
     # =========================================================
     # PASARELA FUTURA
@@ -192,6 +223,7 @@ class Order(models.Model):
         verbose_name='Fecha de confirmación del pago'
     )
 
+
     # =========================================================
     # ACTIVACIÓN MAYORISTA
     # =========================================================
@@ -207,6 +239,7 @@ class Order(models.Model):
         default=False,
         verbose_name='Calificó para activación mayorista'
     )
+
 
     # =========================================================
     # BENEFICIO COMERCIAL
@@ -225,6 +258,7 @@ class Order(models.Model):
         verbose_name='Resultado comercial'
     )
 
+
     # =========================================================
     # BENEFICIO DE ENVÍO
     # =========================================================
@@ -241,6 +275,18 @@ class Order(models.Model):
         null=True,
         verbose_name='Costo de envío'
     )
+
+
+    # =========================================================
+    # RESERVA DEL PEDIDO
+    # =========================================================
+
+    reservation_expires_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha límite de reserva'
+    )
+
 
     # =========================================================
     # DESPACHO
@@ -277,6 +323,7 @@ class Order(models.Model):
         verbose_name='Fecha de entrega'
     )
 
+
     # =========================================================
     # ESTADO Y TOTAL
     # =========================================================
@@ -295,6 +342,11 @@ class Order(models.Model):
         verbose_name='Total de productos'
     )
 
+
+    # =========================================================
+    # FECHAS
+    # =========================================================
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Fecha de creación'
@@ -305,6 +357,7 @@ class Order(models.Model):
         verbose_name='Última actualización'
     )
 
+
     class Meta:
         verbose_name = 'Pedido'
         verbose_name_plural = 'Pedidos'
@@ -312,11 +365,14 @@ class Order(models.Model):
             '-created_at'
         ]
 
+
     def __str__(self):
+
         return (
             self.order_number
             or f'Pedido {self.pk}'
         )
+
 
     def save(self, *args, **kwargs):
 
@@ -393,6 +449,7 @@ class OrderItem(models.Model):
         auto_now_add=True
     )
 
+
     class Meta:
         verbose_name = 'Producto del pedido'
         verbose_name_plural = 'Productos del pedido'
@@ -400,7 +457,9 @@ class OrderItem(models.Model):
             'id'
         ]
 
+
     def __str__(self):
+
         return (
             f'{self.product_name} '
             f'x {self.quantity}'

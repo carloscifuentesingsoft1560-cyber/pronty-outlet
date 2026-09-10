@@ -178,11 +178,17 @@ class Product(models.Model):
 
     @property
     def is_low_stock(self):
-        return 0 < self.stock <= 5
+        return (
+            0
+            < self.stock
+            <= 5
+        )
 
     @property
     def is_out_of_stock(self):
-        return self.stock == 0
+        return (
+            self.stock == 0
+        )
 
 
 class ProductImage(models.Model):
@@ -221,20 +227,55 @@ class ProductImage(models.Model):
     class Meta:
         verbose_name = 'Imagen de producto'
         verbose_name_plural = 'Imágenes de producto'
-        ordering = ['order', 'id']
+        ordering = [
+            'order',
+            'id',
+        ]
 
     def __str__(self):
-        return f'{self.product.name} - imagen {self.pk}'
+        return (
+            f'{self.product.name} '
+            f'- imagen {self.pk}'
+        )
 
 
 class InventoryMovement(models.Model):
 
     class MovementType(models.TextChoices):
-        ENTRY = 'ENTRY', 'Entrada de inventario'
-        SALE = 'SALE', 'Venta'
-        RETURN = 'RETURN', 'Devolución'
-        ADJUSTMENT_IN = 'ADJUSTMENT_IN', 'Ajuste positivo'
-        ADJUSTMENT_OUT = 'ADJUSTMENT_OUT', 'Ajuste negativo'
+        ENTRY = (
+            'ENTRY',
+            'Entrada de inventario'
+        )
+
+        RESERVATION = (
+            'RESERVATION',
+            'Reserva de pedido'
+        )
+
+        RESERVATION_RELEASE = (
+            'RESERVATION_RELEASE',
+            'Liberación de reserva'
+        )
+
+        SALE = (
+            'SALE',
+            'Venta'
+        )
+
+        RETURN = (
+            'RETURN',
+            'Devolución'
+        )
+
+        ADJUSTMENT_IN = (
+            'ADJUSTMENT_IN',
+            'Ajuste positivo'
+        )
+
+        ADJUSTMENT_OUT = (
+            'ADJUSTMENT_OUT',
+            'Ajuste negativo'
+        )
 
     product = models.ForeignKey(
         Product,
@@ -294,27 +335,73 @@ class InventoryMovement(models.Model):
     class Meta:
         verbose_name = 'Movimiento de inventario'
         verbose_name_plural = 'Movimientos de inventario'
-        ordering = ['-created_at', '-id']
+        ordering = [
+            '-created_at',
+            '-id',
+        ]
 
     def __str__(self):
 
-        if self.movement_type == self.MovementType.ENTRY:
-            movement_label = 'Entrada de inventario'
+        if (
+            self.movement_type
+            == self.MovementType.ENTRY
+        ):
+            movement_label = (
+                'Entrada de inventario'
+            )
 
-        elif self.movement_type == self.MovementType.SALE:
-            movement_label = 'Venta'
+        elif (
+            self.movement_type
+            == self.MovementType.RESERVATION
+        ):
+            movement_label = (
+                'Reserva de pedido'
+            )
 
-        elif self.movement_type == self.MovementType.RETURN:
-            movement_label = 'Devolución'
+        elif (
+            self.movement_type
+            == self.MovementType.RESERVATION_RELEASE
+        ):
+            movement_label = (
+                'Liberación de reserva'
+            )
 
-        elif self.movement_type == self.MovementType.ADJUSTMENT_IN:
-            movement_label = 'Ajuste positivo'
+        elif (
+            self.movement_type
+            == self.MovementType.SALE
+        ):
+            movement_label = (
+                'Venta'
+            )
 
-        elif self.movement_type == self.MovementType.ADJUSTMENT_OUT:
-            movement_label = 'Ajuste negativo'
+        elif (
+            self.movement_type
+            == self.MovementType.RETURN
+        ):
+            movement_label = (
+                'Devolución'
+            )
+
+        elif (
+            self.movement_type
+            == self.MovementType.ADJUSTMENT_IN
+        ):
+            movement_label = (
+                'Ajuste positivo'
+            )
+
+        elif (
+            self.movement_type
+            == self.MovementType.ADJUSTMENT_OUT
+        ):
+            movement_label = (
+                'Ajuste negativo'
+            )
 
         else:
-            movement_label = self.movement_type
+            movement_label = (
+                self.movement_type
+            )
 
         return (
             f'{self.product.name} - '
@@ -322,71 +409,141 @@ class InventoryMovement(models.Model):
             f'{self.quantity}'
         )
 
+    # =========================================================
+    # MOVIMIENTOS QUE SUMAN INVENTARIO DISPONIBLE
+    # =========================================================
+
     @property
     def is_incoming(self):
-        return self.movement_type in {
-            self.MovementType.ENTRY,
-            self.MovementType.RETURN,
-            self.MovementType.ADJUSTMENT_IN,
-        }
+
+        return (
+            self.movement_type
+            in {
+                self.MovementType.ENTRY,
+                self.MovementType.RESERVATION_RELEASE,
+                self.MovementType.RETURN,
+                self.MovementType.ADJUSTMENT_IN,
+            }
+        )
+
+    # =========================================================
+    # MOVIMIENTOS QUE RESTAN INVENTARIO DISPONIBLE
+    # =========================================================
 
     @property
     def is_outgoing(self):
-        return self.movement_type in {
-            self.MovementType.SALE,
-            self.MovementType.ADJUSTMENT_OUT,
-        }
+
+        return (
+            self.movement_type
+            in {
+                self.MovementType.RESERVATION,
+                self.MovementType.SALE,
+                self.MovementType.ADJUSTMENT_OUT,
+            }
+        )
+
+    # =========================================================
+    # VALIDACIÓN
+    # =========================================================
 
     def clean(self):
+
         super().clean()
 
         if self.quantity <= 0:
+
             raise ValidationError({
-                'quantity': 'La cantidad debe ser mayor que cero.'
+                'quantity': (
+                    'La cantidad debe ser mayor que cero.'
+                )
             })
 
-    def save(self, *args, **kwargs):
+    # =========================================================
+    # ACTUALIZACIÓN DE INVENTARIO
+    # =========================================================
 
-        # Si el movimiento ya existe, no volver a modificar inventario.
+    def save(
+        self,
+        *args,
+        **kwargs
+    ):
+
+        # Un movimiento existente no debe volver
+        # a modificar el stock al editarse.
         if self.pk:
-            return super().save(*args, **kwargs)
+
+            return super().save(
+                *args,
+                **kwargs
+            )
 
         self.full_clean()
 
         with transaction.atomic():
 
-            product = Product.objects.select_for_update().get(
-                pk=self.product.pk
+            product = (
+                Product.objects
+                .select_for_update()
+                .get(
+                    pk=self.product.pk
+                )
             )
 
-            self.previous_stock = product.stock
+            self.previous_stock = (
+                product.stock
+            )
+
+            # =================================================
+            # ENTRADAS
+            # =================================================
 
             if self.is_incoming:
 
                 resulting_stock = (
-                    product.stock + self.quantity
+                    product.stock
+                    + self.quantity
                 )
+
+            # =================================================
+            # SALIDAS
+            # =================================================
 
             elif self.is_outgoing:
 
-                if self.quantity > product.stock:
+                if (
+                    self.quantity
+                    > product.stock
+                ):
+
                     raise ValidationError(
-                        'No hay existencias suficientes para '
-                        'registrar esta salida.'
+                        (
+                            'No hay existencias '
+                            'suficientes para registrar '
+                            'esta salida.'
+                        )
                     )
 
                 resulting_stock = (
-                    product.stock - self.quantity
+                    product.stock
+                    - self.quantity
                 )
 
             else:
+
                 raise ValidationError(
-                    'Tipo de movimiento de inventario inválido.'
+                    (
+                        'Tipo de movimiento '
+                        'de inventario inválido.'
+                    )
                 )
 
-            self.new_stock = resulting_stock
+            self.new_stock = (
+                resulting_stock
+            )
 
-            product.stock = resulting_stock
+            product.stock = (
+                resulting_stock
+            )
 
             product.save(
                 update_fields=[
@@ -395,4 +552,7 @@ class InventoryMovement(models.Model):
                 ]
             )
 
-            super().save(*args, **kwargs)
+            super().save(
+                *args,
+                **kwargs
+            )

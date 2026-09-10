@@ -1354,3 +1354,41 @@
         line-height: 1.45;
     }
 }
+.order-confirmation__reservation {
+    width: 100%;
+    margin-top: 1rem;
+    padding: 1rem 1.15rem;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+
+    border: 1px solid rgba(202, 138, 4, 0.22);
+    border-radius: 12px;
+
+    background: rgba(250, 204, 21, 0.10);
+
+    color: #6b4f00;
+
+    svg {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+
+    div {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    strong {
+        font-weight: 700;
+    }
+
+    p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.45;
+    }
+}

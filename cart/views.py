@@ -1,3 +1,4 @@
+from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib import messages
@@ -240,6 +241,10 @@ def checkout(request):
 
                 validated_items = []
 
+                # =================================================
+                # VALIDAR EXISTENCIAS
+                # =================================================
+
                 for item in cart_items:
 
                     product = (
@@ -274,6 +279,10 @@ def checkout(request):
                         }
                     )
 
+                # =================================================
+                # CLIENTE
+                # =================================================
+
                 customer = None
 
                 if (
@@ -281,7 +290,12 @@ def checkout(request):
                     and not request.user.is_staff
                     and not request.user.is_superuser
                 ):
+
                     customer = request.user
+
+                # =================================================
+                # CREAR PEDIDO
+                # =================================================
 
                 order = Order.objects.create(
                     customer=customer,
@@ -339,6 +353,26 @@ def checkout(request):
                     ),
                 )
 
+                # =================================================
+                # RESERVA EXACTA DE 3 DÍAS
+                # =================================================
+
+                order.reservation_expires_at = (
+                    order.created_at
+                    + timedelta(days=3)
+                )
+
+                order.save(
+                    update_fields=[
+                        'reservation_expires_at',
+                        'updated_at',
+                    ]
+                )
+
+                # =================================================
+                # PRODUCTOS + RESERVA DE INVENTARIO
+                # =================================================
+
                 for item in validated_items:
 
                     product = item[
@@ -363,20 +397,26 @@ def checkout(request):
                         ],
                     )
 
+                    # =============================================
+                    # IMPORTANTE:
+                    # YA NO ES UNA VENTA.
+                    # ES UNA RESERVA TEMPORAL.
+                    # =============================================
+
                     InventoryMovement.objects.create(
                         product=product,
 
                         movement_type=(
                             InventoryMovement
                             .MovementType
-                            .SALE
+                            .RESERVATION
                         ),
 
                         quantity=quantity,
 
                         reason=(
-                            f'Venta correspondiente al '
-                            f'pedido {order.order_number}'
+                            f'Reserva temporal correspondiente '
+                            f'al pedido {order.order_number}'
                         ),
 
                         reference=(
