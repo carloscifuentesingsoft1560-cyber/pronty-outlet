@@ -1,12 +1,17 @@
 from django.contrib import admin, messages
+from django.db import transaction
 from django.utils import timezone
 
 from accounts.services import process_wholesale_benefit
 
 from .models import Order, OrderItem
+from .reservation_services import (
+    finalize_inventory_reservation,
+)
 
 
 class OrderItemInline(admin.TabularInline):
+
     model = OrderItem
 
     extra = 0
@@ -32,6 +37,7 @@ class OrderAdmin(admin.ModelAdmin):
         'city',
         'payment_method',
         'status',
+        'inventory_reservation_status',
         'total',
         'free_shipping',
         'wholesale_activation_qualified',
@@ -40,6 +46,7 @@ class OrderAdmin(admin.ModelAdmin):
 
     list_filter = (
         'status',
+        'inventory_reservation_status',
         'payment_method',
         'free_shipping',
         'wholesale_activation_qualified',
@@ -65,6 +72,10 @@ class OrderAdmin(admin.ModelAdmin):
         'commercial_benefit_result',
         'payment_proof_uploaded_at',
         'payment_confirmed_at',
+        'reservation_expires_at',
+        'inventory_reservation_status',
+        'reservation_finalized_at',
+        'reservation_released_at',
         'shipped_at',
         'delivered_at',
         'created_at',
@@ -117,6 +128,18 @@ class OrderAdmin(admin.ModelAdmin):
                     'payment_proof',
                     'payment_proof_uploaded_at',
                     'payment_confirmed_at',
+                )
+            }
+        ),
+
+        (
+            'Reserva de inventario',
+            {
+                'fields': (
+                    'inventory_reservation_status',
+                    'reservation_expires_at',
+                    'reservation_finalized_at',
+                    'reservation_released_at',
                 )
             }
         ),
@@ -199,39 +222,78 @@ class OrderAdmin(admin.ModelAdmin):
     ):
 
         confirmed = 0
-        skipped = 0
+        skipped_status = 0
+        skipped_reservation = 0
 
-        for order in queryset:
+        reservation_errors = []
 
-            if (
-                order.status
-                != Order.Status.PROOF_RECEIVED
-            ):
+        for selected_order in queryset:
 
-                skipped += 1
-                continue
+            benefit_order = None
 
-            order.status = (
-                Order.Status.PAYMENT_CONFIRMED
-            )
+            with transaction.atomic():
 
-            order.payment_confirmed_at = (
-                timezone.now()
-            )
+                order = (
+                    Order.objects
+                    .select_for_update()
+                    .get(
+                        pk=selected_order.pk
+                    )
+                )
 
-            order.save(
-                update_fields=[
-                    'status',
-                    'payment_confirmed_at',
-                    'updated_at',
-                ]
-            )
+                if (
+                    order.status
+                    != Order.Status.PROOF_RECEIVED
+                ):
 
-            process_wholesale_benefit(
-                order
-            )
+                    skipped_status += 1
+                    continue
 
-            confirmed += 1
+                (
+                    reservation_ok,
+                    reservation_message
+                ) = finalize_inventory_reservation(
+                    order
+                )
+
+                if not reservation_ok:
+
+                    skipped_reservation += 1
+
+                    reservation_errors.append(
+                        (
+                            f'{order.order_number}: '
+                            f'{reservation_message}'
+                        )
+                    )
+
+                    continue
+
+                order.status = (
+                    Order.Status.PAYMENT_CONFIRMED
+                )
+
+                order.payment_confirmed_at = (
+                    timezone.now()
+                )
+
+                order.save(
+                    update_fields=[
+                        'status',
+                        'payment_confirmed_at',
+                        'updated_at',
+                    ]
+                )
+
+                benefit_order = order
+
+            if benefit_order is not None:
+
+                process_wholesale_benefit(
+                    benefit_order
+                )
+
+                confirmed += 1
 
         if confirmed:
 
@@ -239,21 +301,44 @@ class OrderAdmin(admin.ModelAdmin):
                 request,
                 (
                     f'{confirmed} pedido(s) '
-                    f'confirmado(s) correctamente.'
+                    f'confirmado(s) correctamente. '
+                    f'Las reservas fueron convertidas '
+                    f'en ventas sin descontar nuevamente '
+                    f'el inventario.'
                 ),
                 level=messages.SUCCESS
             )
 
-        if skipped:
+        if skipped_status:
 
             self.message_user(
                 request,
                 (
-                    f'{skipped} pedido(s) '
+                    f'{skipped_status} pedido(s) '
                     f'no estaban en estado '
                     f'"Comprobante recibido".'
                 ),
                 level=messages.WARNING
+            )
+
+        if skipped_reservation:
+
+            self.message_user(
+                request,
+                (
+                    f'{skipped_reservation} pedido(s) '
+                    f'no pudieron confirmarse por problemas '
+                    f'con la reserva de inventario.'
+                ),
+                level=messages.ERROR
+            )
+
+        for error in reservation_errors:
+
+            self.message_user(
+                request,
+                error,
+                level=messages.ERROR
             )
 
 
@@ -301,7 +386,8 @@ class OrderAdmin(admin.ModelAdmin):
                 request,
                 (
                     f'{updated} pedido(s) '
-                    f'marcado(s) como pago rechazado.'
+                    f'marcado(s) como pago rechazado. '
+                    f'La reserva de inventario se mantiene.'
                 ),
                 level=messages.SUCCESS
             )
@@ -490,32 +576,75 @@ class OrderAdmin(admin.ModelAdmin):
     ):
 
         previous_status = None
+        previous_order = None
 
         if change and obj.pk:
 
-            previous_status = (
+            previous_order = (
                 Order.objects
                 .filter(
                     pk=obj.pk
                 )
-                .values_list(
-                    'status',
-                    flat=True
-                )
                 .first()
             )
 
+            if previous_order:
+
+                previous_status = (
+                    previous_order.status
+                )
+
+        # =====================================================
+        # CONFIRMACIÓN MANUAL DESDE EL FORMULARIO DEL ADMIN
+        # =====================================================
+
         if (
-            obj.status
+            previous_order
+            and obj.status
             == Order.Status.PAYMENT_CONFIRMED
             and previous_status
             != Order.Status.PAYMENT_CONFIRMED
         ):
 
-            if not obj.payment_confirmed_at:
+            (
+                reservation_ok,
+                reservation_message
+            ) = finalize_inventory_reservation(
+                previous_order
+            )
+
+            if not reservation_ok:
+
+                obj.status = previous_status
+
+                self.message_user(
+                    request,
+                    (
+                        'El pago no pudo confirmarse. '
+                        f'{reservation_message}'
+                    ),
+                    level=messages.ERROR
+                )
+
+            else:
 
                 obj.payment_confirmed_at = (
                     timezone.now()
+                )
+
+                obj.inventory_reservation_status = (
+                    previous_order
+                    .inventory_reservation_status
+                )
+
+                obj.reservation_finalized_at = (
+                    previous_order
+                    .reservation_finalized_at
+                )
+
+                obj.reservation_released_at = (
+                    previous_order
+                    .reservation_released_at
                 )
 
         statuses_without_confirmed_payment = {

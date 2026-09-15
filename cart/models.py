@@ -89,6 +89,28 @@ class Order(models.Model):
         )
 
 
+    class ReservationStatus(models.TextChoices):
+        NOT_APPLICABLE = (
+            'NOT_APPLICABLE',
+            'No aplica'
+        )
+
+        ACTIVE = (
+            'ACTIVE',
+            'Reserva activa'
+        )
+
+        FINALIZED = (
+            'FINALIZED',
+            'Reserva convertida en venta'
+        )
+
+        RELEASED = (
+            'RELEASED',
+            'Reserva liberada'
+        )
+
+
     # =========================================================
     # CUENTA DEL CLIENTE
     # =========================================================
@@ -285,6 +307,25 @@ class Order(models.Model):
         blank=True,
         null=True,
         verbose_name='Fecha límite de reserva'
+    )
+
+    inventory_reservation_status = models.CharField(
+        max_length=30,
+        choices=ReservationStatus.choices,
+        default=ReservationStatus.NOT_APPLICABLE,
+        verbose_name='Estado de la reserva de inventario'
+    )
+
+    reservation_finalized_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de conversión a venta'
+    )
+
+    reservation_released_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de liberación de reserva'
     )
 
 

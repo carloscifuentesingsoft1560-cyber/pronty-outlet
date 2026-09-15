@@ -351,6 +351,16 @@ def checkout(request):
                     total=(
                         final_order_total
                     ),
+
+                    # =============================================
+                    # TODO PEDIDO NUEVO NACE CON RESERVA ACTIVA
+                    # =============================================
+
+                    inventory_reservation_status=(
+                        Order
+                        .ReservationStatus
+                        .ACTIVE
+                    ),
                 )
 
                 # =================================================
@@ -396,12 +406,6 @@ def checkout(request):
                             'subtotal'
                         ],
                     )
-
-                    # =============================================
-                    # IMPORTANTE:
-                    # YA NO ES UNA VENTA.
-                    # ES UNA RESERVA TEMPORAL.
-                    # =============================================
 
                     InventoryMovement.objects.create(
                         product=product,
