@@ -14,12 +14,20 @@ from catalog.models import InventoryMovement, Product
 
 from .cart import Cart
 from .models import Order, OrderItem
+from .reservation_services import expire_order_if_due
 
 
 FREE_SHIPPING_MINIMUM = Decimal('1000000.00')
 
 
-def get_order_for_payment(request, order_number):
+# ============================================================
+# OBTENER PEDIDO PARA PAGO
+# ============================================================
+
+def get_order_for_payment(
+    request,
+    order_number
+):
 
     if request.user.is_authenticated:
 
@@ -48,6 +56,10 @@ def get_order_for_payment(request, order_number):
     return order
 
 
+# ============================================================
+# CARRITO
+# ============================================================
+
 def cart_detail(request):
 
     cart = Cart(request)
@@ -60,6 +72,10 @@ def cart_detail(request):
         }
     )
 
+
+# ============================================================
+# CHECKOUT
+# ============================================================
 
 def checkout(request):
 
@@ -209,7 +225,7 @@ def checkout(request):
         )
 
         # =====================================================
-        # ENVÍO GRATIS DESDE $1.000.000
+        # ENVÍO GRATIS
         # =====================================================
 
         free_shipping = (
@@ -241,9 +257,9 @@ def checkout(request):
 
                 validated_items = []
 
-                # =================================================
+                # =============================================
                 # VALIDAR EXISTENCIAS
-                # =================================================
+                # =============================================
 
                 for item in cart_items:
 
@@ -279,9 +295,9 @@ def checkout(request):
                         }
                     )
 
-                # =================================================
+                # =============================================
                 # CLIENTE
-                # =================================================
+                # =============================================
 
                 customer = None
 
@@ -293,9 +309,9 @@ def checkout(request):
 
                     customer = request.user
 
-                # =================================================
+                # =============================================
                 # CREAR PEDIDO
-                # =================================================
+                # =============================================
 
                 order = Order.objects.create(
                     customer=customer,
@@ -352,10 +368,6 @@ def checkout(request):
                         final_order_total
                     ),
 
-                    # =============================================
-                    # TODO PEDIDO NUEVO NACE CON RESERVA ACTIVA
-                    # =============================================
-
                     inventory_reservation_status=(
                         Order
                         .ReservationStatus
@@ -363,9 +375,9 @@ def checkout(request):
                     ),
                 )
 
-                # =================================================
+                # =============================================
                 # RESERVA EXACTA DE 3 DÍAS
-                # =================================================
+                # =============================================
 
                 order.reservation_expires_at = (
                     order.created_at
@@ -379,9 +391,9 @@ def checkout(request):
                     ]
                 )
 
-                # =================================================
+                # =============================================
                 # PRODUCTOS + RESERVA DE INVENTARIO
-                # =================================================
+                # =============================================
 
                 for item in validated_items:
 
@@ -506,6 +518,10 @@ def checkout(request):
     )
 
 
+# ============================================================
+# CONFIRMACIÓN DEL PEDIDO
+# ============================================================
+
 def order_confirmation(request):
 
     order_id = request.session.get(
@@ -547,6 +563,29 @@ def order_confirmation(request):
             customer__isnull=True
         )
 
+    # ========================================================
+    # COMPROBAR VENCIMIENTO AL ABRIR EL PEDIDO
+    # ========================================================
+
+    expired = expire_order_if_due(
+        order
+    )
+
+    if expired:
+
+        # Actualizamos el objeto después de que el servicio
+        # haya cambiado estado y reserva.
+        order.refresh_from_db()
+
+        messages.warning(
+            request,
+            (
+                'La reserva de este pedido venció. '
+                'Los productos fueron liberados '
+                'y regresaron al inventario.'
+            )
+        )
+
     return render(
         request,
         'cart/order_confirmation.html',
@@ -556,12 +595,73 @@ def order_confirmation(request):
     )
 
 
-def order_payment(request, order_number):
+# ============================================================
+# CARGAR COMPROBANTE
+# ============================================================
+
+def order_payment(
+    request,
+    order_number
+):
 
     order = get_order_for_payment(
         request,
         order_number
     )
+
+    # ========================================================
+    # VERIFICAR LA RESERVA ANTES DE PERMITIR EL PAGO
+    # ========================================================
+
+    expired = expire_order_if_due(
+        order
+    )
+
+    if expired:
+
+        order.refresh_from_db()
+
+        request.session[
+            'last_order_id'
+        ] = order.pk
+
+        messages.error(
+            request,
+            (
+                'La reserva de este pedido ya venció. '
+                'Los productos fueron liberados '
+                'y ya no es posible cargar un comprobante.'
+            )
+        )
+
+        return redirect(
+            'cart:order_confirmation'
+        )
+
+    # ========================================================
+    # BLOQUEAR PEDIDOS CUYA RESERVA YA ESTÁ LIBERADA
+    # ========================================================
+
+    if (
+        order.inventory_reservation_status
+        == Order.ReservationStatus.RELEASED
+    ):
+
+        request.session[
+            'last_order_id'
+        ] = order.pk
+
+        messages.error(
+            request,
+            (
+                'La reserva de este pedido ya fue liberada. '
+                'No es posible registrar un pago.'
+            )
+        )
+
+        return redirect(
+            'cart:order_confirmation'
+        )
 
     allowed_statuses = [
         Order.Status.PENDING_PAYMENT,
@@ -580,6 +680,63 @@ def order_payment(request, order_number):
         )
 
     if request.method == 'POST':
+
+        # ====================================================
+        # SEGUNDA COMPROBACIÓN JUSTO ANTES DE GUARDAR
+        # ====================================================
+        #
+        # Evita que el cliente abra la página antes del
+        # vencimiento y deje el formulario abierto hasta
+        # después de la fecha límite.
+        # ====================================================
+
+        order.refresh_from_db()
+
+        expired = expire_order_if_due(
+            order
+        )
+
+        if expired:
+
+            order.refresh_from_db()
+
+            request.session[
+                'last_order_id'
+            ] = order.pk
+
+            messages.error(
+                request,
+                (
+                    'La reserva venció antes de recibir '
+                    'el comprobante. Los productos fueron '
+                    'liberados y regresaron al inventario.'
+                )
+            )
+
+            return redirect(
+                'cart:order_confirmation'
+            )
+
+        if (
+            order.inventory_reservation_status
+            == Order.ReservationStatus.RELEASED
+        ):
+
+            request.session[
+                'last_order_id'
+            ] = order.pk
+
+            messages.error(
+                request,
+                (
+                    'La reserva de este pedido ya fue liberada. '
+                    'No es posible registrar el pago.'
+                )
+            )
+
+            return redirect(
+                'cart:order_confirmation'
+            )
 
         payment_method = request.POST.get(
             'payment_method',
@@ -708,8 +865,10 @@ def order_payment(request, order_number):
 
         messages.success(
             request,
-            'Comprobante recibido correctamente. '
-            'Nuestro equipo validará el pago.'
+            (
+                'Comprobante recibido correctamente. '
+                'Nuestro equipo validará el pago.'
+            )
         )
 
         return redirect(
@@ -728,8 +887,15 @@ def order_payment(request, order_number):
     )
 
 
+# ============================================================
+# AGREGAR PRODUCTO
+# ============================================================
+
 @require_POST
-def cart_add(request, product_id):
+def cart_add(
+    request,
+    product_id
+):
 
     cart = Cart(request)
 
@@ -804,8 +970,15 @@ def cart_add(request, product_id):
     )
 
 
+# ============================================================
+# ACTUALIZAR PRODUCTO
+# ============================================================
+
 @require_POST
-def cart_update(request, product_id):
+def cart_update(
+    request,
+    product_id
+):
 
     cart = Cart(request)
 
@@ -855,8 +1028,15 @@ def cart_update(request, product_id):
     )
 
 
+# ============================================================
+# ELIMINAR PRODUCTO
+# ============================================================
+
 @require_POST
-def cart_remove(request, product_id):
+def cart_remove(
+    request,
+    product_id
+):
 
     cart = Cart(request)
 
@@ -873,6 +1053,10 @@ def cart_remove(request, product_id):
         'cart:cart_detail'
     )
 
+
+# ============================================================
+# VACIAR CARRITO
+# ============================================================
 
 @require_POST
 def cart_clear(request):
