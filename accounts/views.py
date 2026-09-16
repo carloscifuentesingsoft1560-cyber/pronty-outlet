@@ -12,6 +12,7 @@ from django.utils.translation import override
 from django.views.decorators.http import require_POST
 
 from cart.models import Order
+from cart.reservation_services import expire_order_if_due
 
 from .models import CustomerProfile
 
@@ -80,12 +81,19 @@ def get_customer_profile(user):
     return profile
 
 
+# ============================================================
+# MI CUENTA
+# ============================================================
+
 @login_required(login_url='accounts:login')
 def account_dashboard(request):
 
     # Un administrador no debe utilizar Mi cuenta
     # como si fuera un cliente.
-    if request.user.is_staff or request.user.is_superuser:
+    if (
+        request.user.is_staff
+        or request.user.is_superuser
+    ):
 
         return redirect(
             '/admin/'
@@ -99,7 +107,11 @@ def account_dashboard(request):
         request.user
     )
 
-    orders = (
+    # ========================================================
+    # CARGAR PEDIDOS DEL CLIENTE
+    # ========================================================
+
+    orders = list(
         Order.objects
         .filter(
             customer=request.user
@@ -112,6 +124,24 @@ def account_dashboard(request):
         )
     )
 
+    # ========================================================
+    # COMPROBAR RESERVAS VENCIDAS
+    # ========================================================
+    #
+    # Así "Mi cuenta" nunca muestra como activa una reserva
+    # que ya superó su fecha límite.
+    # ========================================================
+
+    for order in orders:
+
+        expired = expire_order_if_due(
+            order
+        )
+
+        if expired:
+
+            order.refresh_from_db()
+
     return render(
         request,
         'accounts/dashboard.html',
@@ -122,10 +152,20 @@ def account_dashboard(request):
     )
 
 
-@login_required(login_url='accounts:login')
-def order_detail(request, order_number):
+# ============================================================
+# DETALLE DE PEDIDO
+# ============================================================
 
-    if request.user.is_staff or request.user.is_superuser:
+@login_required(login_url='accounts:login')
+def order_detail(
+    request,
+    order_number
+):
+
+    if (
+        request.user.is_staff
+        or request.user.is_superuser
+    ):
 
         return redirect(
             '/admin/'
@@ -147,6 +187,27 @@ def order_detail(request, order_number):
         customer=request.user
     )
 
+    # ========================================================
+    # COMPROBAR VENCIMIENTO
+    # ========================================================
+
+    expired = expire_order_if_due(
+        order
+    )
+
+    if expired:
+
+        order.refresh_from_db()
+
+        messages.warning(
+            request,
+            (
+                'La reserva de este pedido venció. '
+                'Los productos fueron liberados '
+                'y regresaron al inventario.'
+            )
+        )
+
     return render(
         request,
         'accounts/order_detail.html',
@@ -156,11 +217,18 @@ def order_detail(request, order_number):
     )
 
 
+# ============================================================
+# LOGIN
+# ============================================================
+
 def account_login(request):
 
     if request.user.is_authenticated:
 
-        if request.user.is_staff or request.user.is_superuser:
+        if (
+            request.user.is_staff
+            or request.user.is_superuser
+        ):
 
             return redirect(
                 '/admin/'
@@ -319,11 +387,18 @@ def account_login(request):
     )
 
 
+# ============================================================
+# REGISTRO
+# ============================================================
+
 def account_register(request):
 
     if request.user.is_authenticated:
 
-        if request.user.is_staff or request.user.is_superuser:
+        if (
+            request.user.is_staff
+            or request.user.is_superuser
+        ):
 
             return redirect(
                 '/admin/'
@@ -578,6 +653,10 @@ def account_register(request):
         'accounts/register.html'
     )
 
+
+# ============================================================
+# CERRAR SESIÓN
+# ============================================================
 
 @require_POST
 def account_logout(request):
