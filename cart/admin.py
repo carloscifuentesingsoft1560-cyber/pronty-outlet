@@ -6,6 +6,7 @@ from accounts.services import process_wholesale_benefit
 
 from .models import Order, OrderItem
 from .reservation_services import (
+    cancel_unpaid_order,
     finalize_inventory_reservation,
 )
 
@@ -206,11 +207,16 @@ class OrderAdmin(admin.ModelAdmin):
     actions = (
         'confirm_payment',
         'reject_payment',
+        'cancel_unpaid_orders',
         'mark_as_preparing',
         'mark_as_shipped',
         'mark_as_delivered',
     )
 
+
+    # ========================================================
+    # CONFIRMAR PAGO
+    # ========================================================
 
     @admin.action(
         description='Confirmar pago de pedidos seleccionados'
@@ -342,6 +348,10 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
+    # ========================================================
+    # RECHAZAR PAGO
+    # ========================================================
+
     @admin.action(
         description='Rechazar pago de pedidos seleccionados'
     )
@@ -405,6 +415,102 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
+    # ========================================================
+    # CANCELAR PEDIDOS SIN PAGO
+    # ========================================================
+
+    @admin.action(
+        description=(
+            'Cancelar pedidos sin pago y liberar reserva'
+        )
+    )
+    def cancel_unpaid_orders(
+        self,
+        request,
+        queryset
+    ):
+
+        canceled = 0
+        skipped = 0
+        errors = []
+
+        for selected_order in queryset:
+
+            with transaction.atomic():
+
+                order = (
+                    Order.objects
+                    .select_for_update()
+                    .get(
+                        pk=selected_order.pk
+                    )
+                )
+
+                (
+                    canceled_ok,
+                    cancellation_message
+                ) = cancel_unpaid_order(
+                    order,
+                    reason=(
+                        f'Cancelación administrativa '
+                        f'del pedido '
+                        f'{order.order_number}'
+                    )
+                )
+
+                if not canceled_ok:
+
+                    skipped += 1
+
+                    errors.append(
+                        (
+                            f'{order.order_number}: '
+                            f'{cancellation_message}'
+                        )
+                    )
+
+                    continue
+
+                canceled += 1
+
+        if canceled:
+
+            self.message_user(
+                request,
+                (
+                    f'{canceled} pedido(s) '
+                    f'cancelado(s) correctamente. '
+                    f'Las reservas fueron liberadas '
+                    f'y las unidades regresaron '
+                    f'al inventario.'
+                ),
+                level=messages.SUCCESS
+            )
+
+        if skipped:
+
+            self.message_user(
+                request,
+                (
+                    f'{skipped} pedido(s) '
+                    f'no pudieron cancelarse.'
+                ),
+                level=messages.WARNING
+            )
+
+        for error in errors:
+
+            self.message_user(
+                request,
+                error,
+                level=messages.ERROR
+            )
+
+
+    # ========================================================
+    # PREPARANDO
+    # ========================================================
+
     @admin.action(
         description='Marcar pedidos seleccionados como preparando'
     )
@@ -430,6 +536,10 @@ class OrderAdmin(admin.ModelAdmin):
             level=messages.SUCCESS
         )
 
+
+    # ========================================================
+    # ENVIADO
+    # ========================================================
 
     @admin.action(
         description='Marcar pedidos seleccionados como enviados'
@@ -504,6 +614,10 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
+    # ========================================================
+    # ENTREGADO
+    # ========================================================
+
     @admin.action(
         description='Marcar pedidos seleccionados como entregados'
     )
@@ -567,6 +681,10 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
+    # ========================================================
+    # GUARDADO MANUAL DESDE EL ADMIN
+    # ========================================================
+
     def save_model(
         self,
         request,
@@ -595,7 +713,7 @@ class OrderAdmin(admin.ModelAdmin):
                 )
 
         # =====================================================
-        # CONFIRMACIÓN MANUAL DESDE EL FORMULARIO DEL ADMIN
+        # CONFIRMACIÓN MANUAL DE PAGO
         # =====================================================
 
         if (
@@ -631,6 +749,66 @@ class OrderAdmin(admin.ModelAdmin):
                 obj.payment_confirmed_at = (
                     timezone.now()
                 )
+
+                obj.inventory_reservation_status = (
+                    previous_order
+                    .inventory_reservation_status
+                )
+
+                obj.reservation_finalized_at = (
+                    previous_order
+                    .reservation_finalized_at
+                )
+
+                obj.reservation_released_at = (
+                    previous_order
+                    .reservation_released_at
+                )
+
+        # =====================================================
+        # EVITAR CANCELACIÓN MANUAL INSEGURA
+        # =====================================================
+
+        if (
+            previous_order
+            and obj.status
+            == Order.Status.CANCELED
+            and previous_status
+            != Order.Status.CANCELED
+        ):
+
+            (
+                cancellation_ok,
+                cancellation_message
+            ) = cancel_unpaid_order(
+                previous_order,
+                reason=(
+                    f'Cancelación administrativa '
+                    f'del pedido '
+                    f'{previous_order.order_number}'
+                )
+            )
+
+            if not cancellation_ok:
+
+                obj.status = previous_status
+
+                self.message_user(
+                    request,
+                    (
+                        'El pedido no pudo cancelarse. '
+                        f'{cancellation_message}'
+                    ),
+                    level=messages.ERROR
+                )
+
+            else:
+
+                obj.status = (
+                    Order.Status.CANCELED
+                )
+
+                obj.payment_confirmed_at = None
 
                 obj.inventory_reservation_status = (
                     previous_order

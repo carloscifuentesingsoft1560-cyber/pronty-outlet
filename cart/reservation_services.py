@@ -27,6 +27,16 @@ PAYMENT_REVIEW_STATUSES = {
 
 
 # ============================================================
+# ESTADOS QUE PUEDEN CANCELARSE SIN PAGO CONFIRMADO
+# ============================================================
+
+CANCELLABLE_UNPAID_STATUSES = {
+    Order.Status.PENDING_PAYMENT,
+    Order.Status.PAYMENT_DECLINED,
+}
+
+
+# ============================================================
 # FINALIZAR RESERVA
 # ============================================================
 
@@ -50,7 +60,9 @@ def finalize_inventory_reservation(order):
         locked_order = (
             Order.objects
             .select_for_update()
-            .get(pk=order.pk)
+            .get(
+                pk=order.pk
+            )
         )
 
         # ----------------------------------------------------
@@ -109,7 +121,10 @@ def finalize_inventory_reservation(order):
 
             return (
                 False,
-                'El estado de la reserva no permite finalizarla.'
+                (
+                    'El estado de la reserva '
+                    'no permite finalizarla.'
+                )
             )
 
         reservation_movements = list(
@@ -180,7 +195,10 @@ def finalize_inventory_reservation(order):
             ]
         )
 
-        # Mantener sincronizado el objeto recibido.
+        # ----------------------------------------------------
+        # SINCRONIZAR OBJETO RECIBIDO
+        # ----------------------------------------------------
+
         order.inventory_reservation_status = (
             locked_order.inventory_reservation_status
         )
@@ -217,8 +235,8 @@ def release_inventory_reservation(
 
     El nuevo movimiento suma nuevamente las existencias.
 
-    La operación es idempotente a nivel del estado del pedido:
-    solo una reserva ACTIVE puede liberarse.
+    La operación es idempotente a nivel del pedido:
+    únicamente una reserva ACTIVE puede liberarse.
 
     Retorna:
         (True, mensaje)
@@ -230,7 +248,9 @@ def release_inventory_reservation(
         locked_order = (
             Order.objects
             .select_for_update()
-            .get(pk=order.pk)
+            .get(
+                pk=order.pk
+            )
         )
 
         # ----------------------------------------------------
@@ -292,7 +312,10 @@ def release_inventory_reservation(
 
             return (
                 False,
-                'El estado de la reserva no permite liberarla.'
+                (
+                    'El estado de la reserva '
+                    'no permite liberarla.'
+                )
             )
 
         reservation_movements = list(
@@ -388,7 +411,10 @@ def release_inventory_reservation(
             update_fields=update_fields
         )
 
-        # Mantener sincronizado el objeto recibido.
+        # ----------------------------------------------------
+        # SINCRONIZAR OBJETO RECIBIDO
+        # ----------------------------------------------------
+
         order.inventory_reservation_status = (
             locked_order.inventory_reservation_status
         )
@@ -408,6 +434,238 @@ def release_inventory_reservation(
         return (
             True,
             'Reserva liberada correctamente.'
+        )
+
+
+# ============================================================
+# CANCELAR PEDIDO SIN PAGO CONFIRMADO
+# ============================================================
+
+def cancel_unpaid_order(
+    order,
+    *,
+    reason=None
+):
+    """
+    Cancela un pedido que todavía NO tiene pago confirmado.
+
+    La cancelación:
+
+        ACTIVE
+        -> libera inventario
+        -> RELEASED
+        -> CANCELED
+
+    No puede utilizarse para una venta ya finalizada.
+
+    Tampoco cancela directamente pedidos con comprobante
+    recibido o pago en revisión. En esos casos Pronty debe
+    revisar primero el comprobante.
+
+    Retorna:
+        (True, mensaje)
+        (False, mensaje)
+    """
+
+    with transaction.atomic():
+
+        locked_order = (
+            Order.objects
+            .select_for_update()
+            .get(
+                pk=order.pk
+            )
+        )
+
+        # ----------------------------------------------------
+        # YA CANCELADO
+        # ----------------------------------------------------
+
+        if (
+            locked_order.status
+            == Order.Status.CANCELED
+        ):
+
+            if (
+                locked_order.inventory_reservation_status
+                == Order.ReservationStatus.RELEASED
+            ):
+
+                return (
+                    True,
+                    'El pedido ya estaba cancelado.'
+                )
+
+            return (
+                False,
+                (
+                    'El pedido figura como cancelado, '
+                    'pero su reserva no está liberada.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # PEDIDOS ANTIGUOS
+        # ----------------------------------------------------
+
+        if (
+            locked_order.inventory_reservation_status
+            == Order.ReservationStatus.NOT_APPLICABLE
+        ):
+
+            return (
+                False,
+                (
+                    'Este pedido es anterior al sistema '
+                    'de reservas y no puede cancelarse '
+                    'mediante este proceso automático.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # VENTA YA CONFIRMADA
+        # ----------------------------------------------------
+
+        if (
+            locked_order.inventory_reservation_status
+            == Order.ReservationStatus.FINALIZED
+        ):
+
+            return (
+                False,
+                (
+                    'El pago de este pedido ya fue confirmado. '
+                    'Debe procesarse como devolución, '
+                    'no como cancelación de reserva.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # RESERVA YA LIBERADA
+        # ----------------------------------------------------
+
+        if (
+            locked_order.inventory_reservation_status
+            == Order.ReservationStatus.RELEASED
+        ):
+
+            return (
+                False,
+                (
+                    'La reserva ya fue liberada '
+                    'y el pedido no puede cancelarse '
+                    'nuevamente.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # COMPROBANTE EN REVISIÓN
+        # ----------------------------------------------------
+
+        if (
+            locked_order.status
+            in PAYMENT_REVIEW_STATUSES
+        ):
+
+            return (
+                False,
+                (
+                    'El pedido tiene un comprobante de pago '
+                    'pendiente de revisión. Revisa o rechaza '
+                    'el comprobante antes de cancelar.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # ESTADO PERMITIDO PARA CANCELACIÓN
+        # ----------------------------------------------------
+
+        if (
+            locked_order.status
+            not in CANCELLABLE_UNPAID_STATUSES
+        ):
+
+            return (
+                False,
+                (
+                    'El estado actual del pedido '
+                    'no permite cancelarlo como '
+                    'pedido sin pago.'
+                )
+            )
+
+        cancellation_reason = (
+            reason
+            or (
+                f'Cancelación del pedido '
+                f'{locked_order.order_number} '
+                f'antes de confirmar el pago'
+            )
+        )
+
+        # ----------------------------------------------------
+        # LIBERAR LA RESERVA
+        # ----------------------------------------------------
+
+        (
+            released,
+            release_message
+        ) = release_inventory_reservation(
+            locked_order,
+            mark_as_expired=False,
+            reason=cancellation_reason
+        )
+
+        if not released:
+
+            return (
+                False,
+                release_message
+            )
+
+        # ----------------------------------------------------
+        # MARCAR PEDIDO COMO CANCELADO
+        # ----------------------------------------------------
+
+        locked_order.status = (
+            Order.Status.CANCELED
+        )
+
+        locked_order.payment_confirmed_at = None
+
+        locked_order.save(
+            update_fields=[
+                'status',
+                'payment_confirmed_at',
+                'updated_at',
+            ]
+        )
+
+        # ----------------------------------------------------
+        # SINCRONIZAR OBJETO RECIBIDO
+        # ----------------------------------------------------
+
+        order.status = (
+            locked_order.status
+        )
+
+        order.inventory_reservation_status = (
+            locked_order.inventory_reservation_status
+        )
+
+        order.reservation_released_at = (
+            locked_order.reservation_released_at
+        )
+
+        order.reservation_finalized_at = (
+            locked_order.reservation_finalized_at
+        )
+
+        order.payment_confirmed_at = None
+
+        return (
+            True,
+            'Pedido cancelado y reserva liberada correctamente.'
         )
 
 
@@ -438,27 +696,32 @@ def expire_order_if_due(order):
         order.inventory_reservation_status
         != Order.ReservationStatus.ACTIVE
     ):
+
         return False
 
     if not order.reservation_expires_at:
+
         return False
 
     if (
         order.status
         in PAYMENT_REVIEW_STATUSES
     ):
+
         return False
 
     if (
         order.status
         not in EXPIRABLE_ORDER_STATUSES
     ):
+
         return False
 
     if (
         timezone.now()
         < order.reservation_expires_at
     ):
+
         return False
 
     released, _ = (
@@ -484,9 +747,10 @@ def expire_due_reservations():
     Busca pedidos cuya reserva ya venció y libera
     su inventario.
 
-    Esta función servirá posteriormente para:
+    Esta función puede utilizarse desde:
         - comando de administración;
-        - tarea programada en producción.
+        - tarea programada;
+        - scheduler de producción.
 
     Retorna la cantidad de reservas liberadas.
     """
@@ -503,14 +767,19 @@ def expire_due_reservations():
             reservation_expires_at__isnull=False,
             reservation_expires_at__lte=now,
         )
-        .order_by('id')
+        .order_by(
+            'id'
+        )
     )
 
     expired_count = 0
 
     for order in orders.iterator():
 
-        if expire_order_if_due(order):
+        if expire_order_if_due(
+            order
+        ):
+
             expired_count += 1
 
     return expired_count
