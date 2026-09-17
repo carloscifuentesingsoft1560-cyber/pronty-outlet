@@ -9,6 +9,7 @@ from catalog.models import Product
 class Order(models.Model):
 
     class Status(models.TextChoices):
+
         PENDING_PAYMENT = (
             'PENDING_PAYMENT',
             'Pendiente de pago'
@@ -54,6 +55,11 @@ class Order(models.Model):
             'Cambio solicitado'
         )
 
+        RETURNED = (
+            'RETURNED',
+            'Devuelto'
+        )
+
         CANCELED = (
             'CANCELED',
             'Cancelado'
@@ -66,6 +72,7 @@ class Order(models.Model):
 
 
     class PaymentMethod(models.TextChoices):
+
         NEQUI = (
             'NEQUI',
             'Nequi'
@@ -83,6 +90,7 @@ class Order(models.Model):
 
 
     class PaymentGateway(models.TextChoices):
+
         WOMPI = (
             'WOMPI',
             'Wompi'
@@ -90,6 +98,7 @@ class Order(models.Model):
 
 
     class ReservationStatus(models.TextChoices):
+
         NOT_APPLICABLE = (
             'NOT_APPLICABLE',
             'No aplica'
@@ -108,6 +117,24 @@ class Order(models.Model):
         RELEASED = (
             'RELEASED',
             'Reserva liberada'
+        )
+
+
+    class ReturnStatus(models.TextChoices):
+
+        NOT_RETURNED = (
+            'NOT_RETURNED',
+            'Sin devolución'
+        )
+
+        PARTIAL = (
+            'PARTIAL',
+            'Devolución parcial'
+        )
+
+        FULL = (
+            'FULL',
+            'Devolución total'
         )
 
 
@@ -330,6 +357,30 @@ class Order(models.Model):
 
 
     # =========================================================
+    # DEVOLUCIONES
+    # =========================================================
+
+    return_status = models.CharField(
+        max_length=30,
+        choices=ReturnStatus.choices,
+        default=ReturnStatus.NOT_RETURNED,
+        verbose_name='Estado de devolución'
+    )
+
+    returned_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        verbose_name='Fecha de devolución'
+    )
+
+    return_reason = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Motivo de devolución'
+    )
+
+
+    # =========================================================
     # DESPACHO
     # =========================================================
 
@@ -400,8 +451,11 @@ class Order(models.Model):
 
 
     class Meta:
+
         verbose_name = 'Pedido'
+
         verbose_name_plural = 'Pedidos'
+
         ordering = [
             '-created_at'
         ]
@@ -415,7 +469,11 @@ class Order(models.Model):
         )
 
 
-    def save(self, *args, **kwargs):
+    def save(
+        self,
+        *args,
+        **kwargs
+    ):
 
         is_new = (
             self.pk is None
@@ -492,8 +550,11 @@ class OrderItem(models.Model):
 
 
     class Meta:
+
         verbose_name = 'Producto del pedido'
+
         verbose_name_plural = 'Productos del pedido'
+
         ordering = [
             'id'
         ]

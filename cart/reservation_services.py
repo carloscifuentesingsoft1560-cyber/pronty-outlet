@@ -37,6 +37,19 @@ CANCELLABLE_UNPAID_STATUSES = {
 
 
 # ============================================================
+# ESTADOS DESDE LOS QUE PUEDE PROCESARSE UNA DEVOLUCIÓN
+# ============================================================
+
+RETURNABLE_ORDER_STATUSES = {
+    Order.Status.PAYMENT_CONFIRMED,
+    Order.Status.PREPARING,
+    Order.Status.SHIPPED,
+    Order.Status.DELIVERED,
+    Order.Status.CHANGE_REQUESTED,
+}
+
+
+# ============================================================
 # FINALIZAR RESERVA
 # ============================================================
 
@@ -666,6 +679,287 @@ def cancel_unpaid_order(
         return (
             True,
             'Pedido cancelado y reserva liberada correctamente.'
+        )
+
+
+# ============================================================
+# PROCESAR DEVOLUCIÓN TOTAL
+# ============================================================
+
+def process_full_return(
+    order,
+    *,
+    reason=None,
+    created_by=None
+):
+    """
+    Procesa la devolución total de una venta confirmada.
+
+    Por cada producto del pedido crea un movimiento RETURN.
+
+    El movimiento RETURN suma nuevamente las unidades
+    al inventario disponible.
+
+    La operación es idempotente:
+    si el pedido ya tiene devolución total, no vuelve a
+    crear movimientos ni a sumar inventario.
+
+    Retorna:
+        (True, mensaje)
+        (False, mensaje)
+    """
+
+    with transaction.atomic():
+
+        locked_order = (
+            Order.objects
+            .select_for_update()
+            .get(
+                pk=order.pk
+            )
+        )
+
+        # ----------------------------------------------------
+        # YA DEVUELTO
+        # ----------------------------------------------------
+
+        if (
+            locked_order.return_status
+            == Order.ReturnStatus.FULL
+        ):
+
+            if (
+                locked_order.status
+                == Order.Status.RETURNED
+            ):
+
+                return (
+                    True,
+                    'El pedido ya tenía devolución total.'
+                )
+
+            return (
+                False,
+                (
+                    'El pedido figura con devolución total, '
+                    'pero su estado general no es Devuelto.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # DEVOLUCIÓN PARCIAL EXISTENTE
+        # ----------------------------------------------------
+
+        if (
+            locked_order.return_status
+            == Order.ReturnStatus.PARTIAL
+        ):
+
+            return (
+                False,
+                (
+                    'El pedido ya tiene una devolución parcial. '
+                    'La devolución total deberá procesarse '
+                    'desde el módulo de devoluciones parciales.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # DEBE EXISTIR UNA VENTA REAL
+        # ----------------------------------------------------
+
+        if (
+            locked_order.inventory_reservation_status
+            != Order.ReservationStatus.FINALIZED
+        ):
+
+            return (
+                False,
+                (
+                    'El pedido no tiene una venta de inventario '
+                    'finalizada y no puede devolverse.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # ESTADO DEL PEDIDO
+        # ----------------------------------------------------
+
+        if (
+            locked_order.status
+            not in RETURNABLE_ORDER_STATUSES
+        ):
+
+            return (
+                False,
+                (
+                    'El estado actual del pedido '
+                    'no permite procesar una devolución.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # DEBE EXISTIR PAGO CONFIRMADO
+        # ----------------------------------------------------
+
+        if not locked_order.payment_confirmed_at:
+
+            return (
+                False,
+                (
+                    'El pedido no tiene fecha de '
+                    'confirmación de pago.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # VERIFICAR QUE EXISTAN MOVIMIENTOS DE VENTA
+        # ----------------------------------------------------
+
+        sale_movements = list(
+            InventoryMovement.objects
+            .select_for_update()
+            .filter(
+                reference=locked_order.order_number,
+                movement_type=(
+                    InventoryMovement
+                    .MovementType
+                    .SALE
+                )
+            )
+        )
+
+        if not sale_movements:
+
+            return (
+                False,
+                (
+                    'No se encontraron movimientos de venta '
+                    'para este pedido.'
+                )
+            )
+
+        # ----------------------------------------------------
+        # VERIFICAR QUE NO EXISTAN DEVOLUCIONES PREVIAS
+        # ----------------------------------------------------
+
+        existing_returns = (
+            InventoryMovement.objects
+            .filter(
+                reference=locked_order.order_number,
+                movement_type=(
+                    InventoryMovement
+                    .MovementType
+                    .RETURN
+                )
+            )
+            .exists()
+        )
+
+        if existing_returns:
+
+            return (
+                False,
+                (
+                    'Ya existen movimientos de devolución '
+                    'para este pedido. Se bloqueó la operación '
+                    'para evitar duplicar inventario.'
+                )
+            )
+
+        return_reason = (
+            reason
+            or (
+                f'Devolución total del pedido '
+                f'{locked_order.order_number}'
+            )
+        )
+
+        # ----------------------------------------------------
+        # DEVOLVER AL INVENTARIO LAS UNIDADES VENDIDAS
+        # ----------------------------------------------------
+        #
+        # Usamos los movimientos SALE y no solamente los
+        # OrderItem para devolver exactamente las cantidades
+        # que salieron del inventario.
+        # ----------------------------------------------------
+
+        for sale in sale_movements:
+
+            InventoryMovement.objects.create(
+                product=sale.product,
+
+                movement_type=(
+                    InventoryMovement
+                    .MovementType
+                    .RETURN
+                ),
+
+                quantity=sale.quantity,
+
+                reason=return_reason,
+
+                reference=locked_order.order_number,
+
+                created_by=created_by,
+            )
+
+        now = timezone.now()
+
+        # ----------------------------------------------------
+        # MARCAR DEVOLUCIÓN TOTAL
+        # ----------------------------------------------------
+
+        locked_order.return_status = (
+            Order.ReturnStatus.FULL
+        )
+
+        locked_order.returned_at = now
+
+        locked_order.return_reason = (
+            return_reason
+        )
+
+        locked_order.status = (
+            Order.Status.RETURNED
+        )
+
+        locked_order.save(
+            update_fields=[
+                'return_status',
+                'returned_at',
+                'return_reason',
+                'status',
+                'updated_at',
+            ]
+        )
+
+        # ----------------------------------------------------
+        # SINCRONIZAR OBJETO RECIBIDO
+        # ----------------------------------------------------
+
+        order.return_status = (
+            locked_order.return_status
+        )
+
+        order.returned_at = (
+            locked_order.returned_at
+        )
+
+        order.return_reason = (
+            locked_order.return_reason
+        )
+
+        order.status = (
+            locked_order.status
+        )
+
+        return (
+            True,
+            (
+                'Devolución total procesada correctamente. '
+                'Las unidades regresaron al inventario.'
+            )
         )
 
 

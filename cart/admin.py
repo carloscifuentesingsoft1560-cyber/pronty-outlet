@@ -8,6 +8,7 @@ from .models import Order, OrderItem
 from .reservation_services import (
     cancel_unpaid_order,
     finalize_inventory_reservation,
+    process_full_return,
 )
 
 
@@ -39,6 +40,7 @@ class OrderAdmin(admin.ModelAdmin):
         'payment_method',
         'status',
         'inventory_reservation_status',
+        'return_status',
         'total',
         'free_shipping',
         'wholesale_activation_qualified',
@@ -48,6 +50,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_filter = (
         'status',
         'inventory_reservation_status',
+        'return_status',
         'payment_method',
         'free_shipping',
         'wholesale_activation_qualified',
@@ -77,6 +80,8 @@ class OrderAdmin(admin.ModelAdmin):
         'inventory_reservation_status',
         'reservation_finalized_at',
         'reservation_released_at',
+        'return_status',
+        'returned_at',
         'shipped_at',
         'delivered_at',
         'created_at',
@@ -146,6 +151,17 @@ class OrderAdmin(admin.ModelAdmin):
         ),
 
         (
+            'Devoluciones',
+            {
+                'fields': (
+                    'return_status',
+                    'returned_at',
+                    'return_reason',
+                )
+            }
+        ),
+
+        (
             'Activación mayorista',
             {
                 'fields': (
@@ -208,6 +224,7 @@ class OrderAdmin(admin.ModelAdmin):
         'confirm_payment',
         'reject_payment',
         'cancel_unpaid_orders',
+        'process_full_returns',
         'mark_as_preparing',
         'mark_as_shipped',
         'mark_as_delivered',
@@ -508,6 +525,114 @@ class OrderAdmin(admin.ModelAdmin):
 
 
     # ========================================================
+    # DEVOLUCIÓN TOTAL
+    # ========================================================
+
+    @admin.action(
+        description=(
+            'Procesar devolución total de pedidos seleccionados'
+        )
+    )
+    def process_full_returns(
+        self,
+        request,
+        queryset
+    ):
+
+        returned = 0
+        already_returned = 0
+        skipped = 0
+        errors = []
+
+        for selected_order in queryset:
+
+            was_already_returned = (
+                selected_order.return_status
+                == Order.ReturnStatus.FULL
+            )
+
+            (
+                return_ok,
+                return_message
+            ) = process_full_return(
+                selected_order,
+                reason=(
+                    f'Devolución total administrativa '
+                    f'del pedido '
+                    f'{selected_order.order_number}'
+                ),
+                created_by=request.user,
+            )
+
+            if not return_ok:
+
+                skipped += 1
+
+                errors.append(
+                    (
+                        f'{selected_order.order_number}: '
+                        f'{return_message}'
+                    )
+                )
+
+                continue
+
+            if was_already_returned:
+
+                already_returned += 1
+
+            else:
+
+                returned += 1
+
+        if returned:
+
+            self.message_user(
+                request,
+                (
+                    f'{returned} pedido(s) '
+                    f'procesado(s) como devolución total. '
+                    f'Las unidades regresaron '
+                    f'al inventario.'
+                ),
+                level=messages.SUCCESS
+            )
+
+        if already_returned:
+
+            self.message_user(
+                request,
+                (
+                    f'{already_returned} pedido(s) '
+                    f'ya tenían devolución total. '
+                    f'No se modificó nuevamente '
+                    f'el inventario.'
+                ),
+                level=messages.INFO
+            )
+
+        if skipped:
+
+            self.message_user(
+                request,
+                (
+                    f'{skipped} pedido(s) '
+                    f'no pudieron procesarse '
+                    f'como devolución total.'
+                ),
+                level=messages.WARNING
+            )
+
+        for error in errors:
+
+            self.message_user(
+                request,
+                error,
+                level=messages.ERROR
+            )
+
+
+    # ========================================================
     # PREPARANDO
     # ========================================================
 
@@ -713,6 +838,44 @@ class OrderAdmin(admin.ModelAdmin):
                 )
 
         # =====================================================
+        # PROTEGER PEDIDOS YA DEVUELTOS
+        # =====================================================
+
+        if (
+            previous_order
+            and previous_order.return_status
+            == Order.ReturnStatus.FULL
+            and obj.status
+            != Order.Status.RETURNED
+        ):
+
+            obj.status = (
+                Order.Status.RETURNED
+            )
+
+            obj.return_status = (
+                previous_order.return_status
+            )
+
+            obj.returned_at = (
+                previous_order.returned_at
+            )
+
+            obj.return_reason = (
+                previous_order.return_reason
+            )
+
+            self.message_user(
+                request,
+                (
+                    'Este pedido ya tiene una devolución '
+                    'total procesada. Su estado no puede '
+                    'cambiarse desde el formulario.'
+                ),
+                level=messages.ERROR
+            )
+
+        # =====================================================
         # CONFIRMACIÓN MANUAL DE PAGO
         # =====================================================
 
@@ -722,6 +885,8 @@ class OrderAdmin(admin.ModelAdmin):
             == Order.Status.PAYMENT_CONFIRMED
             and previous_status
             != Order.Status.PAYMENT_CONFIRMED
+            and previous_order.return_status
+            != Order.ReturnStatus.FULL
         ):
 
             (
@@ -775,6 +940,8 @@ class OrderAdmin(admin.ModelAdmin):
             == Order.Status.CANCELED
             and previous_status
             != Order.Status.CANCELED
+            and previous_order.return_status
+            != Order.ReturnStatus.FULL
         ):
 
             (
@@ -825,6 +992,97 @@ class OrderAdmin(admin.ModelAdmin):
                     .reservation_released_at
                 )
 
+        # =====================================================
+        # EVITAR DEVOLUCIÓN MANUAL INSEGURA
+        # =====================================================
+
+        if (
+            previous_order
+            and obj.status
+            == Order.Status.RETURNED
+            and previous_status
+            != Order.Status.RETURNED
+            and previous_order.return_status
+            != Order.ReturnStatus.FULL
+        ):
+
+            return_reason = (
+                obj.return_reason.strip()
+                if obj.return_reason
+                else (
+                    f'Devolución total administrativa '
+                    f'del pedido '
+                    f'{previous_order.order_number}'
+                )
+            )
+
+            (
+                return_ok,
+                return_message
+            ) = process_full_return(
+                previous_order,
+                reason=return_reason,
+                created_by=request.user,
+            )
+
+            if not return_ok:
+
+                obj.status = previous_status
+
+                obj.return_status = (
+                    previous_order.return_status
+                )
+
+                obj.returned_at = (
+                    previous_order.returned_at
+                )
+
+                obj.return_reason = (
+                    previous_order.return_reason
+                )
+
+                self.message_user(
+                    request,
+                    (
+                        'La devolución total no pudo '
+                        'procesarse. '
+                        f'{return_message}'
+                    ),
+                    level=messages.ERROR
+                )
+
+            else:
+
+                obj.status = (
+                    previous_order.status
+                )
+
+                obj.return_status = (
+                    previous_order.return_status
+                )
+
+                obj.returned_at = (
+                    previous_order.returned_at
+                )
+
+                obj.return_reason = (
+                    previous_order.return_reason
+                )
+
+                self.message_user(
+                    request,
+                    (
+                        'Devolución total procesada '
+                        'correctamente. Las unidades '
+                        'regresaron al inventario.'
+                    ),
+                    level=messages.SUCCESS
+                )
+
+        # =====================================================
+        # ESTADOS SIN PAGO CONFIRMADO
+        # =====================================================
+
         statuses_without_confirmed_payment = {
             Order.Status.PENDING_PAYMENT,
             Order.Status.PROOF_RECEIVED,
@@ -841,6 +1099,10 @@ class OrderAdmin(admin.ModelAdmin):
 
             obj.payment_confirmed_at = None
 
+        # =====================================================
+        # FECHA DE ENVÍO
+        # =====================================================
+
         if (
             obj.status
             == Order.Status.SHIPPED
@@ -850,6 +1112,10 @@ class OrderAdmin(admin.ModelAdmin):
             obj.shipped_at = (
                 timezone.now()
             )
+
+        # =====================================================
+        # FECHA DE ENTREGA
+        # =====================================================
 
         if (
             obj.status
@@ -867,6 +1133,10 @@ class OrderAdmin(admin.ModelAdmin):
             form,
             change
         )
+
+        # =====================================================
+        # BENEFICIO MAYORISTA
+        # =====================================================
 
         if (
             obj.status
