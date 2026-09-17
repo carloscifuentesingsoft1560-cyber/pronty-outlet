@@ -1,6 +1,14 @@
+from typing import cast
+
+from django import forms
 from django.contrib import admin, messages
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
+from django.http import Http404, HttpResponseRedirect
+from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils import timezone
+from django.utils.html import format_html
 
 from accounts.services import process_wholesale_benefit
 
@@ -9,10 +17,183 @@ from .reservation_services import (
     cancel_unpaid_order,
     finalize_inventory_reservation,
     process_full_return,
+    process_partial_return,
 )
 
 
-class OrderItemInline(admin.TabularInline):
+# ============================================================
+# CAMPO DE SELECCIÓN DE PRODUCTO PARA DEVOLUCIÓN
+# ============================================================
+
+class ReturnOrderItemChoiceField(
+    forms.ModelChoiceField
+):
+
+    def label_from_instance(
+        self,
+        obj
+    ):
+
+        return (
+            f'{obj.product_name} | '
+            f'Compradas: {obj.quantity} | '
+            f'Devueltas: {obj.returned_quantity} | '
+            f'Disponibles: {obj.returnable_quantity}'
+        )
+
+
+# ============================================================
+# FORMULARIO DE DEVOLUCIÓN PARCIAL
+# ============================================================
+
+class PartialReturnAdminForm(
+    forms.Form
+):
+
+    order_item = ReturnOrderItemChoiceField(
+        queryset=OrderItem.objects.none(),
+        label='Producto'
+    )
+
+    quantity = forms.IntegerField(
+        min_value=1,
+        label='Cantidad a devolver'
+    )
+
+    reason = forms.CharField(
+        required=False,
+        label='Motivo de devolución',
+        widget=forms.Textarea(
+            attrs={
+                'rows': 4,
+                'placeholder': (
+                    'Ejemplo: talla incorrecta, '
+                    'producto defectuoso, cambio solicitado...'
+                ),
+            }
+        )
+    )
+
+
+    def __init__(
+        self,
+        *args,
+        order=None,
+        **kwargs
+    ):
+
+        super().__init__(
+            *args,
+            **kwargs
+        )
+
+        self.order = order
+
+        if order is not None:
+
+            order_item_field = cast(
+                ReturnOrderItemChoiceField,
+                self.fields['order_item']
+            )
+
+            order_item_field.queryset = (
+                OrderItem.objects
+                .filter(
+                    order=order
+                )
+                .select_related(
+                    'product'
+                )
+                .order_by(
+                    'id'
+                )
+            )
+
+
+    def clean_order_item(
+        self
+    ):
+
+        order_item = (
+            self.cleaned_data[
+                'order_item'
+            ]
+        )
+
+        if (
+            self.order is None
+            or order_item.order.pk
+            != self.order.pk
+        ):
+
+            raise forms.ValidationError(
+                (
+                    'El producto seleccionado '
+                    'no pertenece a este pedido.'
+                )
+            )
+
+        if (
+            order_item.returnable_quantity
+            <= 0
+        ):
+
+            raise forms.ValidationError(
+                (
+                    'Este producto ya fue '
+                    'devuelto completamente.'
+                )
+            )
+
+        return order_item
+
+
+    def clean(
+        self
+    ):
+
+        cleaned_data = (
+            super().clean()
+        )
+
+        order_item = (
+            cleaned_data.get(
+                'order_item'
+            )
+        )
+
+        quantity = (
+            cleaned_data.get(
+                'quantity'
+            )
+        )
+
+        if (
+            order_item
+            and quantity
+            and quantity
+            > order_item.returnable_quantity
+        ):
+
+            self.add_error(
+                'quantity',
+                (
+                    f'Solo puedes devolver '
+                    f'{order_item.returnable_quantity} '
+                    f'unidad(es) de este producto.'
+                )
+            )
+
+        return cleaned_data
+
+
+# ============================================================
+# PRODUCTOS DEL PEDIDO
+# ============================================================
+
+class OrderItemInline(
+    admin.TabularInline
+):
 
     model = OrderItem
 
@@ -25,13 +206,30 @@ class OrderItemInline(admin.TabularInline):
         'product_name',
         'sku',
         'quantity',
+        'returned_quantity',
+        'unit_price',
+        'subtotal',
+    )
+
+    fields = (
+        'product',
+        'product_name',
+        'sku',
+        'quantity',
+        'returned_quantity',
         'unit_price',
         'subtotal',
     )
 
 
+# ============================================================
+# PEDIDOS
+# ============================================================
+
 @admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
+class OrderAdmin(
+    admin.ModelAdmin
+):
 
     list_display = (
         'order_number',
@@ -82,6 +280,7 @@ class OrderAdmin(admin.ModelAdmin):
         'reservation_released_at',
         'return_status',
         'returned_at',
+        'partial_return_action',
         'shipped_at',
         'delivered_at',
         'created_at',
@@ -157,6 +356,7 @@ class OrderAdmin(admin.ModelAdmin):
                     'return_status',
                     'returned_at',
                     'return_reason',
+                    'partial_return_action',
                 )
             }
         ),
@@ -232,11 +432,277 @@ class OrderAdmin(admin.ModelAdmin):
 
 
     # ========================================================
+    # URLS PERSONALIZADAS DEL ADMIN
+    # ========================================================
+
+    def get_urls(
+        self
+    ):
+
+        default_urls = (
+            super().get_urls()
+        )
+
+        custom_urls = [
+            path(
+                (
+                    '<path:object_id>/'
+                    'devolucion-parcial/'
+                ),
+                self.admin_site.admin_view(
+                    self.partial_return_view
+                ),
+                name=(
+                    'cart_order_'
+                    'partial_return'
+                ),
+            ),
+        ]
+
+        return (
+            custom_urls
+            + default_urls
+        )
+
+
+    # ========================================================
+    # BOTÓN PARA DEVOLUCIÓN PARCIAL
+    # ========================================================
+
+    @admin.display(
+        description='Devolución parcial'
+    )
+    def partial_return_action(
+        self,
+        obj
+    ):
+
+        if not obj.pk:
+
+            return '-'
+
+        if (
+            obj.return_status
+            == Order.ReturnStatus.FULL
+        ):
+
+            return (
+                'El pedido ya tiene '
+                'devolución total.'
+            )
+
+        if (
+            obj.inventory_reservation_status
+            != Order.ReservationStatus.FINALIZED
+        ):
+
+            return (
+                'Disponible únicamente '
+                'para ventas confirmadas.'
+            )
+
+        if not obj.payment_confirmed_at:
+
+            return (
+                'El pago todavía '
+                'no está confirmado.'
+            )
+
+        url = reverse(
+            'admin:cart_order_partial_return',
+            args=[
+                obj.pk
+            ]
+        )
+
+        return format_html(
+            (
+                '<a class="button" '
+                'href="{}">'
+                'Gestionar devolución parcial'
+                '</a>'
+            ),
+            url
+        )
+
+
+    # ========================================================
+    # VISTA DE DEVOLUCIÓN PARCIAL
+    # ========================================================
+
+    def partial_return_view(
+        self,
+        request,
+        object_id
+    ):
+
+        order = (
+            self.get_object(
+                request,
+                object_id
+            )
+        )
+
+        if order is None:
+
+            raise Http404(
+                'Pedido no encontrado.'
+            )
+
+        if not self.has_change_permission(
+            request,
+            order
+        ):
+
+            raise PermissionDenied
+
+        form = PartialReturnAdminForm(
+            request.POST or None,
+            order=order,
+        )
+
+        if (
+            request.method
+            == 'POST'
+            and form.is_valid()
+        ):
+
+            order_item = (
+                form.cleaned_data[
+                    'order_item'
+                ]
+            )
+
+            quantity = (
+                form.cleaned_data[
+                    'quantity'
+                ]
+            )
+
+            reason = (
+                form.cleaned_data[
+                    'reason'
+                ].strip()
+            )
+
+            if not reason:
+
+                reason = (
+                    f'Devolución parcial '
+                    f'administrativa de '
+                    f'{order_item.product_name} '
+                    f'del pedido '
+                    f'{order.order_number}'
+                )
+
+            (
+                return_ok,
+                return_message
+            ) = process_partial_return(
+                order_item,
+                quantity,
+                reason=reason,
+                created_by=request.user,
+            )
+
+            if return_ok:
+
+                self.message_user(
+                    request,
+                    return_message,
+                    level=messages.SUCCESS
+                )
+
+                return_url = reverse(
+                    'admin:cart_order_change',
+                    args=[
+                        order.pk
+                    ]
+                )
+
+                return HttpResponseRedirect(
+                    return_url
+                )
+
+            form.add_error(
+                None,
+                return_message
+            )
+
+            self.message_user(
+                request,
+                return_message,
+                level=messages.ERROR
+            )
+
+        order_items = (
+            OrderItem.objects
+            .filter(
+                order=order
+            )
+            .select_related(
+                'product'
+            )
+            .order_by(
+                'id'
+            )
+        )
+
+        context = {
+            **self.admin_site.each_context(
+                request
+            ),
+
+            'title': (
+                'Devolución parcial '
+                f'{order.order_number}'
+            ),
+
+            'opts': (
+                self.model._meta
+            ),
+
+            'original': order,
+
+            'order': order,
+
+            'order_items': order_items,
+
+            'form': form,
+
+            'has_view_permission': (
+                self.has_view_permission(
+                    request,
+                    order
+                )
+            ),
+
+            'has_change_permission': (
+                self.has_change_permission(
+                    request,
+                    order
+                )
+            ),
+        }
+
+        return TemplateResponse(
+            request,
+            (
+                'admin/cart/order/'
+                'partial_return.html'
+            ),
+            context
+        )
+
+
+    # ========================================================
     # CONFIRMAR PAGO
     # ========================================================
 
     @admin.action(
-        description='Confirmar pago de pedidos seleccionados'
+        description=(
+            'Confirmar pago de pedidos seleccionados'
+        )
     )
     def confirm_payment(
         self,
@@ -275,8 +741,10 @@ class OrderAdmin(admin.ModelAdmin):
                 (
                     reservation_ok,
                     reservation_message
-                ) = finalize_inventory_reservation(
-                    order
+                ) = (
+                    finalize_inventory_reservation(
+                        order
+                    )
                 )
 
                 if not reservation_ok:
@@ -350,8 +818,9 @@ class OrderAdmin(admin.ModelAdmin):
                 request,
                 (
                     f'{skipped_reservation} pedido(s) '
-                    f'no pudieron confirmarse por problemas '
-                    f'con la reserva de inventario.'
+                    f'no pudieron confirmarse '
+                    f'por problemas con la reserva '
+                    f'de inventario.'
                 ),
                 level=messages.ERROR
             )
@@ -370,7 +839,9 @@ class OrderAdmin(admin.ModelAdmin):
     # ========================================================
 
     @admin.action(
-        description='Rechazar pago de pedidos seleccionados'
+        description=(
+            'Rechazar pago de pedidos seleccionados'
+        )
     )
     def reject_payment(
         self,
@@ -414,7 +885,8 @@ class OrderAdmin(admin.ModelAdmin):
                 (
                     f'{updated} pedido(s) '
                     f'marcado(s) como pago rechazado. '
-                    f'La reserva de inventario se mantiene.'
+                    f'La reserva de inventario '
+                    f'se mantiene.'
                 ),
                 level=messages.SUCCESS
             )
@@ -438,7 +910,8 @@ class OrderAdmin(admin.ModelAdmin):
 
     @admin.action(
         description=(
-            'Cancelar pedidos sin pago y liberar reserva'
+            'Cancelar pedidos sin pago '
+            'y liberar reserva'
         )
     )
     def cancel_unpaid_orders(
@@ -530,7 +1003,8 @@ class OrderAdmin(admin.ModelAdmin):
 
     @admin.action(
         description=(
-            'Procesar devolución total de pedidos seleccionados'
+            'Procesar devolución total '
+            'de pedidos seleccionados'
         )
     )
     def process_full_returns(
@@ -557,8 +1031,8 @@ class OrderAdmin(admin.ModelAdmin):
             ) = process_full_return(
                 selected_order,
                 reason=(
-                    f'Devolución total administrativa '
-                    f'del pedido '
+                    f'Devolución total '
+                    f'administrativa del pedido '
                     f'{selected_order.order_number}'
                 ),
                 created_by=request.user,
@@ -591,9 +1065,9 @@ class OrderAdmin(admin.ModelAdmin):
                 request,
                 (
                     f'{returned} pedido(s) '
-                    f'procesado(s) como devolución total. '
-                    f'Las unidades regresaron '
-                    f'al inventario.'
+                    f'procesado(s) como devolución '
+                    f'total. Las unidades pendientes '
+                    f'regresaron al inventario.'
                 ),
                 level=messages.SUCCESS
             )
@@ -637,7 +1111,9 @@ class OrderAdmin(admin.ModelAdmin):
     # ========================================================
 
     @admin.action(
-        description='Marcar pedidos seleccionados como preparando'
+        description=(
+            'Marcar pedidos seleccionados como preparando'
+        )
     )
     def mark_as_preparing(
         self,
@@ -645,11 +1121,17 @@ class OrderAdmin(admin.ModelAdmin):
         queryset
     ):
 
-        updated = queryset.filter(
-            status=Order.Status.PAYMENT_CONFIRMED
-        ).update(
-            status=Order.Status.PREPARING,
-            updated_at=timezone.now()
+        updated = (
+            queryset
+            .filter(
+                status=(
+                    Order.Status.PAYMENT_CONFIRMED
+                )
+            )
+            .update(
+                status=Order.Status.PREPARING,
+                updated_at=timezone.now()
+            )
         )
 
         self.message_user(
@@ -667,7 +1149,9 @@ class OrderAdmin(admin.ModelAdmin):
     # ========================================================
 
     @admin.action(
-        description='Marcar pedidos seleccionados como enviados'
+        description=(
+            'Marcar pedidos seleccionados como enviados'
+        )
     )
     def mark_as_shipped(
         self,
@@ -744,7 +1228,9 @@ class OrderAdmin(admin.ModelAdmin):
     # ========================================================
 
     @admin.action(
-        description='Marcar pedidos seleccionados como entregados'
+        description=(
+            'Marcar pedidos seleccionados como entregados'
+        )
     )
     def mark_as_delivered(
         self,
@@ -898,7 +1384,9 @@ class OrderAdmin(admin.ModelAdmin):
 
             if not reservation_ok:
 
-                obj.status = previous_status
+                obj.status = (
+                    previous_status
+                )
 
                 self.message_user(
                     request,
@@ -931,7 +1419,7 @@ class OrderAdmin(admin.ModelAdmin):
                 )
 
         # =====================================================
-        # EVITAR CANCELACIÓN MANUAL INSEGURA
+        # CANCELACIÓN MANUAL SEGURA
         # =====================================================
 
         if (
@@ -958,7 +1446,9 @@ class OrderAdmin(admin.ModelAdmin):
 
             if not cancellation_ok:
 
-                obj.status = previous_status
+                obj.status = (
+                    previous_status
+                )
 
                 self.message_user(
                     request,
@@ -993,7 +1483,7 @@ class OrderAdmin(admin.ModelAdmin):
                 )
 
         # =====================================================
-        # EVITAR DEVOLUCIÓN MANUAL INSEGURA
+        # DEVOLUCIÓN TOTAL MANUAL SEGURA
         # =====================================================
 
         if (
@@ -1010,8 +1500,8 @@ class OrderAdmin(admin.ModelAdmin):
                 obj.return_reason.strip()
                 if obj.return_reason
                 else (
-                    f'Devolución total administrativa '
-                    f'del pedido '
+                    f'Devolución total '
+                    f'administrativa del pedido '
                     f'{previous_order.order_number}'
                 )
             )
@@ -1027,7 +1517,9 @@ class OrderAdmin(admin.ModelAdmin):
 
             if not return_ok:
 
-                obj.status = previous_status
+                obj.status = (
+                    previous_status
+                )
 
                 obj.return_status = (
                     previous_order.return_status
@@ -1044,8 +1536,8 @@ class OrderAdmin(admin.ModelAdmin):
                 self.message_user(
                     request,
                     (
-                        'La devolución total no pudo '
-                        'procesarse. '
+                        'La devolución total '
+                        'no pudo procesarse. '
                         f'{return_message}'
                     ),
                     level=messages.ERROR
@@ -1071,11 +1563,7 @@ class OrderAdmin(admin.ModelAdmin):
 
                 self.message_user(
                     request,
-                    (
-                        'Devolución total procesada '
-                        'correctamente. Las unidades '
-                        'regresaron al inventario.'
-                    ),
+                    return_message,
                     level=messages.SUCCESS
                 )
 
@@ -1150,14 +1638,21 @@ class OrderAdmin(admin.ModelAdmin):
             )
 
 
+# ============================================================
+# PRODUCTOS DEL PEDIDO
+# ============================================================
+
 @admin.register(OrderItem)
-class OrderItemAdmin(admin.ModelAdmin):
+class OrderItemAdmin(
+    admin.ModelAdmin
+):
 
     list_display = (
         'order',
         'product_name',
         'sku',
         'quantity',
+        'returned_quantity',
         'unit_price',
         'subtotal',
     )
@@ -1174,6 +1669,7 @@ class OrderItemAdmin(admin.ModelAdmin):
         'product_name',
         'sku',
         'quantity',
+        'returned_quantity',
         'unit_price',
         'subtotal',
         'created_at',

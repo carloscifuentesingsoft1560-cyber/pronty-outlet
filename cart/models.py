@@ -532,6 +532,11 @@ class OrderItem(models.Model):
         verbose_name='Cantidad'
     )
 
+    returned_quantity = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Cantidad devuelta'
+    )
+
     unit_price = models.DecimalField(
         max_digits=12,
         decimal_places=2,
@@ -558,6 +563,25 @@ class OrderItem(models.Model):
         ordering = [
             'id'
         ]
+
+
+    @property
+    def returnable_quantity(self):
+
+        return max(
+            self.quantity
+            - self.returned_quantity,
+            0
+        )
+
+
+    @property
+    def is_fully_returned(self):
+
+        return (
+            self.returned_quantity
+            >= self.quantity
+        )
 
 
     def __str__(self):

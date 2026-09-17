@@ -1,0 +1,350 @@
+{% extends "admin/base_site.html" %}
+
+{% load i18n static %}
+
+
+{% block extrastyle %}
+
+    {{ block.super }}
+
+    <style>
+
+        .partial-return-wrapper {
+            max-width: 1000px;
+        }
+
+        .partial-return-summary {
+            margin-bottom: 24px;
+            padding: 18px;
+            border: 1px solid var(--hairline-color);
+            border-radius: 6px;
+            background: var(--darkened-bg);
+        }
+
+        .partial-return-summary p {
+            margin: 6px 0;
+        }
+
+        .partial-return-table {
+            width: 100%;
+            margin-bottom: 26px;
+            border-collapse: collapse;
+        }
+
+        .partial-return-table th,
+        .partial-return-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--hairline-color);
+            text-align: left;
+        }
+
+        .partial-return-table th {
+            background: var(--darkened-bg);
+        }
+
+        .partial-return-form {
+            max-width: 700px;
+        }
+
+        .partial-return-form .form-row {
+            margin-bottom: 18px;
+        }
+
+        .partial-return-form label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: 600;
+        }
+
+        .partial-return-form select,
+        .partial-return-form input,
+        .partial-return-form textarea {
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
+        .partial-return-errors {
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            border-radius: 4px;
+            background: var(--message-error-bg, #ba2121);
+            color: white;
+        }
+
+        .partial-return-actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+    </style>
+
+{% endblock %}
+
+
+{% block breadcrumbs %}
+
+<div class="breadcrumbs">
+
+    <a href="{% url 'admin:index' %}">
+        Inicio
+    </a>
+
+    &rsaquo;
+
+    <a href="{% url 'admin:cart_order_changelist' %}">
+        Pedidos
+    </a>
+
+    &rsaquo;
+
+    <a href="{% url 'admin:cart_order_change' order.pk %}">
+        {{ order.order_number }}
+    </a>
+
+    &rsaquo;
+
+    Devolución parcial
+
+</div>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div
+    id="content-main"
+    class="partial-return-wrapper"
+>
+
+    <h1>
+        Devolución parcial
+    </h1>
+
+
+    <div class="partial-return-summary">
+
+        <p>
+            <strong>Pedido:</strong>
+            {{ order.order_number }}
+        </p>
+
+        <p>
+            <strong>Cliente:</strong>
+            {{ order.customer_name }}
+        </p>
+
+        <p>
+            <strong>Estado:</strong>
+            {{ order.get_status_display }}
+        </p>
+
+        <p>
+            <strong>Estado de devolución:</strong>
+            {{ order.get_return_status_display }}
+        </p>
+
+    </div>
+
+
+    <h2>
+        Productos del pedido
+    </h2>
+
+
+    <table class="partial-return-table">
+
+        <thead>
+
+            <tr>
+                <th>Producto</th>
+                <th>SKU</th>
+                <th>Compradas</th>
+                <th>Devueltas</th>
+                <th>Disponibles para devolver</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for item in order_items %}
+
+                <tr>
+
+                    <td>
+                        {{ item.product_name }}
+                    </td>
+
+                    <td>
+                        {{ item.sku }}
+                    </td>
+
+                    <td>
+                        {{ item.quantity }}
+                    </td>
+
+                    <td>
+                        {{ item.returned_quantity }}
+                    </td>
+
+                    <td>
+                        {{ item.returnable_quantity }}
+                    </td>
+
+                </tr>
+
+            {% empty %}
+
+                <tr>
+
+                    <td colspan="5">
+                        Este pedido no tiene productos.
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+
+    {% if order.return_status == "FULL" %}
+
+        <div class="partial-return-errors">
+
+            Este pedido ya tiene devolución total.
+            No hay unidades pendientes por devolver.
+
+        </div>
+
+        <div class="partial-return-actions">
+
+            <a
+                href="{% url 'admin:cart_order_change' order.pk %}"
+                class="button"
+            >
+                Volver al pedido
+            </a>
+
+        </div>
+
+
+    {% else %}
+
+        <h2>
+            Registrar devolución
+        </h2>
+
+
+        {% if form.non_field_errors %}
+
+            <div class="partial-return-errors">
+
+                {% for error in form.non_field_errors %}
+
+                    <div>
+                        {{ error }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+
+        <form
+            method="post"
+            class="partial-return-form"
+        >
+
+            {% csrf_token %}
+
+
+            <div class="form-row">
+
+                <label for="{{ form.order_item.id_for_label }}">
+                    {{ form.order_item.label }}
+                </label>
+
+                {{ form.order_item }}
+
+                {% for error in form.order_item.errors %}
+
+                    <p class="errornote">
+                        {{ error }}
+                    </p>
+
+                {% endfor %}
+
+            </div>
+
+
+            <div class="form-row">
+
+                <label for="{{ form.quantity.id_for_label }}">
+                    {{ form.quantity.label }}
+                </label>
+
+                {{ form.quantity }}
+
+                {% for error in form.quantity.errors %}
+
+                    <p class="errornote">
+                        {{ error }}
+                    </p>
+
+                {% endfor %}
+
+            </div>
+
+
+            <div class="form-row">
+
+                <label for="{{ form.reason.id_for_label }}">
+                    {{ form.reason.label }}
+                </label>
+
+                {{ form.reason }}
+
+                {% for error in form.reason.errors %}
+
+                    <p class="errornote">
+                        {{ error }}
+                    </p>
+
+                {% endfor %}
+
+            </div>
+
+
+            <div class="partial-return-actions">
+
+                <input
+                    type="submit"
+                    value="Procesar devolución parcial"
+                    class="default"
+                >
+
+                <a
+                    href="{% url 'admin:cart_order_change' order.pk %}"
+                    class="button"
+                >
+                    Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
