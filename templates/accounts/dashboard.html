@@ -136,10 +136,6 @@ Mi cuenta | Pronty Outlet
                         </div>
 
 
-                        <!-- ==================================
-                             CLIENTE DETAL
-                             ================================== -->
-
                         {% if customer_profile.commercial_status == 'RETAIL' %}
 
                             <p>
@@ -185,10 +181,6 @@ Mi cuenta | Pronty Outlet
 
                         {% endif %}
 
-
-                        <!-- ==================================
-                             MAYORISTA EN MANTENIMIENTO
-                             ================================== -->
 
                         {% if customer_profile.commercial_status == 'WHOLESALE_MAINTENANCE' %}
 
@@ -251,10 +243,6 @@ Mi cuenta | Pronty Outlet
 
                         {% endif %}
 
-
-                        <!-- ==================================
-                             MAYORISTA ACTIVO
-                             ================================== -->
 
                         {% if customer_profile.commercial_status == 'WHOLESALE_ACTIVE' %}
 
@@ -322,10 +310,6 @@ Mi cuenta | Pronty Outlet
                         {% endif %}
 
 
-                        <!-- ==================================
-                             PERÍODO DE GRACIA
-                             ================================== -->
-
                         {% if customer_profile.commercial_status == 'WHOLESALE_GRACE' %}
 
                             <p>
@@ -387,10 +371,6 @@ Mi cuenta | Pronty Outlet
 
                         {% endif %}
 
-
-                        <!-- ==================================
-                             MAYORISTA VENCIDO
-                             ================================== -->
 
                         {% if customer_profile.commercial_status == 'WHOLESALE_EXPIRED' %}
 
@@ -560,6 +540,58 @@ Mi cuenta | Pronty Outlet
                                     </div>
 
 
+                                    <!-- ==================================
+                                         ESTADO DE DEVOLUCIÓN
+                                         ================================== -->
+
+                                    {% if order.return_status == 'PARTIAL' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="rotate-ccw"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Devolución parcial
+                                                </strong>
+
+                                                <span>
+                                                    Algunos productos o unidades
+                                                    de este pedido fueron devueltos.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.return_status == 'FULL' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="undo-2"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Devolución total
+                                                </strong>
+
+                                                <span>
+                                                    Todos los productos de este pedido
+                                                    fueron registrados como devueltos.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
                                     <div class="account-order__items">
 
                                         {% for item in order.items.all %}
@@ -567,9 +599,24 @@ Mi cuenta | Pronty Outlet
                                             <div class="account-order__item">
 
                                                 <span>
+
                                                     {{ item.quantity }}
                                                     x
                                                     {{ item.product_name }}
+
+                                                    {% if item.returned_quantity > 0 %}
+
+                                                        <br>
+
+                                                        <small>
+                                                            Devueltas:
+                                                            {{ item.returned_quantity }}
+                                                            de
+                                                            {{ item.quantity }}
+                                                        </small>
+
+                                                    {% endif %}
+
                                                 </span>
 
                                                 <strong>
@@ -588,7 +635,6 @@ Mi cuenta | Pronty Outlet
                                         <div class="account-order__shipping">
 
                                             <i data-lucide="truck"></i>
-
 
                                             <div>
 
