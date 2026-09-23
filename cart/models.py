@@ -453,7 +453,6 @@ class Order(models.Model):
     class Meta:
 
         verbose_name = 'Pedido'
-
         verbose_name_plural = 'Pedidos'
 
         ordering = [
@@ -557,7 +556,6 @@ class OrderItem(models.Model):
     class Meta:
 
         verbose_name = 'Producto del pedido'
-
         verbose_name_plural = 'Productos del pedido'
 
         ordering = [
@@ -581,6 +579,175 @@ class OrderItem(models.Model):
         return (
             self.returned_quantity
             >= self.quantity
+        )
+
+
+    def __str__(self):
+
+        return (
+            f'{self.product_name} '
+            f'x {self.quantity}'
+        )
+
+
+# ============================================================
+# HISTORIAL DE DEVOLUCIONES
+# ============================================================
+
+class ReturnRecord(models.Model):
+
+    class ReturnType(models.TextChoices):
+
+        PARTIAL = (
+            'PARTIAL',
+            'Devolución parcial'
+        )
+
+        FULL = (
+            'FULL',
+            'Devolución total'
+        )
+
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='return_records',
+        verbose_name='Pedido'
+    )
+
+    return_type = models.CharField(
+        max_length=20,
+        choices=ReturnType.choices,
+        verbose_name='Tipo de devolución'
+    )
+
+    reason = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Motivo de devolución'
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        related_name='processed_return_records',
+        blank=True,
+        null=True,
+        verbose_name='Procesado por'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de devolución'
+    )
+
+
+    class Meta:
+
+        verbose_name = 'Registro de devolución'
+        verbose_name_plural = 'Registros de devoluciones'
+
+        ordering = [
+            '-created_at',
+            '-id',
+        ]
+
+
+    @property
+    def total_units(self):
+
+        return sum(
+            item.quantity
+            for item in ReturnRecordItem.objects.filter(
+                return_record=self
+            )
+        )
+
+
+    def __str__(self):
+
+        if self.return_type == self.ReturnType.FULL:
+            return_type_display = 'Devolución total'
+        else:
+            return_type_display = 'Devolución parcial'
+
+        return (
+        f'{return_type_display} - '
+        f'{self.order.order_number}'
+        )
+
+
+class ReturnRecordItem(models.Model):
+
+    return_record = models.ForeignKey(
+        ReturnRecord,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name='Devolución'
+    )
+
+    order_item = models.ForeignKey(
+        OrderItem,
+        on_delete=models.SET_NULL,
+        related_name='return_record_items',
+        blank=True,
+        null=True,
+        verbose_name='Producto original del pedido'
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        related_name='return_record_items',
+        blank=True,
+        null=True,
+        verbose_name='Producto'
+    )
+
+    product_name = models.CharField(
+        max_length=180,
+        verbose_name='Nombre del producto'
+    )
+
+    sku = models.CharField(
+        max_length=60,
+        verbose_name='SKU'
+    )
+
+    quantity = models.PositiveIntegerField(
+        verbose_name='Cantidad devuelta'
+    )
+
+    unit_price = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=Decimal('0.00'),
+        verbose_name='Precio unitario'
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Fecha de registro'
+    )
+
+
+    class Meta:
+
+        verbose_name = 'Producto de devolución'
+        verbose_name_plural = 'Productos de devolución'
+
+        ordering = [
+            'id'
+        ]
+
+
+    @property
+    def subtotal(self):
+
+        return (
+            self.unit_price
+            * self.quantity
         )
 
 

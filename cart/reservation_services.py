@@ -4,11 +4,16 @@ from django.utils import timezone
 
 from catalog.models import InventoryMovement
 
-from .models import Order, OrderItem
+from .models import (
+    Order,
+    OrderItem,
+    ReturnRecord,
+    ReturnRecordItem,
+)
 
 
 # ============================================================
-# ESTADOS QUE PUEDEN VENCER AUTOMÃTICAMENTE
+# ESTADOS QUE PUEDEN VENCER AUTOMÁTICAMENTE
 # ============================================================
 
 EXPIRABLE_ORDER_STATUSES = {
@@ -38,7 +43,7 @@ CANCELLABLE_UNPAID_STATUSES = {
 
 
 # ============================================================
-# ESTADOS DESDE LOS QUE PUEDE PROCESARSE UNA DEVOLUCIÃ“N
+# ESTADOS DESDE LOS QUE PUEDE PROCESARSE UNA DEVOLUCIÓN
 # ============================================================
 
 RETURNABLE_ORDER_STATUSES = {
@@ -173,7 +178,6 @@ def finalize_inventory_reservation(order):
         )
 
         locked_order.reservation_finalized_at = now
-
         locked_order.reservation_released_at = None
 
         locked_order.save(
@@ -216,7 +220,7 @@ def release_inventory_reservation(
     """
     Devuelve al inventario las unidades de una reserva activa.
 
-    La operaciÃ³n es idempotente:
+    La operación es idempotente:
     solamente una reserva ACTIVE puede liberarse.
     """
 
@@ -305,7 +309,7 @@ def release_inventory_reservation(
         release_reason = (
             reason
             or (
-                f'LiberaciÃ³n de reserva correspondiente '
+                f'Liberación de reserva correspondiente '
                 f'al pedido {locked_order.order_number}'
             )
         )
@@ -314,19 +318,14 @@ def release_inventory_reservation(
 
             InventoryMovement.objects.create(
                 product=reservation.product,
-
                 movement_type=(
                     InventoryMovement
                     .MovementType
                     .RESERVATION_RELEASE
                 ),
-
                 quantity=reservation.quantity,
-
                 reason=release_reason,
-
                 reference=locked_order.order_number,
-
                 created_by=None,
             )
 
@@ -337,7 +336,6 @@ def release_inventory_reservation(
         )
 
         locked_order.reservation_released_at = now
-
         locked_order.reservation_finalized_at = None
 
         update_fields = [
@@ -396,7 +394,7 @@ def cancel_unpaid_order(
     reason=None
 ):
     """
-    Cancela un pedido que todavÃ­a NO tiene pago confirmado.
+    Cancela un pedido que todavía NO tiene pago confirmado.
 
     ACTIVE
     -> libera inventario
@@ -433,7 +431,7 @@ def cancel_unpaid_order(
                 False,
                 (
                     'El pedido figura como cancelado, '
-                    'pero su reserva no estÃ¡ liberada.'
+                    'pero su reserva no está liberada.'
                 )
             )
 
@@ -447,7 +445,7 @@ def cancel_unpaid_order(
                 (
                     'Este pedido es anterior al sistema '
                     'de reservas y no puede cancelarse '
-                    'mediante este proceso automÃ¡tico.'
+                    'mediante este proceso automático.'
                 )
             )
 
@@ -460,8 +458,8 @@ def cancel_unpaid_order(
                 False,
                 (
                     'El pago de este pedido ya fue confirmado. '
-                    'Debe procesarse como devoluciÃ³n, '
-                    'no como cancelaciÃ³n de reserva.'
+                    'Debe procesarse como devolución, '
+                    'no como cancelación de reserva.'
                 )
             )
 
@@ -488,7 +486,7 @@ def cancel_unpaid_order(
                 False,
                 (
                     'El pedido tiene un comprobante de pago '
-                    'pendiente de revisiÃ³n. Revisa o rechaza '
+                    'pendiente de revisión. Revisa o rechaza '
                     'el comprobante antes de cancelar.'
                 )
             )
@@ -510,7 +508,7 @@ def cancel_unpaid_order(
         cancellation_reason = (
             reason
             or (
-                f'CancelaciÃ³n del pedido '
+                f'Cancelación del pedido '
                 f'{locked_order.order_number} '
                 f'antes de confirmar el pago'
             )
@@ -600,7 +598,7 @@ def _validate_returnable_order(
             False,
             (
                 'El pedido no tiene fecha de '
-                'confirmaciÃ³n de pago.'
+                'confirmación de pago.'
             )
         )
 
@@ -615,13 +613,13 @@ def _validate_returnable_order(
             False,
             (
                 'El estado actual del pedido '
-                'no permite procesar una devoluciÃ³n.'
+                'no permite procesar una devolución.'
             )
         )
 
     return (
         True,
-        'Pedido vÃ¡lido para devoluciÃ³n.'
+        'Pedido válido para devolución.'
     )
 
 
@@ -669,7 +667,7 @@ def _get_inventory_returned_quantity(
     product
 ):
     """
-    Obtiene cuÃ¡ntas unidades RETURN ya existen
+    Obtiene cuántas unidades RETURN ya existen
     para ese producto y pedido.
     """
 
@@ -696,7 +694,63 @@ def _get_inventory_returned_quantity(
 
 
 # ============================================================
-# DEVOLUCIÃ“N PARCIAL
+# CREAR REGISTRO HISTÓRICO DE DEVOLUCIÓN
+# ============================================================
+
+def _create_return_record(
+    *,
+    order,
+    return_type,
+    reason,
+    created_by,
+    returned_items
+):
+    """
+    Crea el historial de una operación de devolución.
+
+    returned_items debe contener diccionarios con:
+        order_item
+        quantity
+
+    El registro se crea dentro de la misma transacción
+    de inventario que llamó esta función.
+    """
+
+    return_record = ReturnRecord.objects.create(
+        order=order,
+        return_type=return_type,
+        reason=reason or '',
+        created_by=created_by,
+    )
+
+    record_items = []
+
+    for data in returned_items:
+
+        item = data['order_item']
+        quantity = data['quantity']
+
+        record_items.append(
+            ReturnRecordItem(
+                return_record=return_record,
+                order_item=item,
+                product=item.product,
+                product_name=item.product_name,
+                sku=item.sku,
+                quantity=quantity,
+                unit_price=item.unit_price,
+            )
+        )
+
+    ReturnRecordItem.objects.bulk_create(
+        record_items
+    )
+
+    return return_record
+
+
+# ============================================================
+# DEVOLUCIÓN PARCIAL
 # ============================================================
 
 def process_partial_return(
@@ -707,20 +761,16 @@ def process_partial_return(
     created_by=None
 ):
     """
-    Devuelve una cantidad especÃ­fica de un producto.
+    Devuelve una cantidad específica de un producto.
 
-    Ejemplo:
+    Nunca permite devolver más unidades de las compradas.
 
-        ComprÃ³: 5
-        Ya devolviÃ³: 2
-        Nueva devoluciÃ³n: 1
-        Pendiente por devolver: 2
-
-    Nunca permite devolver mÃ¡s unidades de las compradas.
-
-    Si despuÃ©s de esta operaciÃ³n todos los productos
+    Si después de esta operación todos los productos
     del pedido quedaron completamente devueltos,
-    el pedido pasa automÃ¡ticamente a devoluciÃ³n TOTAL.
+    el pedido pasa automáticamente a devolución TOTAL.
+
+    Cada operación genera además un registro independiente
+    en el historial de devoluciones.
 
     Retorna:
         (True, mensaje)
@@ -740,7 +790,7 @@ def process_partial_return(
 
         return (
             False,
-            'La cantidad a devolver no es vÃ¡lida.'
+            'La cantidad a devolver no es válida.'
         )
 
     if quantity <= 0:
@@ -815,7 +865,7 @@ def process_partial_return(
                 False,
                 (
                     'Este pedido ya tiene '
-                    'devoluciÃ³n total.'
+                    'devolución total.'
                 )
             )
 
@@ -859,7 +909,7 @@ def process_partial_return(
                 (
                     f'Solo quedan '
                     f'{available_to_return} unidad(es) '
-                    f'disponibles para devoluciÃ³n.'
+                    f'disponibles para devolución.'
                 )
             )
 
@@ -896,39 +946,42 @@ def process_partial_return(
             return (
                 False,
                 (
-                    'La devoluciÃ³n excederÃ­a la cantidad '
+                    'La devolución excedería la cantidad '
                     'registrada como vendida. '
-                    'La operaciÃ³n fue bloqueada.'
+                    'La operación fue bloqueada.'
                 )
             )
 
         return_reason = (
             reason
             or (
-                f'DevoluciÃ³n parcial del producto '
+                f'Devolución parcial del producto '
                 f'{locked_item.product_name} '
                 f'del pedido '
                 f'{locked_order.order_number}'
             )
         )
 
+        # ----------------------------------------------------
+        # DEVOLVER INVENTARIO
+        # ----------------------------------------------------
+
         InventoryMovement.objects.create(
             product=locked_item.product,
-
             movement_type=(
                 InventoryMovement
                 .MovementType
                 .RETURN
             ),
-
             quantity=quantity,
-
             reason=return_reason,
-
             reference=locked_order.order_number,
-
             created_by=created_by,
         )
+
+        # ----------------------------------------------------
+        # ACTUALIZAR CANTIDAD DEVUELTA DEL PRODUCTO
+        # ----------------------------------------------------
 
         locked_item.returned_quantity = (
             locked_item.returned_quantity
@@ -942,6 +995,10 @@ def process_partial_return(
         )
 
         now = timezone.now()
+
+        # ----------------------------------------------------
+        # COMPROBAR SI TODO EL PEDIDO QUEDÓ DEVUELTO
+        # ----------------------------------------------------
 
         all_fully_returned = True
 
@@ -971,15 +1028,21 @@ def process_partial_return(
                 Order.Status.RETURNED
             )
 
+            history_return_type = (
+                ReturnRecord.ReturnType.FULL
+            )
+
         else:
 
             locked_order.return_status = (
                 Order.ReturnStatus.PARTIAL
             )
 
-        locked_order.returned_at = (
-            now
-        )
+            history_return_type = (
+                ReturnRecord.ReturnType.PARTIAL
+            )
+
+        locked_order.returned_at = now
 
         locked_order.return_reason = (
             return_reason
@@ -1001,6 +1064,27 @@ def process_partial_return(
         locked_order.save(
             update_fields=order_update_fields
         )
+
+        # ----------------------------------------------------
+        # CREAR HISTORIAL DE ESTA DEVOLUCIÓN
+        # ----------------------------------------------------
+
+        _create_return_record(
+            order=locked_order,
+            return_type=history_return_type,
+            reason=return_reason,
+            created_by=created_by,
+            returned_items=[
+                {
+                    'order_item': locked_item,
+                    'quantity': quantity,
+                }
+            ],
+        )
+
+        # ----------------------------------------------------
+        # SINCRONIZAR OBJETO RECIBIDO
+        # ----------------------------------------------------
 
         order_item.returned_quantity = (
             locked_item.returned_quantity
@@ -1032,10 +1116,10 @@ def process_partial_return(
             return (
                 True,
                 (
-                    'DevoluciÃ³n procesada correctamente. '
+                    'Devolución procesada correctamente. '
                     'Todos los productos del pedido '
                     'quedaron devueltos y el pedido '
-                    'pasÃ³ a devoluciÃ³n total.'
+                    'pasó a devolución total.'
                 )
             )
 
@@ -1047,16 +1131,16 @@ def process_partial_return(
         return (
             True,
             (
-                f'DevoluciÃ³n parcial procesada correctamente. '
+                f'Devolución parcial procesada correctamente. '
                 f'Quedan {remaining} unidad(es) '
                 f'de este producto disponibles '
-                f'para devoluciÃ³n.'
+                f'para devolución.'
             )
         )
 
 
 # ============================================================
-# DEVOLUCIÃ“N TOTAL
+# DEVOLUCIÓN TOTAL
 # ============================================================
 
 def process_full_return(
@@ -1066,16 +1150,19 @@ def process_full_return(
     created_by=None
 ):
     """
-    Procesa la devoluciÃ³n total de una venta.
+    Procesa la devolución total de una venta.
 
-    Si ya existÃ­an devoluciones parciales, devuelve
+    Si ya existían devoluciones parciales, devuelve
     solamente las unidades restantes.
 
     Si el pedido ya estaba marcado FULL antes de existir
     returned_quantity, sincroniza los OrderItem sin volver
     a crear movimientos RETURN.
 
-    La operaciÃ³n es idempotente.
+    Cada devolución nueva genera además un registro
+    en el historial.
+
+    La operación es idempotente.
     """
 
     with transaction.atomic():
@@ -1116,9 +1203,8 @@ def process_full_return(
         # PEDIDO YA DEVUELTO TOTALMENTE
         # ----------------------------------------------------
         #
-        # Esto tambiÃ©n sincroniza pedidos devueltos antes
-        # de existir el campo returned_quantity.
-        # No se crea ningÃºn RETURN nuevo.
+        # Sincroniza pedidos antiguos sin returned_quantity.
+        # No crea RETURN ni historial nuevo.
         # ----------------------------------------------------
 
         if (
@@ -1160,7 +1246,7 @@ def process_full_return(
                 return (
                     False,
                     (
-                        'El pedido figura con devoluciÃ³n total, '
+                        'El pedido figura con devolución total, '
                         'pero su estado general no es Devuelto.'
                     )
                 )
@@ -1168,8 +1254,9 @@ def process_full_return(
             return (
                 True,
                 (
-                    'El pedido ya tenÃ­a devoluciÃ³n total. '
-                    'No se modificÃ³ nuevamente el inventario.'
+                    'El pedido ya tenía devolución total. '
+                    'No se modificó nuevamente el inventario '
+                    'ni se creó un historial duplicado.'
                 )
             )
 
@@ -1190,16 +1277,17 @@ def process_full_return(
         return_reason = (
             reason
             or (
-                f'DevoluciÃ³n total del pedido '
+                f'Devolución total del pedido '
                 f'{locked_order.order_number}'
             )
         )
 
         # ----------------------------------------------------
-        # AGRUPAR UNIDADES QUE FALTAN POR DEVOLVER
+        # CALCULAR LO QUE FALTA POR DEVOLVER
         # ----------------------------------------------------
 
         remaining_by_product = {}
+        returned_items_for_history = []
 
         for item in locked_items:
 
@@ -1212,6 +1300,13 @@ def process_full_return(
             if remaining <= 0:
 
                 continue
+
+            returned_items_for_history.append(
+                {
+                    'order_item': item,
+                    'quantity': remaining,
+                }
+            )
 
             product_id = (
                 item.product.pk
@@ -1236,7 +1331,12 @@ def process_full_return(
             )
 
         # ----------------------------------------------------
-        # SI YA TODOS LOS ITEMS ESTÃN DEVUELTOS
+        # SI LOS ITEMS YA ESTABAN COMPLETAMENTE DEVUELTOS
+        # ----------------------------------------------------
+        #
+        # Aquí no hubo unidades nuevas que regresaran
+        # al inventario, así que tampoco creamos un
+        # ReturnRecord vacío.
         # ----------------------------------------------------
 
         if not remaining_by_product:
@@ -1287,8 +1387,8 @@ def process_full_return(
                 True,
                 (
                     'Todos los productos ya estaban '
-                    'devueltos. El pedido quedÃ³ marcado '
-                    'como devoluciÃ³n total.'
+                    'devueltos. El pedido quedó marcado '
+                    'como devolución total.'
                 )
             )
 
@@ -1339,9 +1439,9 @@ def process_full_return(
                 return (
                     False,
                     (
-                        f'La devoluciÃ³n de {product.name} '
-                        f'excederÃ­a la cantidad vendida. '
-                        f'La operaciÃ³n fue bloqueada.'
+                        f'La devolución de {product.name} '
+                        f'excedería la cantidad vendida. '
+                        f'La operación fue bloqueada.'
                     )
                 )
 
@@ -1353,19 +1453,14 @@ def process_full_return(
 
             InventoryMovement.objects.create(
                 product=data['product'],
-
                 movement_type=(
                     InventoryMovement
                     .MovementType
                     .RETURN
                 ),
-
                 quantity=data['quantity'],
-
                 reason=return_reason,
-
                 reference=locked_order.order_number,
-
                 created_by=created_by,
             )
 
@@ -1392,9 +1487,7 @@ def process_full_return(
             Order.ReturnStatus.FULL
         )
 
-        locked_order.returned_at = (
-            now
-        )
+        locked_order.returned_at = now
 
         locked_order.return_reason = (
             return_reason
@@ -1413,6 +1506,22 @@ def process_full_return(
                 'updated_at',
             ]
         )
+
+        # ----------------------------------------------------
+        # CREAR HISTORIAL DE LA DEVOLUCIÓN TOTAL
+        # ----------------------------------------------------
+
+        _create_return_record(
+            order=locked_order,
+            return_type=ReturnRecord.ReturnType.FULL,
+            reason=return_reason,
+            created_by=created_by,
+            returned_items=returned_items_for_history,
+        )
+
+        # ----------------------------------------------------
+        # SINCRONIZAR OBJETO RECIBIDO
+        # ----------------------------------------------------
 
         order.return_status = (
             locked_order.return_status
@@ -1433,7 +1542,7 @@ def process_full_return(
         return (
             True,
             (
-                'DevoluciÃ³n total procesada correctamente. '
+                'Devolución total procesada correctamente. '
                 'Las unidades pendientes regresaron '
                 'al inventario.'
             )
@@ -1441,7 +1550,7 @@ def process_full_return(
 
 
 # ============================================================
-# COMPROBAR SI UN PEDIDO YA VENCIÃ“
+# COMPROBAR SI UN PEDIDO YA VENCIÓ
 # ============================================================
 
 def expire_order_if_due(order):
@@ -1501,7 +1610,7 @@ def expire_order_if_due(order):
 
 def expire_due_reservations():
     """
-    Busca pedidos cuya reserva ya venciÃ³
+    Busca pedidos cuya reserva ya venció
     y libera su inventario.
     """
 
