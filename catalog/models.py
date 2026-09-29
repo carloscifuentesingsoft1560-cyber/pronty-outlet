@@ -4,6 +4,113 @@ from django.db import models, transaction
 
 
 class Category(models.Model):
+
+    # =========================================================
+    # ICONOS DISPONIBLES PARA EL MENÚ
+    # =========================================================
+
+    class Icon(models.TextChoices):
+
+        SPARKLES = (
+            'sparkles',
+            '✨ Brillos / maquillaje'
+        )
+
+        HEART = (
+            'heart',
+            '❤️ Corazón'
+        )
+
+        DROPLETS = (
+            'droplets',
+            '💧 Gotas / cuidado personal'
+        )
+
+        SHIRT = (
+            'shirt',
+            '👕 Ropa / moda'
+        )
+
+        BADGE_PERCENT = (
+            'badge-percent',
+            '🏷️ Promoción / descuento'
+        )
+
+        GEM = (
+            'gem',
+            '💎 Accesorios / joyería'
+        )
+
+        TAG = (
+            'tag',
+            '🔖 Etiqueta'
+        )
+
+        SHOPPING_BAG = (
+            'shopping-bag',
+            '🛍️ Bolsa de compras'
+        )
+
+        GIFT = (
+            'gift',
+            '🎁 Regalo'
+        )
+
+        STAR = (
+            'star',
+            '⭐ Estrella'
+        )
+
+        PALETTE = (
+            'palette',
+            '🎨 Belleza / colores'
+        )
+
+        CROWN = (
+            'crown',
+            '👑 Premium'
+        )
+
+        BABY = (
+            'baby',
+            '👶 Infantil / bebé'
+        )
+
+        WATCH = (
+            'watch',
+            '⌚ Relojes'
+        )
+
+        GLASSES = (
+            'glasses',
+            '👓 Gafas'
+        )
+
+        FOOTPRINTS = (
+            'footprints',
+            '👣 Calzado'
+        )
+
+        FLOWER = (
+            'flower-2',
+            '🌸 Floral / femenino'
+        )
+
+        SMILE = (
+            'smile',
+            '😊 Kawaii / divertido'
+        )
+
+        PACKAGE = (
+            'package',
+            '📦 Otros productos'
+        )
+
+
+    # =========================================================
+    # INFORMACIÓN DE LA CATEGORÍA
+    # =========================================================
+
     name = models.CharField(
         max_length=120,
         unique=True,
@@ -12,13 +119,46 @@ class Category(models.Model):
 
     slug = models.SlugField(
         max_length=140,
-        unique=True
+        unique=True,
+        verbose_name='Slug'
     )
 
     is_active = models.BooleanField(
         default=True,
         verbose_name='Activa'
     )
+
+
+    # =========================================================
+    # VISUALIZACIÓN EN EL MENÚ
+    # =========================================================
+
+    show_in_menu = models.BooleanField(
+        default=True,
+        verbose_name='Mostrar en menú principal'
+    )
+
+    menu_order = models.PositiveIntegerField(
+        default=0,
+        verbose_name='Orden en el menú'
+    )
+
+    icon = models.CharField(
+        max_length=60,
+        choices=Icon.choices,
+        default=Icon.TAG,
+        verbose_name='Icono'
+    )
+
+    highlight_in_menu = models.BooleanField(
+        default=False,
+        verbose_name='Destacar en el menú'
+    )
+
+
+    # =========================================================
+    # FECHAS
+    # =========================================================
 
     created_at = models.DateTimeField(
         auto_now_add=True
@@ -28,16 +168,25 @@ class Category(models.Model):
         auto_now=True
     )
 
+
     class Meta:
+
         verbose_name = 'Categoría'
         verbose_name_plural = 'Categorías'
-        ordering = ['name']
+
+        ordering = [
+            'menu_order',
+            'name',
+        ]
+
 
     def __str__(self):
+
         return self.name
 
 
 class Brand(models.Model):
+
     name = models.CharField(
         max_length=120,
         unique=True,
@@ -62,16 +211,24 @@ class Brand(models.Model):
         auto_now=True
     )
 
+
     class Meta:
+
         verbose_name = 'Marca'
         verbose_name_plural = 'Marcas'
-        ordering = ['name']
+
+        ordering = [
+            'name'
+        ]
+
 
     def __str__(self):
+
         return self.name
 
 
 class Product(models.Model):
+
     name = models.CharField(
         max_length=180,
         verbose_name='Nombre'
@@ -168,30 +325,42 @@ class Product(models.Model):
         auto_now=True
     )
 
+
     class Meta:
+
         verbose_name = 'Producto'
         verbose_name_plural = 'Productos'
-        ordering = ['-created_at']
+
+        ordering = [
+            '-created_at'
+        ]
+
 
     def __str__(self):
+
         return self.name
+
 
     @property
     def is_low_stock(self):
+
         return (
             0
             < self.stock
             <= 5
         )
 
+
     @property
     def is_out_of_stock(self):
+
         return (
             self.stock == 0
         )
 
 
 class ProductImage(models.Model):
+
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
@@ -224,15 +393,20 @@ class ProductImage(models.Model):
         auto_now_add=True
     )
 
+
     class Meta:
+
         verbose_name = 'Imagen de producto'
         verbose_name_plural = 'Imágenes de producto'
+
         ordering = [
             'order',
             'id',
         ]
 
+
     def __str__(self):
+
         return (
             f'{self.product.name} '
             f'- imagen {self.pk}'
@@ -242,6 +416,7 @@ class ProductImage(models.Model):
 class InventoryMovement(models.Model):
 
     class MovementType(models.TextChoices):
+
         ENTRY = (
             'ENTRY',
             'Entrada de inventario'
@@ -276,6 +451,7 @@ class InventoryMovement(models.Model):
             'ADJUSTMENT_OUT',
             'Ajuste negativo'
         )
+
 
     product = models.ForeignKey(
         Product,
@@ -332,13 +508,17 @@ class InventoryMovement(models.Model):
         verbose_name='Fecha'
     )
 
+
     class Meta:
+
         verbose_name = 'Movimiento de inventario'
         verbose_name_plural = 'Movimientos de inventario'
+
         ordering = [
             '-created_at',
             '-id',
         ]
+
 
     def __str__(self):
 
@@ -346,6 +526,7 @@ class InventoryMovement(models.Model):
             self.movement_type
             == self.MovementType.ENTRY
         ):
+
             movement_label = (
                 'Entrada de inventario'
             )
@@ -354,6 +535,7 @@ class InventoryMovement(models.Model):
             self.movement_type
             == self.MovementType.RESERVATION
         ):
+
             movement_label = (
                 'Reserva de pedido'
             )
@@ -362,6 +544,7 @@ class InventoryMovement(models.Model):
             self.movement_type
             == self.MovementType.RESERVATION_RELEASE
         ):
+
             movement_label = (
                 'Liberación de reserva'
             )
@@ -370,6 +553,7 @@ class InventoryMovement(models.Model):
             self.movement_type
             == self.MovementType.SALE
         ):
+
             movement_label = (
                 'Venta'
             )
@@ -378,6 +562,7 @@ class InventoryMovement(models.Model):
             self.movement_type
             == self.MovementType.RETURN
         ):
+
             movement_label = (
                 'Devolución'
             )
@@ -386,6 +571,7 @@ class InventoryMovement(models.Model):
             self.movement_type
             == self.MovementType.ADJUSTMENT_IN
         ):
+
             movement_label = (
                 'Ajuste positivo'
             )
@@ -394,11 +580,13 @@ class InventoryMovement(models.Model):
             self.movement_type
             == self.MovementType.ADJUSTMENT_OUT
         ):
+
             movement_label = (
                 'Ajuste negativo'
             )
 
         else:
+
             movement_label = (
                 self.movement_type
             )
@@ -409,9 +597,6 @@ class InventoryMovement(models.Model):
             f'{self.quantity}'
         )
 
-    # =========================================================
-    # MOVIMIENTOS QUE SUMAN INVENTARIO DISPONIBLE
-    # =========================================================
 
     @property
     def is_incoming(self):
@@ -426,9 +611,6 @@ class InventoryMovement(models.Model):
             }
         )
 
-    # =========================================================
-    # MOVIMIENTOS QUE RESTAN INVENTARIO DISPONIBLE
-    # =========================================================
 
     @property
     def is_outgoing(self):
@@ -442,9 +624,6 @@ class InventoryMovement(models.Model):
             }
         )
 
-    # =========================================================
-    # VALIDACIÓN
-    # =========================================================
 
     def clean(self):
 
@@ -458,9 +637,6 @@ class InventoryMovement(models.Model):
                 )
             })
 
-    # =========================================================
-    # ACTUALIZACIÓN DE INVENTARIO
-    # =========================================================
 
     def save(
         self,
@@ -468,8 +644,6 @@ class InventoryMovement(models.Model):
         **kwargs
     ):
 
-        # Un movimiento existente no debe volver
-        # a modificar el stock al editarse.
         if self.pk:
 
             return super().save(
@@ -493,20 +667,12 @@ class InventoryMovement(models.Model):
                 product.stock
             )
 
-            # =================================================
-            # ENTRADAS
-            # =================================================
-
             if self.is_incoming:
 
                 resulting_stock = (
                     product.stock
                     + self.quantity
                 )
-
-            # =================================================
-            # SALIDAS
-            # =================================================
 
             elif self.is_outgoing:
 

@@ -158,56 +158,40 @@
         </div>
 
 
+        <!-- ==============================================
+             MENÚ DINÁMICO DE CATEGORÍAS
+             ============================================== -->
+
         <nav class="main-nav">
 
             <div class="container main-nav__inner">
 
-                <a href="{% url 'product_list' %}?category=maquillaje">
+                {% for category in navigation_categories %}
 
-                    <i data-lucide="sparkles"></i>
+                    <a
+                        href="{% url 'product_list' %}?category={{ category.slug }}"
+                        {% if category.highlight_in_menu %}
+                            class="main-nav__promotion"
+                        {% endif %}
+                    >
 
-                    Maquillaje
+                        <i data-lucide="{{ category.icon|default:'tag' }}"></i>
 
-                </a>
+                        {{ category.name }}
 
+                    </a>
 
-                <a href="{% url 'product_list' %}?category=kawaii">
+                {% empty %}
 
-                    <i data-lucide="heart"></i>
+                    <a href="{% url 'product_list' %}">
 
-                    Kawaii
+                        <i data-lucide="shopping-bag"></i>
 
-                </a>
+                        Ver productos
 
+                    </a>
 
-                <a href="{% url 'product_list' %}?category=cuidado-facial-y-corporal">
-
-                    <i data-lucide="droplets"></i>
-
-                    Cuidado facial y corporal
-
-                </a>
-
-
-                <a href="{% url 'product_list' %}?category=moda-shein">
-
-                    <i data-lucide="shirt"></i>
-
-                    Moda SHEIN
-
-                </a>
-
-
-                <a
-                    href="{% url 'product_list' %}?category=promociones"
-                    class="main-nav__promotion"
-                >
-
-                    <i data-lucide="badge-percent"></i>
-
-                    Promociones
-
-                </a>
+                {% endfor %}
 
             </div>
 
@@ -340,31 +324,31 @@
             </div>
 
 
+            <!-- ==========================================
+                 CATEGORÍAS DINÁMICAS EN EL FOOTER
+                 ========================================== -->
+
             <div class="site-footer__column">
 
                 <h3>
                     Tienda
                 </h3>
 
-                <a href="{% url 'product_list' %}">
-                    Maquillaje
-                </a>
+                {% for category in navigation_categories %}
 
-                <a href="{% url 'product_list' %}">
-                    Kawaii
-                </a>
+                    <a
+                        href="{% url 'product_list' %}?category={{ category.slug }}"
+                    >
+                        {{ category.name }}
+                    </a>
 
-                <a href="{% url 'product_list' %}">
-                    Cuidado facial y corporal
-                </a>
+                {% empty %}
 
-                <a href="{% url 'product_list' %}">
-                    Moda SHEIN
-                </a>
+                    <a href="{% url 'product_list' %}">
+                        Ver productos
+                    </a>
 
-                <a href="{% url 'product_list' %}">
-                    Promociones
-                </a>
+                {% endfor %}
 
             </div>
 
