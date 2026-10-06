@@ -8,11 +8,16 @@ from django.http import Http404, HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
-from django.utils.html import format_html
+from django.utils.html import format_html, format_html_join
 
 from accounts.services import process_wholesale_benefit
 
-from .models import Order, OrderItem
+from .models import (
+    Order,
+    OrderItem,
+    ReturnRecord,
+    ReturnRecordItem,
+)
 from .reservation_services import (
     cancel_unpaid_order,
     finalize_inventory_reservation,
@@ -281,6 +286,7 @@ class OrderAdmin(
         'return_status',
         'returned_at',
         'partial_return_action',
+        'return_history',
         'shipped_at',
         'delivered_at',
         'created_at',
@@ -357,6 +363,7 @@ class OrderAdmin(
                     'returned_at',
                     'return_reason',
                     'partial_return_action',
+                    'return_history',
                 )
             }
         ),
@@ -429,6 +436,110 @@ class OrderAdmin(
         'mark_as_shipped',
         'mark_as_delivered',
     )
+
+
+    # ========================================================
+    # HISTORIAL DE DEVOLUCIONES DEL PEDIDO
+    # ========================================================
+
+    @admin.display(
+        description='Historial de devoluciones'
+    )
+    def return_history(
+        self,
+        obj
+    ):
+
+        if not obj.pk:
+
+            return '-'
+
+        return_records = (
+            ReturnRecord.objects
+            .filter(
+                order=obj
+            )
+            .select_related(
+                'created_by'
+            )
+            .order_by(
+                '-created_at',
+                '-id',
+            )
+        )
+
+        if not return_records.exists():
+
+            return 'Sin devoluciones registradas.'
+
+        rows = []
+
+        for return_record in return_records:
+
+            if (
+                return_record.return_type
+                == ReturnRecord.ReturnType.FULL
+            ):
+
+                return_type_label = (
+                    'Devolución total'
+                )
+
+            else:
+
+                return_type_label = (
+                    'Devolución parcial'
+                )
+
+            if return_record.created_by:
+
+                created_by_label = (
+                    return_record.created_by.get_username()
+                )
+
+            else:
+
+                created_by_label = (
+                    'Sistema / usuario no disponible'
+                )
+
+            detail_url = reverse(
+                'admin:cart_returnrecord_change',
+                args=[
+                    return_record.pk
+                ]
+            )
+
+            created_at = timezone.localtime(
+                return_record.created_at
+            ).strftime(
+                '%d/%m/%Y %H:%M'
+            )
+
+            rows.append((
+                detail_url,
+                created_at,
+                return_type_label,
+                return_record.total_units,
+                created_by_label,
+                return_record.reason
+                or 'Sin motivo registrado',
+            ))
+
+        return format_html_join(
+            '',
+            (
+                '<div style="margin-bottom: 10px;">'
+                '<a href="{}"><strong>{}</strong></a>'
+                ' · {} · {} unidad(es)'
+                '<br>'
+                '<span><strong>Procesada por:</strong> {}</span>'
+                '<br>'
+                '<span><strong>Motivo:</strong> {}</span>'
+                '</div>'
+            ),
+            rows,
+        )
 
 
     # ========================================================
@@ -1674,3 +1785,271 @@ class OrderItemAdmin(
         'subtotal',
         'created_at',
     )
+
+
+# ============================================================
+# HISTORIAL DE DEVOLUCIONES
+# ============================================================
+
+class ReturnRecordItemInline(
+    admin.TabularInline
+):
+
+    model = ReturnRecordItem
+
+    extra = 0
+
+    can_delete = False
+
+    fields = (
+        'product',
+        'product_name',
+        'sku',
+        'quantity',
+        'unit_price',
+        'subtotal',
+        'created_at',
+    )
+
+    readonly_fields = (
+        'product',
+        'product_name',
+        'sku',
+        'quantity',
+        'unit_price',
+        'subtotal',
+        'created_at',
+    )
+
+    show_change_link = False
+
+
+    def has_add_permission(
+        self,
+        request,
+        obj=None
+    ):
+
+        return False
+
+
+    def has_delete_permission(
+        self,
+        request,
+        obj=None
+    ):
+
+        return False
+
+
+@admin.register(ReturnRecord)
+class ReturnRecordAdmin(
+    admin.ModelAdmin
+):
+
+    list_display = (
+        'id',
+        'order_link',
+        'return_type_label',
+        'total_units_display',
+        'created_by',
+        'created_at',
+    )
+
+    list_filter = (
+        'return_type',
+        'created_at',
+    )
+
+    search_fields = (
+        'order__order_number',
+        'reason',
+        'created_by__username',
+        'items__product_name',
+        'items__sku',
+    )
+
+    readonly_fields = (
+        'order_link',
+        'return_type_label',
+        'total_units_display',
+        'reason',
+        'created_by',
+        'created_at',
+    )
+
+    fieldsets = (
+        (
+            'Devolución',
+            {
+                'fields': (
+                    'order_link',
+                    'return_type_label',
+                    'total_units_display',
+                )
+            }
+        ),
+        (
+            'Información de la operación',
+            {
+                'fields': (
+                    'reason',
+                    'created_by',
+                    'created_at',
+                )
+            }
+        ),
+    )
+
+    inlines = (
+        ReturnRecordItemInline,
+    )
+
+    ordering = (
+        '-created_at',
+        '-id',
+    )
+
+    date_hierarchy = 'created_at'
+
+
+    @admin.display(
+        description='Pedido',
+        ordering='order__order_number'
+    )
+    def order_link(
+        self,
+        obj
+    ):
+
+        if not obj.order_id:
+
+            return '-'
+
+        url = reverse(
+            'admin:cart_order_change',
+            args=[
+                obj.order_id
+            ]
+        )
+
+        return format_html(
+            '<a href="{}">{}</a>',
+            url,
+            obj.order.order_number,
+        )
+
+
+    @admin.display(
+        description='Tipo',
+        ordering='return_type'
+    )
+    def return_type_label(
+        self,
+        obj
+    ):
+
+        if (
+            obj.return_type
+            == ReturnRecord.ReturnType.FULL
+        ):
+
+            return 'Devolución total'
+
+        return 'Devolución parcial'
+
+
+    @admin.display(
+        description='Unidades devueltas'
+    )
+    def total_units_display(
+        self,
+        obj
+    ):
+
+        if not obj.pk:
+
+            return 0
+
+        return obj.total_units
+
+
+    def has_add_permission(
+        self,
+        request
+    ):
+
+        return False
+
+
+    def has_delete_permission(
+        self,
+        request,
+        obj=None
+    ):
+
+        return False
+
+
+# ============================================================
+# DETALLE DE PRODUCTOS DEVUELTOS
+# ============================================================
+
+@admin.register(ReturnRecordItem)
+class ReturnRecordItemAdmin(
+    admin.ModelAdmin
+):
+
+    list_display = (
+        'return_record',
+        'product_name',
+        'sku',
+        'quantity',
+        'unit_price',
+        'subtotal',
+        'created_at',
+    )
+
+    list_filter = (
+        'created_at',
+    )
+
+    search_fields = (
+        'return_record__order__order_number',
+        'product_name',
+        'sku',
+    )
+
+    readonly_fields = (
+        'return_record',
+        'order_item',
+        'product',
+        'product_name',
+        'sku',
+        'quantity',
+        'unit_price',
+        'subtotal',
+        'created_at',
+    )
+
+    ordering = (
+        '-created_at',
+        '-id',
+    )
+
+
+    def has_add_permission(
+        self,
+        request
+    ):
+
+        return False
+
+
+    def has_delete_permission(
+        self,
+        request,
+        obj=None
+    ):
+
+        return False

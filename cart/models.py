@@ -645,8 +645,8 @@ class ReturnRecord(models.Model):
 
     class Meta:
 
-        verbose_name = 'Registro de devolución'
-        verbose_name_plural = 'Registros de devoluciones'
+        verbose_name = 'Historial de devolución'
+        verbose_name_plural = 'Historial de devoluciones'
 
         ordering = [
             '-created_at',
@@ -667,14 +667,24 @@ class ReturnRecord(models.Model):
 
     def __str__(self):
 
-        if self.return_type == self.ReturnType.FULL:
-            return_type_display = 'Devolución total'
+        if (
+            self.return_type
+            == self.ReturnType.FULL
+        ):
+
+            return_type_display = (
+                'Devolución total'
+            )
+
         else:
-            return_type_display = 'Devolución parcial'
+
+            return_type_display = (
+                'Devolución parcial'
+            )
 
         return (
-        f'{return_type_display} - '
-        f'{self.order.order_number}'
+            f'{return_type_display} - '
+            f'{self.order.order_number}'
         )
 
 
@@ -734,8 +744,8 @@ class ReturnRecordItem(models.Model):
 
     class Meta:
 
-        verbose_name = 'Producto de devolución'
-        verbose_name_plural = 'Productos de devolución'
+        verbose_name = 'Detalle de producto devuelto'
+        verbose_name_plural = 'Detalle de productos devueltos'
 
         ordering = [
             'id'
