@@ -1,11 +1,18 @@
 from decimal import Decimal, InvalidOperation
 
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
 
-from .models import Brand, Category, Product, ProductImage
+from .models import (
+    Brand,
+    Category,
+    Product,
+    ProductImage,
+)
 
 
 def home(request):
+
     return render(
         request,
         'home.html'
@@ -14,86 +21,183 @@ def home(request):
 
 def product_list(request):
 
-    products = Product.objects.filter(
-        is_active=True
-    ).select_related(
-        'category',
-        'brand'
-    ).prefetch_related(
-        'images'
+    # =========================================================
+    # PRODUCTOS DISPONIBLES EN EL CATÁLOGO PÚBLICO
+    # =========================================================
+
+    products = (
+        Product.objects
+        .filter(
+            is_active=True,
+            category__is_active=True,
+        )
+        .select_related(
+            'category',
+            'brand'
+        )
+        .prefetch_related(
+            'images'
+        )
     )
 
-    categories = Category.objects.filter(
-        is_active=True
-    ).order_by(
-        'name'
+
+    # =========================================================
+    # CATEGORÍAS ACTIVAS
+    # =========================================================
+
+    categories = (
+        Category.objects
+        .filter(
+            is_active=True
+        )
+        .order_by(
+            'menu_order',
+            'name',
+        )
     )
 
-    brands = Brand.objects.filter(
-        is_active=True
-    ).order_by(
-        'name'
+
+    # =========================================================
+    # MARCAS ACTIVAS
+    # =========================================================
+
+    brands = (
+        Brand.objects
+        .filter(
+            is_active=True
+        )
+        .order_by(
+            'name'
+        )
     )
 
-    # =========================
+
+    # =========================================================
+    # BÚSQUEDA
+    # =========================================================
+
+    search_query = (
+        request.GET
+        .get(
+            'q',
+            ''
+        )
+        .strip()
+    )
+
+    if search_query:
+
+        products = products.filter(
+            Q(
+                name__icontains=search_query
+            )
+            |
+            Q(
+                sku__icontains=search_query
+            )
+            |
+            Q(
+                short_description__icontains=search_query
+            )
+            |
+            Q(
+                description__icontains=search_query
+            )
+            |
+            Q(
+                category__name__icontains=search_query
+            )
+            |
+            Q(
+                brand__name__icontains=search_query
+            )
+        )
+
+
+    # =========================================================
     # FILTROS
-    # =========================
+    # =========================================================
 
-    selected_categories = request.GET.getlist(
-        'category'
+    selected_categories = (
+        request.GET
+        .getlist(
+            'category'
+        )
     )
 
-    selected_brand = request.GET.get(
-        'brand',
-        ''
-    ).strip()
-
-    price_min_raw = request.GET.get(
-        'price_min',
-        ''
-    ).strip()
-
-    price_max_raw = request.GET.get(
-        'price_max',
-        ''
-    ).strip()
-
-    on_sale = request.GET.get(
-        'on_sale',
-        ''
+    selected_brand = (
+        request.GET
+        .get(
+            'brand',
+            ''
+        )
+        .strip()
     )
 
-    ordering = request.GET.get(
-        'ordering',
-        'recent'
+    price_min_raw = (
+        request.GET
+        .get(
+            'price_min',
+            ''
+        )
+        .strip()
+    )
+
+    price_max_raw = (
+        request.GET
+        .get(
+            'price_max',
+            ''
+        )
+        .strip()
+    )
+
+    on_sale = (
+        request.GET
+        .get(
+            'on_sale',
+            ''
+        )
+    )
+
+    ordering = (
+        request.GET
+        .get(
+            'ordering',
+            'recent'
+        )
     )
 
 
-    # =========================
+    # =========================================================
     # CATEGORÍA
-    # =========================
+    # =========================================================
 
     if selected_categories:
 
         products = products.filter(
-            category__slug__in=selected_categories
+            category__slug__in=(
+                selected_categories
+            ),
+            category__is_active=True,
         )
 
 
-    # =========================
+    # =========================================================
     # MARCA
-    # =========================
+    # =========================================================
 
     if selected_brand:
 
         products = products.filter(
-            brand__slug=selected_brand
+            brand__slug=selected_brand,
+            brand__is_active=True,
         )
 
 
-    # =========================
+    # =========================================================
     # PRECIO MÍNIMO
-    # =========================
+    # =========================================================
 
     if price_min_raw:
 
@@ -105,17 +209,22 @@ def product_list(request):
 
             if price_min >= 0:
 
-                products = products.filter(
-                    retail_price__gte=price_min
+                products = (
+                    products.filter(
+                        retail_price__gte=(
+                            price_min
+                        )
+                    )
                 )
 
         except InvalidOperation:
+
             pass
 
 
-    # =========================
+    # =========================================================
     # PRECIO MÁXIMO
-    # =========================
+    # =========================================================
 
     if price_max_raw:
 
@@ -127,17 +236,22 @@ def product_list(request):
 
             if price_max >= 0:
 
-                products = products.filter(
-                    retail_price__lte=price_max
+                products = (
+                    products.filter(
+                        retail_price__lte=(
+                            price_max
+                        )
+                    )
                 )
 
         except InvalidOperation:
+
             pass
 
 
-    # =========================
+    # =========================================================
     # PROMOCIONES
-    # =========================
+    # =========================================================
 
     if on_sale:
 
@@ -146,44 +260,95 @@ def product_list(request):
         )
 
 
-    # =========================
+    # =========================================================
     # ORDEN
-    # =========================
+    # =========================================================
 
     if ordering == 'price_asc':
 
-        products = products.order_by(
-            'retail_price',
-            'name'
+        products = (
+            products.order_by(
+                'retail_price',
+                'name'
+            )
         )
 
     elif ordering == 'price_desc':
 
-        products = products.order_by(
-            '-retail_price',
-            'name'
+        products = (
+            products.order_by(
+                '-retail_price',
+                'name'
+            )
+        )
+
+    elif ordering == 'name_asc':
+
+        products = (
+            products.order_by(
+                'name'
+            )
+        )
+
+    elif ordering == 'name_desc':
+
+        products = (
+            products.order_by(
+                '-name'
+            )
         )
 
     else:
 
         ordering = 'recent'
 
-        products = products.order_by(
-            '-created_at'
+        products = (
+            products.order_by(
+                '-created_at'
+            )
         )
 
 
+    # =========================================================
+    # CONTEXTO
+    # =========================================================
+
     context = {
         'products': products,
+
         'categories': categories,
+
         'brands': brands,
-        'selected_categories': selected_categories,
-        'selected_brand': selected_brand,
-        'price_min': price_min_raw,
-        'price_max': price_max_raw,
-        'on_sale': on_sale,
-        'ordering': ordering,
+
+        'search_query': (
+            search_query
+        ),
+
+        'selected_categories': (
+            selected_categories
+        ),
+
+        'selected_brand': (
+            selected_brand
+        ),
+
+        'price_min': (
+            price_min_raw
+        ),
+
+        'price_max': (
+            price_max_raw
+        ),
+
+        'on_sale': (
+            on_sale
+        ),
+
+        'ordering': (
+            ordering
+        ),
     }
+
 
     return render(
         request,
@@ -192,43 +357,70 @@ def product_list(request):
     )
 
 
-def product_detail(request, slug):
+def product_detail(
+    request,
+    slug
+):
 
     product = get_object_or_404(
-        Product.objects.select_related(
-            'category',
-            'brand'
+        (
+            Product.objects
+            .select_related(
+                'category',
+                'brand'
+            )
         ),
         slug=slug,
-        is_active=True
+        is_active=True,
+        category__is_active=True,
     )
 
+
     gallery_images = list(
-        ProductImage.objects.filter(
-            product=product,
-            is_active=True
-        ).order_by(
-            'order',
-            'id'
+        (
+            ProductImage.objects
+            .filter(
+                product=product,
+                is_active=True
+            )
+            .order_by(
+                'order',
+                'id'
+            )
         )
     )
 
+
     main_image = None
+
 
     if product.image:
 
-        main_image = product.image
+        main_image = (
+            product.image
+        )
 
     elif gallery_images:
 
-        main_image = gallery_images[0].image
+        main_image = (
+            gallery_images[
+                0
+            ].image
+        )
 
 
     context = {
         'product': product,
-        'gallery_images': gallery_images,
-        'main_image': main_image,
+
+        'gallery_images': (
+            gallery_images
+        ),
+
+        'main_image': (
+            main_image
+        ),
     }
+
 
     return render(
         request,
