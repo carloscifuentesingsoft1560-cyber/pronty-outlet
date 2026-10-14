@@ -18,11 +18,20 @@ from .models import (
     ReturnRecord,
     ReturnRecordItem,
 )
+
 from .reservation_services import (
     cancel_unpaid_order,
     finalize_inventory_reservation,
     process_full_return,
     process_partial_return,
+)
+
+from .order_status_services import (
+    mark_order_as_delivered,
+    mark_order_as_preparing,
+    mark_order_as_shipped,
+    mark_order_change_requested,
+    validate_admin_status_transition,
 )
 
 
@@ -79,7 +88,6 @@ class PartialReturnAdminForm(
         )
     )
 
-
     def __init__(
         self,
         *args,
@@ -113,7 +121,6 @@ class PartialReturnAdminForm(
                     'id'
                 )
             )
-
 
     def clean_order_item(
         self
@@ -151,7 +158,6 @@ class PartialReturnAdminForm(
             )
 
         return order_item
-
 
     def clean(
         self
@@ -436,6 +442,39 @@ class OrderAdmin(
         'mark_as_shipped',
         'mark_as_delivered',
     )
+
+
+    # ========================================================
+    # EVITAR MENSAJE VERDE CUANDO SE BLOQUEA UN CAMBIO
+    # ========================================================
+
+    def response_change(
+        self,
+        request,
+        obj
+    ):
+
+        if getattr(
+            request,
+            '_pronty_transition_blocked',
+            False
+        ):
+
+            change_url = reverse(
+                'admin:cart_order_change',
+                args=[
+                    obj.pk
+                ]
+            )
+
+            return HttpResponseRedirect(
+                change_url
+            )
+
+        return super().response_change(
+            request,
+            obj
+        )
 
 
     # ========================================================
@@ -1232,27 +1271,64 @@ class OrderAdmin(
         queryset
     ):
 
-        updated = (
-            queryset
-            .filter(
-                status=(
-                    Order.Status.PAYMENT_CONFIRMED
-                )
-            )
-            .update(
-                status=Order.Status.PREPARING,
-                updated_at=timezone.now()
-            )
-        )
+        updated = 0
+        skipped = 0
+        errors = []
 
-        self.message_user(
-            request,
+        for order in queryset:
+
             (
-                f'{updated} pedido(s) '
-                f'marcado(s) como preparando.'
-            ),
-            level=messages.SUCCESS
-        )
+                status_ok,
+                status_message
+            ) = mark_order_as_preparing(
+                order
+            )
+
+            if status_ok:
+
+                updated += 1
+
+            else:
+
+                skipped += 1
+
+                errors.append(
+                    (
+                        f'{order.order_number}: '
+                        f'{status_message}'
+                    )
+                )
+
+        if updated:
+
+            self.message_user(
+                request,
+                (
+                    f'{updated} pedido(s) '
+                    f'marcado(s) como preparando.'
+                ),
+                level=messages.SUCCESS
+            )
+
+        if skipped:
+
+            self.message_user(
+                request,
+                (
+                    f'{skipped} pedido(s) '
+                    f'no pudieron pasar '
+                    f'a preparación.'
+                ),
+                level=messages.WARNING
+            )
+
+        for error in errors:
+
+            self.message_user(
+                request,
+                error,
+                level=messages.ERROR
+            )
 
 
     # ========================================================
@@ -1272,42 +1348,31 @@ class OrderAdmin(
 
         updated = 0
         skipped = 0
+        errors = []
 
         for order in queryset:
 
-            if (
-                order.status
-                != Order.Status.PREPARING
-            ):
+            (
+                status_ok,
+                status_message
+            ) = mark_order_as_shipped(
+                order
+            )
+
+            if status_ok:
+
+                updated += 1
+
+            else:
 
                 skipped += 1
-                continue
 
-            if (
-                not order.shipping_carrier
-                or not order.tracking_number
-            ):
-
-                skipped += 1
-                continue
-
-            order.status = (
-                Order.Status.SHIPPED
-            )
-
-            order.shipped_at = (
-                timezone.now()
-            )
-
-            order.save(
-                update_fields=[
-                    'status',
-                    'shipped_at',
-                    'updated_at',
-                ]
-            )
-
-            updated += 1
+                errors.append(
+                    (
+                        f'{order.order_number}: '
+                        f'{status_message}'
+                    )
+                )
 
         if updated:
 
@@ -1326,11 +1391,18 @@ class OrderAdmin(
                 request,
                 (
                     f'{skipped} pedido(s) '
-                    f'no pudieron marcarse como enviados. '
-                    f'Deben estar en "Preparando pedido" '
-                    f'y tener transportadora y guía.'
+                    f'no pudieron marcarse '
+                    f'como enviados.'
                 ),
                 level=messages.WARNING
+            )
+
+        for error in errors:
+
+            self.message_user(
+                request,
+                error,
+                level=messages.ERROR
             )
 
 
@@ -1351,34 +1423,31 @@ class OrderAdmin(
 
         updated = 0
         skipped = 0
+        errors = []
 
         for order in queryset:
 
-            if (
-                order.status
-                != Order.Status.SHIPPED
-            ):
+            (
+                status_ok,
+                status_message
+            ) = mark_order_as_delivered(
+                order
+            )
+
+            if status_ok:
+
+                updated += 1
+
+            else:
 
                 skipped += 1
-                continue
 
-            order.status = (
-                Order.Status.DELIVERED
-            )
-
-            order.delivered_at = (
-                timezone.now()
-            )
-
-            order.save(
-                update_fields=[
-                    'status',
-                    'delivered_at',
-                    'updated_at',
-                ]
-            )
-
-            updated += 1
+                errors.append(
+                    (
+                        f'{order.order_number}: '
+                        f'{status_message}'
+                    )
+                )
 
         if updated:
 
@@ -1397,9 +1466,18 @@ class OrderAdmin(
                 request,
                 (
                     f'{skipped} pedido(s) '
-                    f'no estaban en estado "Enviado".'
+                    f'no pudieron marcarse '
+                    f'como entregados.'
                 ),
                 level=messages.WARNING
+            )
+
+        for error in errors:
+
+            self.message_user(
+                request,
+                error,
+                level=messages.ERROR
             )
 
 
@@ -1418,6 +1496,12 @@ class OrderAdmin(
         previous_status = None
         previous_order = None
 
+        setattr(
+            request,
+            '_pronty_transition_blocked',
+            False
+        )
+
         if change and obj.pk:
 
             previous_order = (
@@ -1434,6 +1518,7 @@ class OrderAdmin(
                     previous_order.status
                 )
 
+
         # =====================================================
         # PROTEGER PEDIDOS YA DEVUELTOS
         # =====================================================
@@ -1442,9 +1527,28 @@ class OrderAdmin(
             previous_order
             and previous_order.return_status
             == Order.ReturnStatus.FULL
-            and obj.status
-            != Order.Status.RETURNED
         ):
+
+            if (
+                obj.status
+                != Order.Status.RETURNED
+            ):
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
+                )
+
+                self.message_user(
+                    request,
+                    (
+                        'Este pedido ya tiene una devolución '
+                        'total procesada. Su estado no puede '
+                        'cambiarse desde el formulario.'
+                    ),
+                    level=messages.ERROR
+                )
 
             obj.status = (
                 Order.Status.RETURNED
@@ -1462,15 +1566,47 @@ class OrderAdmin(
                 previous_order.return_reason
             )
 
-            self.message_user(
-                request,
-                (
-                    'Este pedido ya tiene una devolución '
-                    'total procesada. Su estado no puede '
-                    'cambiarse desde el formulario.'
-                ),
-                level=messages.ERROR
+
+        # =====================================================
+        # VALIDAR TRANSICIÓN MANUAL DE ESTADO
+        # =====================================================
+
+        transition_requested = (
+            previous_order is not None
+            and previous_status is not None
+            and obj.status != previous_status
+        )
+
+        transition_allowed = True
+
+        if transition_requested:
+
+            (
+                transition_allowed,
+                transition_message
+            ) = validate_admin_status_transition(
+                previous_status,
+                obj.status
             )
+
+            if not transition_allowed:
+
+                obj.status = (
+                    previous_status
+                )
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
+                )
+
+                self.message_user(
+                    request,
+                    transition_message,
+                    level=messages.ERROR
+                )
+
 
         # =====================================================
         # CONFIRMACIÓN MANUAL DE PAGO
@@ -1478,6 +1614,7 @@ class OrderAdmin(
 
         if (
             previous_order
+            and transition_allowed
             and obj.status
             == Order.Status.PAYMENT_CONFIRMED
             and previous_status
@@ -1497,6 +1634,12 @@ class OrderAdmin(
 
                 obj.status = (
                     previous_status
+                )
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
                 )
 
                 self.message_user(
@@ -1529,12 +1672,14 @@ class OrderAdmin(
                     .reservation_released_at
                 )
 
+
         # =====================================================
         # CANCELACIÓN MANUAL SEGURA
         # =====================================================
 
-        if (
+        elif (
             previous_order
+            and transition_allowed
             and obj.status
             == Order.Status.CANCELED
             and previous_status
@@ -1559,6 +1704,12 @@ class OrderAdmin(
 
                 obj.status = (
                     previous_status
+                )
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
                 )
 
                 self.message_user(
@@ -1593,12 +1744,14 @@ class OrderAdmin(
                     .reservation_released_at
                 )
 
+
         # =====================================================
         # DEVOLUCIÓN TOTAL MANUAL SEGURA
         # =====================================================
 
-        if (
+        elif (
             previous_order
+            and transition_allowed
             and obj.status
             == Order.Status.RETURNED
             and previous_status
@@ -1644,6 +1797,12 @@ class OrderAdmin(
                     previous_order.return_reason
                 )
 
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
+                )
+
                 self.message_user(
                     request,
                     (
@@ -1678,6 +1837,264 @@ class OrderAdmin(
                     level=messages.SUCCESS
                 )
 
+
+        # =====================================================
+        # PREPARANDO MANUAL SEGURO
+        # =====================================================
+
+        elif (
+            previous_order
+            and transition_allowed
+            and obj.status
+            == Order.Status.PREPARING
+            and previous_status
+            != Order.Status.PREPARING
+        ):
+
+            (
+                preparing_ok,
+                preparing_message
+            ) = mark_order_as_preparing(
+                previous_order
+            )
+
+            if not preparing_ok:
+
+                obj.status = (
+                    previous_status
+                )
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
+                )
+
+                self.message_user(
+                    request,
+                    (
+                        'El pedido no pudo pasar '
+                        'a preparación. '
+                        f'{preparing_message}'
+                    ),
+                    level=messages.ERROR
+                )
+
+            else:
+
+                obj.status = (
+                    previous_order.status
+                )
+
+                self.message_user(
+                    request,
+                    preparing_message,
+                    level=messages.SUCCESS
+                )
+
+
+        # =====================================================
+        # ENVÍO MANUAL SEGURO
+        # =====================================================
+
+        elif (
+            previous_order
+            and transition_allowed
+            and obj.status
+            == Order.Status.SHIPPED
+            and previous_status
+            != Order.Status.SHIPPED
+        ):
+
+            (
+                shipped_ok,
+                shipped_message
+            ) = mark_order_as_shipped(
+                previous_order,
+                shipping_carrier=(
+                    obj.shipping_carrier
+                ),
+                tracking_number=(
+                    obj.tracking_number
+                ),
+                shipping_notes=(
+                    obj.shipping_notes
+                ),
+            )
+
+            if not shipped_ok:
+
+                obj.status = (
+                    previous_status
+                )
+
+                obj.shipped_at = (
+                    previous_order.shipped_at
+                )
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
+                )
+
+                self.message_user(
+                    request,
+                    (
+                        'El pedido no pudo marcarse '
+                        'como enviado. '
+                        f'{shipped_message}'
+                    ),
+                    level=messages.ERROR
+                )
+
+            else:
+
+                obj.status = (
+                    previous_order.status
+                )
+
+                obj.shipping_carrier = (
+                    previous_order.shipping_carrier
+                )
+
+                obj.tracking_number = (
+                    previous_order.tracking_number
+                )
+
+                obj.shipping_notes = (
+                    previous_order.shipping_notes
+                )
+
+                obj.shipped_at = (
+                    previous_order.shipped_at
+                )
+
+                self.message_user(
+                    request,
+                    shipped_message,
+                    level=messages.SUCCESS
+                )
+
+
+        # =====================================================
+        # ENTREGA MANUAL SEGURA
+        # =====================================================
+
+        elif (
+            previous_order
+            and transition_allowed
+            and obj.status
+            == Order.Status.DELIVERED
+            and previous_status
+            != Order.Status.DELIVERED
+        ):
+
+            (
+                delivered_ok,
+                delivered_message
+            ) = mark_order_as_delivered(
+                previous_order
+            )
+
+            if not delivered_ok:
+
+                obj.status = (
+                    previous_status
+                )
+
+                obj.delivered_at = (
+                    previous_order.delivered_at
+                )
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
+                )
+
+                self.message_user(
+                    request,
+                    (
+                        'El pedido no pudo marcarse '
+                        'como entregado. '
+                        f'{delivered_message}'
+                    ),
+                    level=messages.ERROR
+                )
+
+            else:
+
+                obj.status = (
+                    previous_order.status
+                )
+
+                obj.delivered_at = (
+                    previous_order.delivered_at
+                )
+
+                self.message_user(
+                    request,
+                    delivered_message,
+                    level=messages.SUCCESS
+                )
+
+
+        # =====================================================
+        # SOLICITUD DE CAMBIO MANUAL SEGURA
+        # =====================================================
+
+        elif (
+            previous_order
+            and transition_allowed
+            and obj.status
+            == Order.Status.CHANGE_REQUESTED
+            and previous_status
+            != Order.Status.CHANGE_REQUESTED
+        ):
+
+            (
+                change_ok,
+                change_message
+            ) = mark_order_change_requested(
+                previous_order
+            )
+
+            if not change_ok:
+
+                obj.status = (
+                    previous_status
+                )
+
+                setattr(
+                    request,
+                    '_pronty_transition_blocked',
+                    True
+                )
+
+                self.message_user(
+                    request,
+                    (
+                        'No pudo registrarse '
+                        'la solicitud de cambio. '
+                        f'{change_message}'
+                    ),
+                    level=messages.ERROR
+                )
+
+            else:
+
+                obj.status = (
+                    previous_order.status
+                )
+
+                self.message_user(
+                    request,
+                    change_message,
+                    level=messages.SUCCESS
+                )
+
+
         # =====================================================
         # ESTADOS SIN PAGO CONFIRMADO
         # =====================================================
@@ -1698,33 +2115,10 @@ class OrderAdmin(
 
             obj.payment_confirmed_at = None
 
-        # =====================================================
-        # FECHA DE ENVÍO
-        # =====================================================
-
-        if (
-            obj.status
-            == Order.Status.SHIPPED
-            and not obj.shipped_at
-        ):
-
-            obj.shipped_at = (
-                timezone.now()
-            )
 
         # =====================================================
-        # FECHA DE ENTREGA
+        # GUARDAR PEDIDO
         # =====================================================
-
-        if (
-            obj.status
-            == Order.Status.DELIVERED
-            and not obj.delivered_at
-        ):
-
-            obj.delivered_at = (
-                timezone.now()
-            )
 
         super().save_model(
             request,
@@ -1733,12 +2127,18 @@ class OrderAdmin(
             change
         )
 
+
         # =====================================================
         # BENEFICIO MAYORISTA
         # =====================================================
 
         if (
-            obj.status
+            not getattr(
+                request,
+                '_pronty_transition_blocked',
+                False
+            )
+            and obj.status
             == Order.Status.PAYMENT_CONFIRMED
             and previous_status
             != Order.Status.PAYMENT_CONFIRMED
@@ -1823,7 +2223,6 @@ class ReturnRecordItemInline(
 
     show_change_link = False
 
-
     def has_add_permission(
         self,
         request,
@@ -1831,7 +2230,6 @@ class ReturnRecordItemInline(
     ):
 
         return False
-
 
     def has_delete_permission(
         self,
@@ -1889,6 +2287,7 @@ class ReturnRecordAdmin(
                 )
             }
         ),
+
         (
             'Información de la operación',
             {
@@ -1911,7 +2310,6 @@ class ReturnRecordAdmin(
     )
 
     date_hierarchy = 'created_at'
-
 
     @admin.display(
         description='Pedido',
@@ -1939,7 +2337,6 @@ class ReturnRecordAdmin(
             obj.order.order_number,
         )
 
-
     @admin.display(
         description='Tipo',
         ordering='return_type'
@@ -1958,7 +2355,6 @@ class ReturnRecordAdmin(
 
         return 'Devolución parcial'
 
-
     @admin.display(
         description='Unidades devueltas'
     )
@@ -1973,14 +2369,12 @@ class ReturnRecordAdmin(
 
         return obj.total_units
 
-
     def has_add_permission(
         self,
         request
     ):
 
         return False
-
 
     def has_delete_permission(
         self,
@@ -2037,14 +2431,12 @@ class ReturnRecordItemAdmin(
         '-id',
     )
 
-
     def has_add_permission(
         self,
         request
     ):
 
         return False
-
 
     def has_delete_permission(
         self,
