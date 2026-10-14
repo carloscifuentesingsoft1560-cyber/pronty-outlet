@@ -475,6 +475,10 @@ Mi cuenta | Pronty Outlet
 
                                 <article class="account-order">
 
+                                    <!-- ==============================
+                                         ENCABEZADO DEL PEDIDO
+                                         ============================== -->
+
                                     <div class="account-order__top">
 
                                         <div>
@@ -496,6 +500,10 @@ Mi cuenta | Pronty Outlet
 
                                     </div>
 
+
+                                    <!-- ==============================
+                                         DATOS GENERALES
+                                         ============================== -->
 
                                     <div class="account-order__meta">
 
@@ -540,9 +548,339 @@ Mi cuenta | Pronty Outlet
                                     </div>
 
 
-                                    <!-- ==================================
+                                    <!-- ==============================
+                                         ESTADOS DEL PEDIDO
+                                         ============================== -->
+
+                                    <div class="account-order__meta">
+
+                                        <div>
+
+                                            <span>
+                                                Estado del pedido
+                                            </span>
+
+                                            <strong>
+                                                {{ order.get_status_display }}
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Estado del pago
+                                            </span>
+
+                                            <strong>
+
+                                                {% if order.payment_confirmed_at %}
+
+                                                    Pago confirmado
+
+                                                {% elif order.status == 'PAYMENT_DECLINED' %}
+
+                                                    Pago rechazado
+
+                                                {% elif order.status == 'PROOF_RECEIVED' or order.status == 'PAYMENT_PROCESSING' %}
+
+                                                    En validación
+
+                                                {% elif order.status == 'PENDING_PAYMENT' %}
+
+                                                    Pendiente de pago
+
+                                                {% elif order.status == 'RESERVATION_EXPIRED' %}
+
+                                                    Sin pago confirmado
+
+                                                {% elif order.status == 'CANCELED' %}
+
+                                                    Sin pago confirmado
+
+                                                {% else %}
+
+                                                    Pendiente de confirmación
+
+                                                {% endif %}
+
+                                            </strong>
+
+                                        </div>
+
+
+                                        <div>
+
+                                            <span>
+                                                Estado de devolución
+                                            </span>
+
+                                            <strong>
+                                                {{ order.get_return_status_display }}
+                                            </strong>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- ==============================
+                                         MENSAJES DE ESTADO
+                                         ============================== -->
+
+                                    {% if order.status == 'PENDING_PAYMENT' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="credit-card"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pago pendiente
+                                                </strong>
+
+                                                <span>
+                                                    Completa el pago antes de que
+                                                    venza la reserva.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'PROOF_RECEIVED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="clock-3"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Comprobante recibido
+                                                </strong>
+
+                                                <span>
+                                                    Estamos validando tu pago.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'PAYMENT_PROCESSING' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="clock-3"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pago en validación
+                                                </strong>
+
+                                                <span>
+                                                    Tu pago continúa en proceso
+                                                    de revisión.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'PAYMENT_DECLINED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="circle-x"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pago rechazado
+                                                </strong>
+
+                                                <span>
+                                                    Puedes ingresar al detalle
+                                                    del pedido para enviar
+                                                    un nuevo comprobante.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'PAYMENT_CONFIRMED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="circle-check"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pago confirmado
+                                                </strong>
+
+                                                <span>
+                                                    Tu pedido continuará
+                                                    al proceso de preparación.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'PREPARING' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="package-check"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Preparando pedido
+                                                </strong>
+
+                                                <span>
+                                                    Estamos preparando tu compra
+                                                    para despacho.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'DELIVERED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="badge-check"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pedido entregado
+                                                </strong>
+
+                                                {% if order.delivered_at %}
+
+                                                    <span>
+                                                        Entregado el
+                                                        {{ order.delivered_at|date:"d/m/Y H:i" }}.
+                                                    </span>
+
+                                                {% else %}
+
+                                                    <span>
+                                                        El pedido figura como entregado.
+                                                    </span>
+
+                                                {% endif %}
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'CHANGE_REQUESTED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="refresh-cw"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Cambio solicitado
+                                                </strong>
+
+                                                <span>
+                                                    Hay una solicitud de cambio
+                                                    registrada para este pedido.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'CANCELED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="circle-x"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Pedido cancelado
+                                                </strong>
+
+                                                <span>
+                                                    Este pedido fue cancelado.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    {% if order.status == 'RESERVATION_EXPIRED' %}
+
+                                        <div class="account-order__shipping">
+
+                                            <i data-lucide="timer-off"></i>
+
+                                            <div>
+
+                                                <strong>
+                                                    Reserva vencida
+                                                </strong>
+
+                                                <span>
+                                                    Los productos fueron liberados
+                                                    nuevamente al inventario.
+                                                </span>
+
+                                            </div>
+
+                                        </div>
+
+                                    {% endif %}
+
+
+                                    <!-- ==============================
                                          ESTADO DE DEVOLUCIÓN
-                                         ================================== -->
+                                         ============================== -->
 
                                     {% if order.return_status == 'PARTIAL' %}
 
@@ -592,6 +930,10 @@ Mi cuenta | Pronty Outlet
                                     {% endif %}
 
 
+                                    <!-- ==============================
+                                         PRODUCTOS
+                                         ============================== -->
+
                                     <div class="account-order__items">
 
                                         {% for item in order.items.all %}
@@ -630,6 +972,10 @@ Mi cuenta | Pronty Outlet
                                     </div>
 
 
+                                    <!-- ==============================
+                                         ENVÍO
+                                         ============================== -->
+
                                     {% if order.status == 'SHIPPED' or order.status == 'DELIVERED' %}
 
                                         <div class="account-order__shipping">
@@ -644,6 +990,12 @@ Mi cuenta | Pronty Outlet
                                                         {{ order.shipping_carrier }}
                                                     </strong>
 
+                                                {% else %}
+
+                                                    <strong>
+                                                        Información de envío
+                                                    </strong>
+
                                                 {% endif %}
 
 
@@ -656,12 +1008,26 @@ Mi cuenta | Pronty Outlet
 
                                                 {% endif %}
 
+
+                                                {% if order.shipped_at %}
+
+                                                    <span>
+                                                        Enviado:
+                                                        {{ order.shipped_at|date:"d/m/Y H:i" }}
+                                                    </span>
+
+                                                {% endif %}
+
                                             </div>
 
                                         </div>
 
                                     {% endif %}
 
+
+                                    <!-- ==============================
+                                         ACCIONES
+                                         ============================== -->
 
                                     <div class="account-order__actions">
 
