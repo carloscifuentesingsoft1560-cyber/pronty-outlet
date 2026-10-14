@@ -8,6 +8,7 @@ from django.utils import timezone
 class CustomerProfile(models.Model):
 
     class CommercialStatus(models.TextChoices):
+
         RETAIL = (
             'RETAIL',
             'Cliente detal'
@@ -32,6 +33,7 @@ class CustomerProfile(models.Model):
             'WHOLESALE_EXPIRED',
             'Mayorista vencido'
         )
+
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -95,23 +97,36 @@ class CustomerProfile(models.Model):
         verbose_name='Última actualización'
     )
 
+
     class Meta:
+
         verbose_name = 'Perfil comercial'
         verbose_name_plural = 'Perfiles comerciales'
+
         ordering = [
             'user__first_name',
             'user__last_name',
             'user__email'
         ]
 
+
     def __str__(self):
 
-        full_name = self.user.get_full_name().strip()
+        full_name = (
+            self.user
+            .get_full_name()
+            .strip()
+        )
 
         if full_name:
+
             return full_name
 
-        return self.user.email or self.user.username
+        return (
+            self.user.email
+            or self.user.username
+        )
+
 
     # =========================================================
     # PROPIEDADES COMERCIALES
@@ -122,23 +137,31 @@ class CustomerProfile(models.Model):
         """
         Indica si el cliente puede utilizar precios mayoristas.
 
-        Durante mantenimiento y gracia conserva el beneficio.
+        Durante mantenimiento y durante el período de gracia
+        conserva el beneficio mayorista.
         """
 
-        return self.commercial_status in {
-            self.CommercialStatus.WHOLESALE_MAINTENANCE,
-            self.CommercialStatus.WHOLESALE_ACTIVE,
-            self.CommercialStatus.WHOLESALE_GRACE,
-        }
+        return (
+            self.commercial_status
+            in {
+                self.CommercialStatus.WHOLESALE_MAINTENANCE,
+                self.CommercialStatus.WHOLESALE_ACTIVE,
+                self.CommercialStatus.WHOLESALE_GRACE,
+            }
+        )
+
 
     @property
     def is_retail(self):
+
         return not self.has_wholesale_prices
+
 
     @property
     def days_until_maintenance_deadline(self):
 
         if not self.maintenance_deadline:
+
             return None
 
         remaining = (
@@ -151,10 +174,12 @@ class CustomerProfile(models.Model):
             0
         )
 
+
     @property
     def days_until_grace_deadline(self):
 
         if not self.grace_deadline:
+
             return None
 
         remaining = (
@@ -167,16 +192,21 @@ class CustomerProfile(models.Model):
             0
         )
 
+
     # =========================================================
     # ACTIVACIÓN MAYORISTA
     # =========================================================
 
-    def activate_wholesale(self, purchase_total=None, purchase_date=None):
+    def activate_wholesale(
+        self,
+        purchase_total=None,
+        purchase_date=None
+    ):
         """
         Activa por primera vez al cliente como mayorista.
 
-        Después de la activación comienza un período de
-        mantenimiento de 30 días.
+        La compra de activación inicia un período
+        de mantenimiento de 30 días.
         """
 
         purchase_date = (
@@ -185,7 +215,8 @@ class CustomerProfile(models.Model):
         )
 
         self.commercial_status = (
-            self.CommercialStatus.WHOLESALE_MAINTENANCE
+            self.CommercialStatus
+            .WHOLESALE_MAINTENANCE
         )
 
         self.wholesale_activated_at = (
@@ -205,22 +236,28 @@ class CustomerProfile(models.Model):
         )
 
         if purchase_total is not None:
+
             self.last_wholesale_purchase_total = (
                 purchase_total
             )
 
         self.save()
 
+
     # =========================================================
     # MANTENIMIENTO
     # =========================================================
 
-    def confirm_maintenance(self, purchase_total=None, purchase_date=None):
+    def confirm_maintenance(
+        self,
+        purchase_total=None,
+        purchase_date=None
+    ):
         """
-        El cliente realizó la compra mínima requerida
-        para mantener su condición mayorista.
+        Registra una compra válida de mantenimiento.
 
-        Reinicia un nuevo período de 30 días.
+        Una compra confirmada desde $50.000 reinicia
+        un nuevo período comercial de 30 días.
         """
 
         purchase_date = (
@@ -229,7 +266,8 @@ class CustomerProfile(models.Model):
         )
 
         self.commercial_status = (
-            self.CommercialStatus.WHOLESALE_ACTIVE
+            self.CommercialStatus
+            .WHOLESALE_ACTIVE
         )
 
         self.maintenance_deadline = (
@@ -245,31 +283,47 @@ class CustomerProfile(models.Model):
         )
 
         if purchase_total is not None:
+
             self.last_wholesale_purchase_total = (
                 purchase_total
             )
 
         self.save()
 
+
     # =========================================================
     # PERÍODO DE GRACIA
     # =========================================================
 
-    def start_grace_period(self):
+    def start_grace_period(
+        self,
+        grace_start=None
+    ):
         """
         Inicia el período adicional de gracia de 30 días.
+
+        El período comienza exactamente cuando venció
+        el mantenimiento, no cuando el cliente vuelve
+        a entrar a la plataforma.
         """
 
-        now = timezone.now()
-
-        self.commercial_status = (
-            self.CommercialStatus.WHOLESALE_GRACE
+        grace_start = (
+            grace_start
+            or self.maintenance_deadline
+            or timezone.now()
         )
 
-        self.grace_started_at = now
+        self.commercial_status = (
+            self.CommercialStatus
+            .WHOLESALE_GRACE
+        )
+
+        self.grace_started_at = (
+            grace_start
+        )
 
         self.grace_deadline = (
-            now
+            grace_start
             + timedelta(days=30)
         )
 
@@ -282,14 +336,18 @@ class CustomerProfile(models.Model):
             ]
         )
 
+
     def reactivate_from_grace(
         self,
         purchase_total=None,
         purchase_date=None
     ):
         """
-        Reactiva al cliente después de cumplir
-        la compra requerida durante el período de gracia.
+        Reactiva al cliente durante el período de gracia
+        después de una compra válida desde $150.000.
+
+        Después de la reactivación comienza un nuevo
+        período de mantenimiento de 30 días.
         """
 
         purchase_date = (
@@ -298,7 +356,8 @@ class CustomerProfile(models.Model):
         )
 
         self.commercial_status = (
-            self.CommercialStatus.WHOLESALE_ACTIVE
+            self.CommercialStatus
+            .WHOLESALE_ACTIVE
         )
 
         self.maintenance_deadline = (
@@ -314,11 +373,13 @@ class CustomerProfile(models.Model):
         )
 
         if purchase_total is not None:
+
             self.last_wholesale_purchase_total = (
                 purchase_total
             )
 
         self.save()
+
 
     # =========================================================
     # VENCIMIENTO
@@ -328,13 +389,13 @@ class CustomerProfile(models.Model):
         """
         Finaliza el beneficio mayorista.
 
-        El historial de activación se conserva para efectos
-        administrativos, pero el cliente vuelve a comprar
-        con precios detal.
+        El historial de activación se conserva,
+        pero el cliente vuelve a comprar a precio detal.
         """
 
         self.commercial_status = (
-            self.CommercialStatus.WHOLESALE_EXPIRED
+            self.CommercialStatus
+            .WHOLESALE_EXPIRED
         )
 
         self.maintenance_deadline = None
@@ -351,19 +412,37 @@ class CustomerProfile(models.Model):
             ]
         )
 
+
     # =========================================================
     # ACTUALIZACIÓN TEMPORAL
     # =========================================================
 
     def refresh_commercial_status(self):
         """
-        Revisa si los plazos comerciales ya vencieron.
+        Revisa las fechas comerciales del cliente.
 
-        La evaluación real de compras se conectará después
-        con los pedidos cuyo pago esté confirmado.
+        Reglas:
+
+        1. Mayorista activo o en mantenimiento:
+           al vencer los primeros 30 días entra en gracia.
+
+        2. La gracia comienza exactamente en la fecha
+           en que venció el mantenimiento.
+
+        3. Si cuando se revisa el perfil ya transcurrieron
+           también los 30 días de gracia, el beneficio
+           vence directamente.
+
+        Esto evita extender artificialmente los plazos
+        cuando el cliente pasa varios días sin ingresar.
         """
 
         now = timezone.now()
+
+
+        # =====================================================
+        # MANTENIMIENTO / MAYORISTA ACTIVO
+        # =====================================================
 
         if (
             self.commercial_status
@@ -375,9 +454,47 @@ class CustomerProfile(models.Model):
             and now > self.maintenance_deadline
         ):
 
-            self.start_grace_period()
+            original_maintenance_deadline = (
+                self.maintenance_deadline
+            )
 
-            return self.commercial_status
+            calculated_grace_deadline = (
+                original_maintenance_deadline
+                + timedelta(days=30)
+            )
+
+
+            # =================================================
+            # TAMBIÉN VENCIÓ LA GRACIA
+            # =================================================
+
+            if now > calculated_grace_deadline:
+
+                self.expire_wholesale()
+
+                return (
+                    self.commercial_status
+                )
+
+
+            # =================================================
+            # TODAVÍA ESTÁ DENTRO DE LA GRACIA
+            # =================================================
+
+            self.start_grace_period(
+                grace_start=(
+                    original_maintenance_deadline
+                )
+            )
+
+            return (
+                self.commercial_status
+            )
+
+
+        # =====================================================
+        # PERÍODO DE GRACIA YA REGISTRADO
+        # =====================================================
 
         if (
             self.commercial_status
@@ -388,6 +505,11 @@ class CustomerProfile(models.Model):
 
             self.expire_wholesale()
 
-            return self.commercial_status
+            return (
+                self.commercial_status
+            )
 
-        return self.commercial_status
+
+        return (
+            self.commercial_status
+        )
