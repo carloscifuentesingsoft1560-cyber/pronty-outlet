@@ -26,6 +26,11 @@ urlpatterns = [
     ),
 
     path(
+        'live/',
+        include('live_sales.urls')
+    ),
+
+    path(
         '',
         include('catalog.urls')
     ),

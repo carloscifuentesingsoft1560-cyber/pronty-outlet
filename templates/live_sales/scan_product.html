@@ -1,0 +1,633 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+Asignar producto | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-scan {
+        min-height: 70vh;
+        padding: 28px 16px 60px;
+        background: #fafafa;
+    }
+
+
+    .live-scan__container {
+        max-width: 760px;
+        margin: 0 auto;
+    }
+
+
+    .live-scan__back {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        color: #1f6a43;
+        text-decoration: none;
+        font-weight: 700;
+
+        margin-bottom: 18px;
+    }
+
+
+    .live-scan__header {
+        margin-bottom: 22px;
+    }
+
+
+    .live-scan__header h1 {
+        margin: 0 0 5px;
+        color: #1d352a;
+        font-size: 1.65rem;
+    }
+
+
+    .live-scan__header p {
+        margin: 0;
+        color: #6b7280;
+    }
+
+
+    .live-scan__card {
+        background: white;
+        border: 1px solid #ececec;
+        border-radius: 20px;
+
+        padding: 22px;
+
+        margin-bottom: 20px;
+
+        box-shadow:
+            0 7px 25px
+            rgba(0, 0, 0, 0.05);
+    }
+
+
+    .live-product {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+    }
+
+
+    .live-product__icon {
+        width: 58px;
+        height: 58px;
+
+        border-radius: 17px;
+
+        background: #fff0f5;
+        color: #d81b60;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex-shrink: 0;
+    }
+
+
+    .live-product__icon svg {
+        width: 28px;
+        height: 28px;
+    }
+
+
+    .live-product__name {
+        margin: 0 0 5px;
+
+        color: #202d27;
+
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+
+    .live-product__meta {
+        margin: 0;
+
+        color: #737373;
+
+        font-size: 0.9rem;
+    }
+
+
+    .live-product__stock {
+        margin-top: 8px;
+
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+
+        padding: 5px 9px;
+
+        border-radius: 999px;
+
+        background: #edf7f0;
+        color: #266a48;
+
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+
+    .live-form__group {
+        margin-bottom: 18px;
+    }
+
+
+    .live-form__label {
+        display: block;
+
+        margin-bottom: 7px;
+
+        color: #263c31;
+
+        font-weight: 750;
+    }
+
+
+    .live-form__input,
+    .live-form__select {
+        width: 100%;
+
+        box-sizing: border-box;
+
+        border: 1px solid #d9dedb;
+
+        border-radius: 12px;
+
+        min-height: 48px;
+
+        padding: 11px 13px;
+
+        background: white;
+
+        font: inherit;
+
+        outline: none;
+    }
+
+
+    .live-form__input:focus,
+    .live-form__select:focus {
+        border-color: #268152;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(38, 129, 82, 0.10);
+    }
+
+
+    .live-form__hint {
+        margin: 6px 0 0;
+
+        font-size: 0.8rem;
+
+        color: #858585;
+    }
+
+
+    .live-form__button {
+        width: 100%;
+
+        border: 0;
+
+        border-radius: 13px;
+
+        padding: 14px 18px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #17613e,
+                #278657
+            );
+
+        color: white;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+        gap: 9px;
+    }
+
+
+    .live-form__button:hover {
+        filter: brightness(1.04);
+    }
+
+
+    .live-warning {
+        padding: 17px;
+
+        border-radius: 13px;
+
+        background: #fff7df;
+
+        color: #765600;
+
+        font-size: 0.9rem;
+    }
+
+
+    .live-recent__title {
+        margin: 0 0 16px;
+
+        color: #263c31;
+
+        font-size: 1.05rem;
+    }
+
+
+    .live-assignment {
+        display: flex;
+
+        justify-content: space-between;
+
+        gap: 15px;
+
+        padding: 14px 0;
+
+        border-top: 1px solid #eeeeee;
+    }
+
+
+    .live-assignment:first-of-type {
+        border-top: 0;
+    }
+
+
+    .live-assignment__customer {
+        font-weight: 800;
+        color: #232323;
+    }
+
+
+    .live-assignment__name {
+        margin-top: 3px;
+
+        color: #707070;
+
+        font-size: 0.84rem;
+    }
+
+
+    .live-assignment__right {
+        text-align: right;
+    }
+
+
+    .live-assignment__price {
+        font-weight: 800;
+        color: #1e5e40;
+    }
+
+
+    .live-assignment__status {
+        margin-top: 4px;
+
+        font-size: 0.76rem;
+
+        color: #777;
+    }
+
+
+    @media (
+        max-width: 600px
+    ) {
+
+        .live-scan {
+            padding:
+                20px 12px
+                45px;
+        }
+
+
+        .live-scan__card {
+            padding: 18px;
+            border-radius: 17px;
+        }
+
+
+        .live-scan__header h1 {
+            font-size: 1.4rem;
+        }
+
+    }
+
+</style>
+
+
+<section class="live-scan">
+
+    <div class="live-scan__container">
+
+
+        <a
+            href="{% url 'live_sales:dashboard' %}"
+            class="live-scan__back"
+        >
+
+            <i data-lucide="arrow-left"></i>
+
+            Pronty Live
+
+        </a>
+
+
+        <header class="live-scan__header">
+
+            <h1>
+                Producto escaneado
+            </h1>
+
+            <p>
+                Identifica al cliente y confirma la asignación.
+            </p>
+
+        </header>
+
+
+        <!-- PRODUCTO -->
+
+        <section class="live-scan__card">
+
+            <div class="live-product">
+
+                <div class="live-product__icon">
+
+                    <i data-lucide="scan-line"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h2 class="live-product__name">
+
+                        {{ product.name }}
+
+                    </h2>
+
+
+                    <p class="live-product__meta">
+
+                        SKU:
+                        {{ product.sku }}
+
+                    </p>
+
+
+                    <span class="live-product__stock">
+
+                        <i data-lucide="package-check"></i>
+
+                        {{ product.stock }}
+                        disponibles
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ASIGNACIÓN -->
+
+        <section class="live-scan__card">
+
+            {% if session_products %}
+
+                <form
+                    method="post"
+                    class="live-form"
+                >
+
+                    {% csrf_token %}
+
+
+                    <div class="live-form__group">
+
+                        <label
+                            for="live_session"
+                            class="live-form__label"
+                        >
+                            Live
+                        </label>
+
+
+                        <select
+                            id="live_session"
+                            name="live_session"
+                            class="live-form__select"
+                            required
+                        >
+
+                            <option value="">
+                                Selecciona el Live
+                            </option>
+
+
+                            {% for session_product in session_products %}
+
+                                <option
+                                    value="{{ session_product.live_session.id }}"
+                                    {% if selected_session_product %}
+                                        {% if session_product.live_session.id == selected_session_product.live_session.id %}
+                                            selected
+                                        {% endif %}
+                                    {% endif %}
+                                >
+
+                                    {{ session_product.live_session.name }}
+                                    -
+                                    {{ session_product.live_session.get_platform_display }}
+
+                                </option>
+
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="live-form__group">
+
+                        <label
+                            for="customer_code"
+                            class="live-form__label"
+                        >
+                            Código del cliente
+                        </label>
+
+
+                        <input
+                            id="customer_code"
+                            name="customer_code"
+                            type="text"
+                            class="live-form__input"
+                            placeholder="Ej. PRY-C000002"
+                            autocomplete="off"
+                            autocapitalize="characters"
+                            required
+                        >
+
+
+                        <p class="live-form__hint">
+
+                            Digita el código permanente
+                            de Pronty Live del cliente.
+
+                        </p>
+
+                    </div>
+
+
+                    <div class="live-form__group">
+
+                        <label
+                            for="quantity"
+                            class="live-form__label"
+                        >
+                            Cantidad
+                        </label>
+
+
+                        <input
+                            id="quantity"
+                            name="quantity"
+                            type="number"
+                            class="live-form__input"
+                            value="1"
+                            min="1"
+                            inputmode="numeric"
+                            required
+                        >
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="live-form__button"
+                    >
+
+                        <i data-lucide="shopping-bag"></i>
+
+                        Asignar al cliente
+
+                    </button>
+
+                </form>
+
+
+            {% else %}
+
+                <div class="live-warning">
+
+                    Este producto no está habilitado
+                    actualmente en ningún Live
+                    programado o en vivo.
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- ASIGNACIONES RECIENTES -->
+
+        {% if recent_assignments %}
+
+            <section class="live-scan__card">
+
+                <h2 class="live-recent__title">
+
+                    Asignaciones recientes
+
+                </h2>
+
+
+                {% for assignment in recent_assignments %}
+
+                    <div class="live-assignment">
+
+                        <div>
+
+                            <div class="live-assignment__customer">
+
+                                {{ assignment.customer.customer_code }}
+
+                            </div>
+
+
+                            <div class="live-assignment__name">
+
+                                {% if assignment.customer.user.get_full_name %}
+
+                                    {{ assignment.customer.user.get_full_name }}
+
+                                {% else %}
+
+                                    {{ assignment.customer.user.username }}
+
+                                {% endif %}
+
+                                ·
+                                {{ assignment.quantity }}
+                                unidad(es)
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="live-assignment__right">
+
+                            <div class="live-assignment__price">
+
+                                ${{ assignment.subtotal|floatformat:0 }}
+
+                            </div>
+
+
+                            <div class="live-assignment__status">
+
+                                {{ assignment.get_status_display }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </section>
+
+        {% endif %}
+
+
+    </div>
+
+</section>
+
+{% endblock %}

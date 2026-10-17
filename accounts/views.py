@@ -14,8 +14,20 @@ from django.views.decorators.http import require_POST
 from cart.models import Order
 from cart.reservation_services import expire_order_if_due
 
+from live_sales.models import (
+    LiveAssignment,
+    LiveCustomerAccess,
+)
+from live_sales.services import (
+    convert_live_assignments_to_order,
+)
+
 from .models import CustomerProfile
 
+
+# ============================================================
+# USUARIO CLIENTE
+# ============================================================
 
 def is_customer_user(user):
     """
@@ -29,6 +41,10 @@ def is_customer_user(user):
         and not user.is_superuser
     )
 
+
+# ============================================================
+# VINCULAR PEDIDOS DE INVITADO
+# ============================================================
 
 def link_guest_orders_to_user(user):
     """
@@ -60,6 +76,10 @@ def link_guest_orders_to_user(user):
     return updated_orders
 
 
+# ============================================================
+# PERFIL COMERCIAL
+# ============================================================
+
 def get_customer_profile(user):
     """
     Obtiene o crea el perfil comercial exclusivamente
@@ -85,11 +105,15 @@ def get_customer_profile(user):
 # MI CUENTA
 # ============================================================
 
-@login_required(login_url='accounts:login')
+@login_required(
+    login_url='accounts:login'
+)
 def account_dashboard(request):
 
-    # Un administrador no debe utilizar Mi cuenta
-    # como si fuera un cliente.
+    # ========================================================
+    # ADMINISTRADORES NO USAN MI CUENTA
+    # ========================================================
+
     if (
         request.user.is_staff
         or request.user.is_superuser
@@ -99,6 +123,10 @@ def account_dashboard(request):
             '/admin/'
         )
 
+    # ========================================================
+    # PEDIDOS PREVIOS
+    # ========================================================
+
     link_guest_orders_to_user(
         request.user
     )
@@ -106,10 +134,6 @@ def account_dashboard(request):
     customer_profile = get_customer_profile(
         request.user
     )
-
-    # ========================================================
-    # CARGAR PEDIDOS DEL CLIENTE
-    # ========================================================
 
     orders = list(
         Order.objects
@@ -127,10 +151,6 @@ def account_dashboard(request):
     # ========================================================
     # COMPROBAR RESERVAS VENCIDAS
     # ========================================================
-    #
-    # Así "Mi cuenta" nunca muestra como activa una reserva
-    # que ya superó su fecha límite.
-    # ========================================================
 
     for order in orders:
 
@@ -142,13 +162,293 @@ def account_dashboard(request):
 
             order.refresh_from_db()
 
+    # ========================================================
+    # PRONTY LIVE DEL CLIENTE
+    # ========================================================
+
+    live_access = (
+        LiveCustomerAccess.objects
+        .filter(
+            user=request.user,
+            is_activated=True,
+        )
+        .first()
+    )
+
+    live_assignments = []
+
+    if live_access:
+
+        live_assignments = list(
+            LiveAssignment.objects
+            .select_related(
+                'product',
+                'live_session',
+                'order',
+            )
+            .filter(
+                customer=live_access,
+                status=(
+                    LiveAssignment
+                    .Status
+                    .ASSIGNED
+                ),
+            )
+            .order_by(
+                '-assigned_at'
+            )
+        )
+
+    # ========================================================
+    # RENDER
+    # ========================================================
+
     return render(
         request,
         'accounts/dashboard.html',
         {
             'orders': orders,
             'customer_profile': customer_profile,
+            'live_access': live_access,
+            'live_assignments': live_assignments,
         }
+    )
+
+
+# ============================================================
+# GENERAR PEDIDO DESDE PRONTY LIVE
+# ============================================================
+
+@login_required(
+    login_url='accounts:login'
+)
+@require_POST
+def generate_live_order(request):
+    """
+    Permite al cliente convertir sus asignaciones activas
+    de Pronty Live en un pedido real.
+
+    Seguridad:
+    - solamente asignaciones del usuario autenticado;
+    - solamente ASSIGNED;
+    - el servicio vuelve a validar todo dentro de transacción;
+    - no se vuelve a descontar inventario.
+    """
+
+    # ========================================================
+    # ADMINISTRADORES NO GENERAN PEDIDOS COMO CLIENTES
+    # ========================================================
+
+    if (
+        request.user.is_staff
+        or request.user.is_superuser
+    ):
+
+        return redirect(
+            '/admin/'
+        )
+
+    # ========================================================
+    # ACCESO LIVE
+    # ========================================================
+
+    live_access = (
+        LiveCustomerAccess.objects
+        .filter(
+            user=request.user,
+            is_activated=True,
+        )
+        .first()
+    )
+
+    if not live_access:
+
+        messages.error(
+            request,
+            (
+                'Tu cuenta no tiene activado '
+                'Pronty Live.'
+            )
+        )
+
+        return redirect(
+            'accounts:dashboard'
+        )
+
+    # ========================================================
+    # IDS SELECCIONADOS
+    # ========================================================
+
+    raw_assignment_ids = (
+        request.POST.getlist(
+            'assignment_ids'
+        )
+    )
+
+    if not raw_assignment_ids:
+
+        messages.warning(
+            request,
+            (
+                'Selecciona al menos un producto '
+                'de Pronty Live.'
+            )
+        )
+
+        return redirect(
+            'accounts:dashboard'
+        )
+
+    try:
+
+        assignment_ids = sorted({
+            int(assignment_id)
+            for assignment_id
+            in raw_assignment_ids
+        })
+
+    except (
+        TypeError,
+        ValueError,
+    ):
+
+        messages.error(
+            request,
+            (
+                'La selección de productos '
+                'no es válida.'
+            )
+        )
+
+        return redirect(
+            'accounts:dashboard'
+        )
+
+    if not assignment_ids:
+
+        messages.warning(
+            request,
+            (
+                'Selecciona al menos un producto '
+                'de Pronty Live.'
+            )
+        )
+
+        return redirect(
+            'accounts:dashboard'
+        )
+
+    # ========================================================
+    # VALIDAR PROPIEDAD DE LAS ASIGNACIONES
+    # ========================================================
+
+    valid_assignment_ids = list(
+        LiveAssignment.objects
+        .filter(
+            pk__in=assignment_ids,
+            customer=live_access,
+            status=(
+                LiveAssignment
+                .Status
+                .ASSIGNED
+            ),
+        )
+        .values_list(
+            'pk',
+            flat=True
+        )
+    )
+
+    if (
+        len(valid_assignment_ids)
+        != len(assignment_ids)
+    ):
+
+        messages.error(
+            request,
+            (
+                'Uno o más productos seleccionados '
+                'ya no están disponibles para '
+                'generar el pedido. '
+                'Actualiza la página e inténtalo nuevamente.'
+            )
+        )
+
+        return redirect(
+            'accounts:dashboard'
+        )
+
+    # ========================================================
+    # CONVERTIR A PEDIDO
+    # ========================================================
+
+    try:
+
+        order = (
+            convert_live_assignments_to_order(
+                valid_assignment_ids,
+                created_by=request.user,
+            )
+        )
+
+    except ValidationError as error:
+
+        if getattr(
+            error,
+            'messages',
+            None
+        ):
+
+            error_message = ' '.join(
+                error.messages
+            )
+
+        else:
+
+            error_message = str(
+                error
+            )
+
+        messages.error(
+            request,
+            error_message
+        )
+
+        return redirect(
+            'accounts:dashboard'
+        )
+
+    except Exception as error:
+
+        messages.error(
+            request,
+            (
+                'No fue posible generar el pedido '
+                'de Pronty Live. '
+                f'Detalle: {error}'
+            )
+        )
+
+        return redirect(
+            'accounts:dashboard'
+        )
+
+    # ========================================================
+    # ÉXITO
+    # ========================================================
+
+    messages.success(
+        request,
+        (
+            'Tu pedido de Pronty Live fue creado '
+            f'correctamente: {order.order_number}. '
+            'Ahora puedes continuar con el pago.'
+        )
+    )
+
+    return redirect(
+        'accounts:order_detail',
+        order_number=order.order_number
     )
 
 
@@ -156,7 +456,9 @@ def account_dashboard(request):
 # DETALLE DE PEDIDO
 # ============================================================
 
-@login_required(login_url='accounts:login')
+@login_required(
+    login_url='accounts:login'
+)
 def order_detail(
     request,
     order_number
@@ -259,7 +561,10 @@ def account_login(request):
 
             messages.error(
                 request,
-                'Ingresa tu correo electrónico y contraseña.'
+                (
+                    'Ingresa tu correo electrónico '
+                    'y contraseña.'
+                )
             )
 
             return render(
@@ -282,7 +587,10 @@ def account_login(request):
 
             messages.error(
                 request,
-                'El correo o la contraseña no son correctos.'
+                (
+                    'El correo o la contraseña '
+                    'no son correctos.'
+                )
             )
 
             return render(
@@ -305,8 +613,9 @@ def account_login(request):
             messages.error(
                 request,
                 (
-                    'Esta cuenta corresponde a la administración '
-                    'de Pronty. Ingresa desde el panel administrativo.'
+                    'Esta cuenta corresponde a la '
+                    'administración de Pronty. '
+                    'Ingresa desde el panel administrativo.'
                 )
             )
 
@@ -328,7 +637,10 @@ def account_login(request):
 
             messages.error(
                 request,
-                'El correo o la contraseña no son correctos.'
+                (
+                    'El correo o la contraseña '
+                    'no son correctos.'
+                )
             )
 
             return render(
@@ -354,7 +666,10 @@ def account_login(request):
 
         messages.success(
             request,
-            'Has iniciado sesión correctamente.'
+            (
+                'Has iniciado sesión '
+                'correctamente.'
+            )
         )
 
         next_url = request.GET.get(
@@ -467,7 +782,10 @@ def account_register(request):
 
             messages.error(
                 request,
-                'Completa todos los campos obligatorios.'
+                (
+                    'Completa todos los '
+                    'campos obligatorios.'
+                )
             )
 
             return render(
@@ -492,7 +810,10 @@ def account_register(request):
 
             messages.error(
                 request,
-                'Ingresa un correo electrónico válido.'
+                (
+                    'Ingresa un correo '
+                    'electrónico válido.'
+                )
             )
 
             return render(
@@ -511,7 +832,10 @@ def account_register(request):
 
             messages.error(
                 request,
-                'Las contraseñas no coinciden.'
+                (
+                    'Las contraseñas '
+                    'no coinciden.'
+                )
             )
 
             return render(
@@ -532,7 +856,10 @@ def account_register(request):
 
             messages.error(
                 request,
-                'Ya existe una cuenta registrada con este correo.'
+                (
+                    'Ya existe una cuenta '
+                    'registrada con este correo.'
+                )
             )
 
             return render(
@@ -598,9 +925,6 @@ def account_register(request):
                     last_name=last_name
                 )
 
-                # Seguridad explícita:
-                # un cliente nunca debe tener permisos administrativos.
-
                 user.is_staff = False
                 user.is_superuser = False
 
@@ -623,7 +947,10 @@ def account_register(request):
 
             messages.error(
                 request,
-                'Ya existe una cuenta registrada con este correo.'
+                (
+                    'Ya existe una cuenta '
+                    'registrada con este correo.'
+                )
             )
 
             return render(
@@ -641,7 +968,10 @@ def account_register(request):
 
         messages.success(
             request,
-            'Tu cuenta fue creada correctamente.'
+            (
+                'Tu cuenta fue creada '
+                'correctamente.'
+            )
         )
 
         return redirect(
@@ -667,7 +997,10 @@ def account_logout(request):
 
     messages.success(
         request,
-        'Has cerrado sesión correctamente.'
+        (
+            'Has cerrado sesión '
+            'correctamente.'
+        )
     )
 
     return redirect(

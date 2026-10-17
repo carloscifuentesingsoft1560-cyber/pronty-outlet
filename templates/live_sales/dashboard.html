@@ -1,0 +1,882 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Pronty Live | Pronty Outlet
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-dashboard {
+        padding: 40px 20px 70px;
+        background:
+            linear-gradient(
+                180deg,
+                #fffafc 0%,
+                #ffffff 45%,
+                #f8faf8 100%
+            );
+        min-height: 70vh;
+    }
+
+
+    .live-dashboard__container {
+        max-width: 1250px;
+        margin: 0 auto;
+    }
+
+
+    /* ======================================================
+       ENCABEZADO
+       ====================================================== */
+
+    .live-dashboard__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+
+
+    .live-dashboard__title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+
+    .live-dashboard__icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background:
+            linear-gradient(
+                135deg,
+                #d81b60,
+                #ff4f9a
+            );
+
+        color: white;
+
+        box-shadow:
+            0 10px 24px
+            rgba(216, 27, 96, 0.20);
+    }
+
+
+    .live-dashboard__icon svg {
+        width: 28px;
+        height: 28px;
+    }
+
+
+    .live-dashboard__title {
+        margin: 0;
+        color: #1e362b;
+        font-size: 2rem;
+        font-weight: 800;
+    }
+
+
+    .live-dashboard__subtitle {
+        margin: 5px 0 0;
+        color: #6b7280;
+        font-size: 0.98rem;
+    }
+
+
+    .live-dashboard__admin-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+
+        padding: 11px 18px;
+
+        border-radius: 12px;
+
+        text-decoration: none;
+
+        color: #1f5135;
+        background: #edf7f0;
+        border: 1px solid #d5eadb;
+
+        font-weight: 700;
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+
+    .live-dashboard__admin-link:hover {
+        transform: translateY(-2px);
+
+        box-shadow:
+            0 8px 20px
+            rgba(31, 81, 53, 0.12);
+    }
+
+
+    /* ======================================================
+       MÉTRICAS
+       ====================================================== */
+
+    .live-dashboard__metrics {
+        display: grid;
+
+        grid-template-columns:
+            repeat(3, minmax(0, 1fr));
+
+        gap: 20px;
+
+        margin-bottom: 34px;
+    }
+
+
+    .live-metric {
+        background: white;
+
+        border-radius: 20px;
+
+        padding: 24px;
+
+        border: 1px solid #ececec;
+
+        box-shadow:
+            0 8px 28px
+            rgba(0, 0, 0, 0.055);
+
+        display: flex;
+
+        align-items: center;
+
+        gap: 18px;
+    }
+
+
+    .live-metric__icon {
+        width: 52px;
+        height: 52px;
+
+        border-radius: 16px;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        flex-shrink: 0;
+    }
+
+
+    .live-metric__icon--live {
+        background: #fff0f5;
+        color: #d81b60;
+    }
+
+
+    .live-metric__icon--clients {
+        background: #edf7f0;
+        color: #26734d;
+    }
+
+
+    .live-metric__icon--assignments {
+        background: #fff7df;
+        color: #a36b00;
+    }
+
+
+    .live-metric__value {
+        display: block;
+
+        font-size: 1.9rem;
+
+        line-height: 1;
+
+        font-weight: 800;
+
+        color: #1f2937;
+    }
+
+
+    .live-metric__label {
+        display: block;
+
+        margin-top: 7px;
+
+        color: #6b7280;
+
+        font-size: 0.9rem;
+    }
+
+
+    /* ======================================================
+       BLOQUE PRINCIPAL
+       ====================================================== */
+
+    .live-dashboard__panel {
+        background: white;
+
+        border-radius: 22px;
+
+        border: 1px solid #ececec;
+
+        box-shadow:
+            0 10px 32px
+            rgba(0, 0, 0, 0.055);
+
+        overflow: hidden;
+    }
+
+
+    .live-dashboard__panel-header {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 20px;
+
+        padding: 22px 25px;
+
+        border-bottom: 1px solid #ededed;
+    }
+
+
+    .live-dashboard__panel-title {
+        margin: 0;
+
+        font-size: 1.2rem;
+
+        color: #1e362b;
+    }
+
+
+    .live-dashboard__panel-text {
+        margin: 4px 0 0;
+
+        color: #777;
+
+        font-size: 0.88rem;
+    }
+
+
+    .live-dashboard__create {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 10px 15px;
+
+        border-radius: 11px;
+
+        color: white;
+
+        background:
+            linear-gradient(
+                135deg,
+                #1f6a43,
+                #2c8b59
+            );
+
+        text-decoration: none;
+
+        font-weight: 700;
+
+        font-size: 0.9rem;
+    }
+
+
+    /* ======================================================
+       TABLA DE LIVES
+       ====================================================== */
+
+    .live-table-wrapper {
+        overflow-x: auto;
+    }
+
+
+    .live-table {
+        width: 100%;
+
+        border-collapse: collapse;
+    }
+
+
+    .live-table th {
+        text-align: left;
+
+        padding: 14px 20px;
+
+        background: #fafafa;
+
+        color: #6b7280;
+
+        font-size: 0.78rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    .live-table td {
+        padding: 17px 20px;
+
+        border-top: 1px solid #f0f0f0;
+
+        color: #374151;
+
+        vertical-align: middle;
+    }
+
+
+    .live-table__name {
+        font-weight: 750;
+
+        color: #1f2937;
+    }
+
+
+    .live-status {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        border-radius: 999px;
+
+        padding: 5px 10px;
+
+        font-size: 0.76rem;
+
+        font-weight: 700;
+    }
+
+
+    .live-status--live {
+        color: #b4124e;
+
+        background: #ffeaf2;
+    }
+
+
+    .live-status--scheduled {
+        color: #855d00;
+
+        background: #fff5d6;
+    }
+
+
+    .live-status--closed {
+        color: #456052;
+
+        background: #eaf2ed;
+    }
+
+
+    .live-status--canceled {
+        color: #7b7b7b;
+
+        background: #eeeeee;
+    }
+
+
+    .live-table__action {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        text-decoration: none;
+
+        color: #1f6a43;
+
+        font-weight: 700;
+
+        font-size: 0.85rem;
+    }
+
+
+    .live-empty {
+        padding: 48px 25px;
+
+        text-align: center;
+
+        color: #777;
+    }
+
+
+    .live-empty svg {
+        width: 42px;
+
+        height: 42px;
+
+        margin-bottom: 12px;
+
+        color: #c2c2c2;
+    }
+
+
+    /* ======================================================
+       RESPONSIVE
+       ====================================================== */
+
+    @media (
+        max-width: 850px
+    ) {
+
+        .live-dashboard__header {
+            flex-direction: column;
+
+            align-items: flex-start;
+        }
+
+
+        .live-dashboard__metrics {
+            grid-template-columns: 1fr;
+        }
+
+
+        .live-dashboard__panel-header {
+            flex-direction: column;
+
+            align-items: flex-start;
+        }
+    }
+
+
+    @media (
+        max-width: 600px
+    ) {
+
+        .live-dashboard {
+            padding:
+                28px 14px
+                50px;
+        }
+
+
+        .live-dashboard__title {
+            font-size: 1.55rem;
+        }
+
+
+        .live-dashboard__icon {
+            width: 48px;
+            height: 48px;
+        }
+    }
+
+</style>
+
+
+<section class="live-dashboard">
+
+    <div class="live-dashboard__container">
+
+
+        <!-- ==============================================
+             ENCABEZADO
+             ============================================== -->
+
+        <div class="live-dashboard__header">
+
+            <div class="live-dashboard__title-wrap">
+
+                <div class="live-dashboard__icon">
+
+                    <i data-lucide="radio"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h1 class="live-dashboard__title">
+
+                        Pronty Live
+
+                    </h1>
+
+                    <p class="live-dashboard__subtitle">
+
+                        Centro de operación de ventas en vivo
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <a
+                href="/admin/live_sales/"
+                class="live-dashboard__admin-link"
+            >
+
+                <i data-lucide="settings"></i>
+
+                Administración Live
+
+            </a>
+
+        </div>
+
+
+        <!-- ==============================================
+             MÉTRICAS
+             ============================================== -->
+
+        <div class="live-dashboard__metrics">
+
+
+            <article class="live-metric">
+
+                <div
+                    class="
+                        live-metric__icon
+                        live-metric__icon--live
+                    "
+                >
+
+                    <i data-lucide="radio-tower"></i>
+
+                </div>
+
+
+                <div>
+
+                    <strong class="live-metric__value">
+
+                        {{ active_sessions }}
+
+                    </strong>
+
+                    <span class="live-metric__label">
+
+                        Lives activos o programados
+
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <article class="live-metric">
+
+                <div
+                    class="
+                        live-metric__icon
+                        live-metric__icon--clients
+                    "
+                >
+
+                    <i data-lucide="users"></i>
+
+                </div>
+
+
+                <div>
+
+                    <strong class="live-metric__value">
+
+                        {{ active_customers }}
+
+                    </strong>
+
+                    <span class="live-metric__label">
+
+                        Clientes Live activos
+
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <article class="live-metric">
+
+                <div
+                    class="
+                        live-metric__icon
+                        live-metric__icon--assignments
+                    "
+                >
+
+                    <i data-lucide="shopping-basket"></i>
+
+                </div>
+
+
+                <div>
+
+                    <strong class="live-metric__value">
+
+                        {{ pending_assignments }}
+
+                    </strong>
+
+                    <span class="live-metric__label">
+
+                        Asignaciones por convertir
+
+                    </span>
+
+                </div>
+
+            </article>
+
+        </div>
+
+
+        <!-- ==============================================
+             LIVES RECIENTES
+             ============================================== -->
+
+        <section class="live-dashboard__panel">
+
+
+            <div class="live-dashboard__panel-header">
+
+                <div>
+
+                    <h2 class="live-dashboard__panel-title">
+
+                        Lives recientes
+
+                    </h2>
+
+                    <p class="live-dashboard__panel-text">
+
+                        Selecciona un Live para continuar
+                        con la operación.
+
+                    </p>
+
+                </div>
+
+
+                <a
+                    href="/admin/live_sales/livesession/add/"
+                    class="live-dashboard__create"
+                >
+
+                    <i data-lucide="plus"></i>
+
+                    Crear Live
+
+                </a>
+
+            </div>
+
+
+            {% if sessions %}
+
+                <div class="live-table-wrapper">
+
+                    <table class="live-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Live
+                                </th>
+
+                                <th>
+                                    Plataforma
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
+                                <th>
+                                    Programado
+                                </th>
+
+                                <th>
+                                    Acción
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for session in sessions %}
+
+                                <tr>
+
+                                    <td>
+
+                                        <span class="live-table__name">
+
+                                            {{ session.name }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ session.get_platform_display }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if session.status == 'LIVE' %}
+
+                                            <span
+                                                class="
+                                                    live-status
+                                                    live-status--live
+                                                "
+                                            >
+
+                                                <i data-lucide="circle-dot"></i>
+
+                                                En vivo
+
+                                            </span>
+
+
+                                        {% elif session.status == 'SCHEDULED' %}
+
+                                            <span
+                                                class="
+                                                    live-status
+                                                    live-status--scheduled
+                                                "
+                                            >
+
+                                                <i data-lucide="clock"></i>
+
+                                                Programado
+
+                                            </span>
+
+
+                                        {% elif session.status == 'CLOSED' %}
+
+                                            <span
+                                                class="
+                                                    live-status
+                                                    live-status--closed
+                                                "
+                                            >
+
+                                                <i data-lucide="check-circle"></i>
+
+                                                Finalizado
+
+                                            </span>
+
+
+                                        {% else %}
+
+                                            <span
+                                                class="
+                                                    live-status
+                                                    live-status--canceled
+                                                "
+                                            >
+
+                                                <i data-lucide="circle-x"></i>
+
+                                                Cancelado
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if session.scheduled_at %}
+
+                                            {{ session.scheduled_at|date:"d/m/Y h:i A" }}
+
+                                        {% else %}
+
+                                            Sin fecha
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <a
+                                            href="/admin/live_sales/livesession/{{ session.id }}/change/"
+                                            class="live-table__action"
+                                        >
+
+                                            <i data-lucide="arrow-right"></i>
+
+                                            Administrar
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+                <div class="live-empty">
+
+                    <i data-lucide="radio"></i>
+
+                    <p>
+
+                        Todavía no hay Lives registrados.
+
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+
+        </section>
+
+    </div>
+
+</section>
+
+{% endblock %}

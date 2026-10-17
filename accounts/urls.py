@@ -8,17 +8,40 @@ app_name = 'accounts'
 
 
 urlpatterns = [
+
+    # ========================================================
+    # MI CUENTA
+    # ========================================================
+
     path(
         '',
         views.account_dashboard,
         name='dashboard'
     ),
 
+    # ========================================================
+    # PRONTY LIVE
+    # ========================================================
+
+    path(
+        'pronty-live/generar-pedido/',
+        views.generate_live_order,
+        name='generate_live_order'
+    ),
+
+    # ========================================================
+    # PEDIDOS
+    # ========================================================
+
     path(
         'pedido/<str:order_number>/',
         views.order_detail,
         name='order_detail'
     ),
+
+    # ========================================================
+    # LOGIN / REGISTRO / LOGOUT
+    # ========================================================
 
     path(
         'ingresar/',
