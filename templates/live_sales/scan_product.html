@@ -137,6 +137,42 @@ Asignar producto | Pronty Live
     }
 
 
+    .live-product__actions {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 10px;
+
+        margin-top: 16px;
+    }
+
+
+    .live-product__action {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        padding: 9px 12px;
+
+        border-radius: 10px;
+
+        text-decoration: none;
+
+        font-size: 0.82rem;
+
+        font-weight: 750;
+
+        color: #1f6a43;
+
+        background: #edf7f0;
+
+        border: 1px solid #d5eadb;
+    }
+
+
     .live-form__group {
         margin-bottom: 18px;
     }
@@ -327,6 +363,11 @@ Asignar producto | Pronty Live
             font-size: 1.4rem;
         }
 
+
+        .live-product {
+            align-items: flex-start;
+        }
+
     }
 
 </style>
@@ -361,8 +402,6 @@ Asignar producto | Pronty Live
 
         </header>
 
-
-        <!-- PRODUCTO -->
 
         <section class="live-scan__card">
 
@@ -401,14 +440,41 @@ Asignar producto | Pronty Live
 
                     </span>
 
+
+                    <div class="live-product__actions">
+
+                        <a
+                            href="{% url 'live_sales:product_qr_label' qr.code %}"
+                            class="live-product__action"
+                        >
+
+                            <i data-lucide="printer"></i>
+
+                            Ver etiqueta QR
+
+                        </a>
+
+
+                        <a
+                            href="{% url 'live_sales:product_qr_image' qr.code %}"
+                            target="_blank"
+                            class="live-product__action"
+                        >
+
+                            <i data-lucide="qr-code"></i>
+
+                            Abrir QR
+
+                        </a>
+
+                    </div>
+
                 </div>
 
             </div>
 
         </section>
 
-
-        <!-- ASIGNACIÓN -->
 
         <section class="live-scan__card">
 
@@ -552,8 +618,6 @@ Asignar producto | Pronty Live
 
         </section>
 
-
-        <!-- ASIGNACIONES RECIENTES -->
 
         {% if recent_assignments %}
 

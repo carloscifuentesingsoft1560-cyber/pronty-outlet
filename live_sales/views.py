@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import ValidationError
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
@@ -13,6 +14,7 @@ from .models import (
 )
 
 from .services import (
+    build_product_qr_image_bytes,
     reserve_new_live_assignment,
 )
 
@@ -90,6 +92,92 @@ def live_dashboard(request):
     return render(
         request,
         'live_sales/dashboard.html',
+        context
+    )
+
+
+# ============================================================
+# IMAGEN PNG DEL QR DE PRODUCTO
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+def product_qr_image(
+    request,
+    code
+):
+
+    qr_record = get_object_or_404(
+        LiveProductQR.objects.select_related(
+            'product'
+        ),
+        code=code,
+        is_active=True,
+    )
+
+
+    image_bytes = (
+        build_product_qr_image_bytes(
+            request,
+            qr_record,
+        )
+    )
+
+
+    response = HttpResponse(
+        image_bytes,
+        content_type='image/png',
+    )
+
+
+    response[
+        'Content-Disposition'
+    ] = (
+        f'inline; '
+        f'filename="pronty-live-producto-'
+        f'{qr_record.product.pk}.png"'
+    )
+
+
+    return response
+
+
+# ============================================================
+# ETIQUETA QR DEL PRODUCTO
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+def product_qr_label(
+    request,
+    code
+):
+
+    qr_record = get_object_or_404(
+        LiveProductQR.objects.select_related(
+            'product'
+        ),
+        code=code,
+        is_active=True,
+    )
+
+
+    product = qr_record.product
+
+
+    context = {
+        'qr': qr_record,
+        'product': product,
+    }
+
+
+    return render(
+        request,
+        'live_sales/product_qr_label.html',
         context
     )
 
@@ -178,9 +266,6 @@ def scan_product_qr(
                 break
 
 
-    # Si solamente hay un Live posible,
-    # lo seleccionamos automáticamente.
-
     if (
         selected_session_product is None
         and len(session_products) == 1
@@ -229,10 +314,6 @@ def scan_product_qr(
             )
 
 
-            # =================================================
-            # CLIENTE
-            # =================================================
-
             customer = (
                 LiveCustomerAccess.objects
                 .select_related(
@@ -270,10 +351,6 @@ def scan_product_qr(
 
             else:
 
-                # =============================================
-                # CANTIDAD
-                # =============================================
-
                 try:
 
                     quantity = int(
@@ -299,10 +376,6 @@ def scan_product_qr(
                     )
 
                 else:
-
-                    # =========================================
-                    # CREAR ASIGNACIÓN
-                    # =========================================
 
                     assignment = (
                         LiveAssignment(
@@ -442,10 +515,6 @@ def scan_product_qr(
         )[:10]
     )
 
-
-    # ========================================================
-    # CONTEXTO
-    # ========================================================
 
     context = {
         'qr': qr,

@@ -1,9 +1,14 @@
+import io
 from datetime import timedelta
 from decimal import Decimal
 
+import qrcode
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.urls import reverse
 from django.utils import timezone
+from qrcode.constants import ERROR_CORRECT_M
 
 from accounts.models import CustomerProfile
 from cart.models import Order, OrderItem
@@ -11,6 +16,7 @@ from catalog.models import InventoryMovement, Product
 
 from .models import (
     LiveAssignment,
+    LiveProductQR,
     LiveSession,
     LiveSessionProduct,
 )
@@ -1078,3 +1084,147 @@ def convert_live_assignments_to_order(
 
 
         return order
+
+
+# ============================================================
+# QR PERMANENTE DE PRODUCTO
+# ============================================================
+
+def get_or_create_product_qr(
+    product
+):
+    """
+    Obtiene o crea el código QR permanente de un producto.
+
+    Cada producto tiene un único LiveProductQR.
+    El UUID permanece igual independientemente del Live.
+    """
+
+    qr_record, _ = (
+        LiveProductQR.objects
+        .get_or_create(
+            product=product,
+            defaults={
+                'is_active': True,
+            },
+        )
+    )
+
+    return qr_record
+
+
+# ============================================================
+# URL ABSOLUTA DEL QR
+# ============================================================
+
+def build_product_qr_absolute_url(
+    request,
+    qr_record
+):
+    """
+    Construye la URL absoluta que se guardará dentro
+    del código QR.
+    """
+
+    relative_url = reverse(
+        'live_sales:scan_product',
+        kwargs={
+            'code': qr_record.code,
+        },
+    )
+
+
+    return request.build_absolute_uri(
+        relative_url
+    )
+
+
+# ============================================================
+# GENERAR IMAGEN PNG DEL QR
+# ============================================================
+
+def build_product_qr_image_bytes(
+    request,
+    qr_record
+):
+    """
+    Genera el PNG del QR permanente en memoria.
+    """
+
+    qr_url = (
+        build_product_qr_absolute_url(
+            request,
+            qr_record,
+        )
+    )
+
+
+    qr_code = qrcode.QRCode(
+        version=None,
+
+        error_correction=(
+            ERROR_CORRECT_M
+        ),
+
+        box_size=10,
+
+        border=4,
+    )
+
+
+    qr_code.add_data(
+        qr_url
+    )
+
+    qr_code.make(
+        fit=True
+    )
+
+
+    image = qr_code.make_image(
+        fill_color='black',
+        back_color='white',
+    )
+
+
+    buffer = io.BytesIO()
+
+
+    image.save(
+        buffer,
+        'PNG',
+    )
+
+
+    buffer.seek(0)
+
+
+    return buffer.getvalue()
+
+
+# ============================================================
+# GENERAR QR DE UN PRODUCTO
+# ============================================================
+
+def generate_product_qr_png(
+    request,
+    product
+):
+    """
+    Obtiene o crea el LiveProductQR permanente del producto
+    y devuelve la imagen PNG correspondiente.
+    """
+
+    qr_record = (
+        get_or_create_product_qr(
+            product
+        )
+    )
+
+
+    return (
+        build_product_qr_image_bytes(
+            request,
+            qr_record,
+        )
+    )

@@ -1,0 +1,518 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+Etiqueta QR | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .qr-label-page {
+        min-height: 70vh;
+        padding: 35px 18px 70px;
+        background: #fafafa;
+    }
+
+
+    .qr-label-page__container {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+
+    .qr-label-page__back {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        margin-bottom: 20px;
+
+        color: #1f6a43;
+
+        text-decoration: none;
+
+        font-weight: 700;
+    }
+
+
+    .qr-label-page__card {
+        background: white;
+
+        border: 1px solid #e8e8e8;
+
+        border-radius: 22px;
+
+        padding: 30px;
+
+        box-shadow:
+            0 10px 30px
+            rgba(0, 0, 0, 0.06);
+    }
+
+
+    .qr-label-page__heading {
+        text-align: center;
+
+        margin-bottom: 25px;
+    }
+
+
+    .qr-label-page__heading h1 {
+        margin: 0;
+
+        color: #1f3c2e;
+
+        font-size: 1.7rem;
+    }
+
+
+    .qr-label-page__heading p {
+        margin: 7px 0 0;
+
+        color: #737373;
+    }
+
+
+    .qr-label {
+        width: 100%;
+
+        max-width: 390px;
+
+        margin: 0 auto;
+
+        padding: 25px;
+
+        box-sizing: border-box;
+
+        border: 2px solid #1f6a43;
+
+        border-radius: 18px;
+
+        text-align: center;
+
+        background: white;
+    }
+
+
+    .qr-label__brand {
+        color: #d81b60;
+
+        font-size: 0.9rem;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.08em;
+    }
+
+
+    .qr-label__title {
+        margin: 8px 0 3px;
+
+        color: #20352b;
+
+        font-size: 1.45rem;
+
+        font-weight: 850;
+    }
+
+
+    .qr-label__sku {
+        color: #777;
+
+        font-size: 0.86rem;
+    }
+
+
+    .qr-label__image {
+        display: block;
+
+        width: 100%;
+
+        max-width: 280px;
+
+        margin: 20px auto 15px;
+    }
+
+
+    .qr-label__instruction {
+        margin: 0;
+
+        color: #1f5135;
+
+        font-size: 0.88rem;
+
+        font-weight: 700;
+    }
+
+
+    .qr-label-page__actions {
+        display: flex;
+
+        justify-content: center;
+
+        flex-wrap: wrap;
+
+        gap: 12px;
+
+        margin-top: 25px;
+    }
+
+
+    .qr-label-page__button {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 12px 18px;
+
+        border: 0;
+
+        border-radius: 12px;
+
+        text-decoration: none;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    .qr-label-page__button--primary {
+        background: #1f6a43;
+
+        color: white;
+    }
+
+
+    .qr-label-page__button--secondary {
+        background: #eef7f1;
+
+        color: #1f6a43;
+
+        border: 1px solid #d6e8db;
+    }
+
+
+    /* ======================================================
+       IMPRESIÓN LIMPIA
+       ====================================================== */
+
+    @page {
+        size: auto;
+        margin: 8mm;
+    }
+
+
+    @media print {
+
+        html,
+        body {
+            width: 100% !important;
+            height: auto !important;
+
+            min-height: 0 !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+
+            background: white !important;
+
+            overflow: visible !important;
+        }
+
+
+        /*
+        Ocultamos absolutamente todo lo que venga
+        del template base.
+        */
+
+        body > * {
+            display: none !important;
+        }
+
+
+        /*
+        Volvemos a mostrar únicamente el contenido
+        principal de esta página.
+        */
+
+        body > main,
+        body main {
+            display: block !important;
+
+            width: 100% !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+
+        body main > * {
+            display: none !important;
+        }
+
+
+        body main .qr-label-page {
+            display: block !important;
+        }
+
+
+        .qr-label-page,
+        .qr-label-page__container,
+        .qr-label-page__card,
+        .qr-label {
+            visibility: visible !important;
+        }
+
+
+        .qr-label-page__back,
+        .qr-label-page__heading,
+        .qr-label-page__actions {
+            display: none !important;
+        }
+
+
+        .qr-label-page {
+            min-height: 0 !important;
+
+            width: 100% !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+
+            background: white !important;
+        }
+
+
+        .qr-label-page__container {
+            width: 100% !important;
+            max-width: none !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+
+        .qr-label-page__card {
+            width: 100% !important;
+
+            margin: 0 !important;
+            padding: 0 !important;
+
+            border: 0 !important;
+            border-radius: 0 !important;
+
+            box-shadow: none !important;
+
+            background: white !important;
+        }
+
+
+        .qr-label {
+            width: 90mm !important;
+            max-width: 90mm !important;
+
+            margin: 0 auto !important;
+
+            padding: 8mm !important;
+
+            box-sizing: border-box !important;
+
+            border: 1.5px solid #1f6a43 !important;
+
+            border-radius: 4mm !important;
+
+            text-align: center !important;
+
+            background: white !important;
+
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+
+        .qr-label__brand {
+            font-size: 9pt !important;
+        }
+
+
+        .qr-label__title {
+            font-size: 14pt !important;
+        }
+
+
+        .qr-label__sku {
+            font-size: 8pt !important;
+        }
+
+
+        .qr-label__image {
+            width: 55mm !important;
+            max-width: 55mm !important;
+
+            margin:
+                5mm auto
+                4mm !important;
+        }
+
+
+        .qr-label__instruction {
+            font-size: 8pt !important;
+        }
+
+    }
+
+
+    @media (
+        max-width: 600px
+    ) {
+
+        .qr-label-page__card {
+            padding: 20px;
+        }
+
+
+        .qr-label {
+            padding: 20px;
+        }
+
+
+        .qr-label-page__actions {
+            flex-direction: column;
+        }
+
+
+        .qr-label-page__button {
+            justify-content: center;
+        }
+
+    }
+
+</style>
+
+
+<section class="qr-label-page">
+
+    <div class="qr-label-page__container">
+
+
+        <a
+            href="{% url 'live_sales:scan_product' qr.code %}"
+            class="qr-label-page__back"
+        >
+
+            <i data-lucide="arrow-left"></i>
+
+            Volver al producto
+
+        </a>
+
+
+        <div class="qr-label-page__card">
+
+
+            <header class="qr-label-page__heading">
+
+                <h1>
+                    Etiqueta QR del producto
+                </h1>
+
+                <p>
+                    Este QR es permanente y puede reutilizarse
+                    en todos los Lives.
+                </p>
+
+            </header>
+
+
+            <div class="qr-label">
+
+                <div class="qr-label__brand">
+                    Pronty Live
+                </div>
+
+
+                <div class="qr-label__title">
+
+                    {{ product.name }}
+
+                </div>
+
+
+                <div class="qr-label__sku">
+
+                    SKU: {{ product.sku }}
+
+                </div>
+
+
+                <img
+                    src="{% url 'live_sales:product_qr_image' qr.code %}"
+                    alt="QR de {{ product.name }}"
+                    class="qr-label__image"
+                >
+
+
+                <p class="qr-label__instruction">
+
+                    Escanear para asignar este producto
+                    durante Pronty Live
+
+                </p>
+
+            </div>
+
+
+            <div class="qr-label-page__actions">
+
+
+                <button
+                    type="button"
+                    class="
+                        qr-label-page__button
+                        qr-label-page__button--primary
+                    "
+                    onclick="window.print()"
+                >
+
+                    <i data-lucide="printer"></i>
+
+                    Imprimir etiqueta
+
+                </button>
+
+
+                <a
+                    href="{% url 'live_sales:product_qr_image' qr.code %}"
+                    target="_blank"
+                    class="
+                        qr-label-page__button
+                        qr-label-page__button--secondary
+                    "
+                >
+
+                    <i data-lucide="qr-code"></i>
+
+                    Abrir QR PNG
+
+                </a>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}
