@@ -42,6 +42,57 @@ class CustomerProfile(models.Model):
         verbose_name='Usuario'
     )
 
+
+    # =========================================================
+    # DATOS DE CONTACTO Y ENTREGA
+    # =========================================================
+
+    whatsapp = models.CharField(
+        max_length=30,
+        blank=True,
+        default='',
+        verbose_name='WhatsApp'
+    )
+
+    department = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        verbose_name='Departamento'
+    )
+
+    city = models.CharField(
+        max_length=120,
+        blank=True,
+        default='',
+        verbose_name='Ciudad / municipio'
+    )
+
+    address = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        verbose_name='Dirección de entrega'
+    )
+
+    delivery_notes = models.TextField(
+        blank=True,
+        default='',
+        verbose_name='Indicaciones de entrega'
+    )
+
+    preferred_carrier = models.CharField(
+        max_length=60,
+        blank=True,
+        default='',
+        verbose_name='Transportadora preferida'
+    )
+
+
+    # =========================================================
+    # ESTADO COMERCIAL
+    # =========================================================
+
     commercial_status = models.CharField(
         max_length=40,
         choices=CommercialStatus.choices,
@@ -134,12 +185,6 @@ class CustomerProfile(models.Model):
 
     @property
     def has_wholesale_prices(self):
-        """
-        Indica si el cliente puede utilizar precios mayoristas.
-
-        Durante mantenimiento y durante el período de gracia
-        conserva el beneficio mayorista.
-        """
 
         return (
             self.commercial_status
@@ -202,12 +247,6 @@ class CustomerProfile(models.Model):
         purchase_total=None,
         purchase_date=None
     ):
-        """
-        Activa por primera vez al cliente como mayorista.
-
-        La compra de activación inicia un período
-        de mantenimiento de 30 días.
-        """
 
         purchase_date = (
             purchase_date
@@ -253,12 +292,6 @@ class CustomerProfile(models.Model):
         purchase_total=None,
         purchase_date=None
     ):
-        """
-        Registra una compra válida de mantenimiento.
-
-        Una compra confirmada desde $50.000 reinicia
-        un nuevo período comercial de 30 días.
-        """
 
         purchase_date = (
             purchase_date
@@ -299,13 +332,6 @@ class CustomerProfile(models.Model):
         self,
         grace_start=None
     ):
-        """
-        Inicia el período adicional de gracia de 30 días.
-
-        El período comienza exactamente cuando venció
-        el mantenimiento, no cuando el cliente vuelve
-        a entrar a la plataforma.
-        """
 
         grace_start = (
             grace_start
@@ -342,13 +368,6 @@ class CustomerProfile(models.Model):
         purchase_total=None,
         purchase_date=None
     ):
-        """
-        Reactiva al cliente durante el período de gracia
-        después de una compra válida desde $150.000.
-
-        Después de la reactivación comienza un nuevo
-        período de mantenimiento de 30 días.
-        """
 
         purchase_date = (
             purchase_date
@@ -386,12 +405,6 @@ class CustomerProfile(models.Model):
     # =========================================================
 
     def expire_wholesale(self):
-        """
-        Finaliza el beneficio mayorista.
-
-        El historial de activación se conserva,
-        pero el cliente vuelve a comprar a precio detal.
-        """
 
         self.commercial_status = (
             self.CommercialStatus
@@ -418,31 +431,9 @@ class CustomerProfile(models.Model):
     # =========================================================
 
     def refresh_commercial_status(self):
-        """
-        Revisa las fechas comerciales del cliente.
-
-        Reglas:
-
-        1. Mayorista activo o en mantenimiento:
-           al vencer los primeros 30 días entra en gracia.
-
-        2. La gracia comienza exactamente en la fecha
-           en que venció el mantenimiento.
-
-        3. Si cuando se revisa el perfil ya transcurrieron
-           también los 30 días de gracia, el beneficio
-           vence directamente.
-
-        Esto evita extender artificialmente los plazos
-        cuando el cliente pasa varios días sin ingresar.
-        """
 
         now = timezone.now()
 
-
-        # =====================================================
-        # MANTENIMIENTO / MAYORISTA ACTIVO
-        # =====================================================
 
         if (
             self.commercial_status
@@ -464,10 +455,6 @@ class CustomerProfile(models.Model):
             )
 
 
-            # =================================================
-            # TAMBIÉN VENCIÓ LA GRACIA
-            # =================================================
-
             if now > calculated_grace_deadline:
 
                 self.expire_wholesale()
@@ -476,10 +463,6 @@ class CustomerProfile(models.Model):
                     self.commercial_status
                 )
 
-
-            # =================================================
-            # TODAVÍA ESTÁ DENTRO DE LA GRACIA
-            # =================================================
 
             self.start_grace_period(
                 grace_start=(
@@ -491,10 +474,6 @@ class CustomerProfile(models.Model):
                 self.commercial_status
             )
 
-
-        # =====================================================
-        # PERÍODO DE GRACIA YA REGISTRADO
-        # =====================================================
 
         if (
             self.commercial_status
