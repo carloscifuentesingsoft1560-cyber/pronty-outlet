@@ -1,0 +1,600 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+Productos y QR | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-products {
+        min-height: 70vh;
+        padding: 36px 18px 70px;
+        background: #fafafa;
+    }
+
+
+    .live-products__container {
+        max-width: 1180px;
+        margin: 0 auto;
+    }
+
+
+    .live-products__top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+
+    .live-products__back {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+
+        color: #1f6a43;
+        text-decoration: none;
+        font-weight: 750;
+    }
+
+
+    .live-products__title {
+        margin: 10px 0 4px;
+
+        color: #1f352b;
+
+        font-size: 1.8rem;
+    }
+
+
+    .live-products__subtitle {
+        margin: 0;
+
+        color: #6b7280;
+    }
+
+
+    .live-products__search {
+        display: flex;
+
+        gap: 10px;
+
+        margin-bottom: 24px;
+    }
+
+
+    .live-products__search input {
+        flex: 1;
+
+        min-height: 46px;
+
+        padding: 10px 14px;
+
+        border: 1px solid #d9dedb;
+
+        border-radius: 12px;
+
+        font: inherit;
+    }
+
+
+    .live-products__search button {
+        border: 0;
+
+        border-radius: 12px;
+
+        padding: 10px 18px;
+
+        background: #1f6a43;
+
+        color: white;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    .live-products__panel {
+        background: white;
+
+        border: 1px solid #e8e8e8;
+
+        border-radius: 20px;
+
+        overflow: hidden;
+
+        box-shadow:
+            0 8px 28px
+            rgba(0, 0, 0, 0.05);
+    }
+
+
+    .live-products__table-wrap {
+        overflow-x: auto;
+    }
+
+
+    .live-products__table {
+        width: 100%;
+
+        border-collapse: collapse;
+    }
+
+
+    .live-products__table th {
+        text-align: left;
+
+        padding: 14px 17px;
+
+        background: #fafafa;
+
+        color: #6b7280;
+
+        font-size: 0.76rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    .live-products__table td {
+        padding: 15px 17px;
+
+        border-top: 1px solid #eeeeee;
+
+        vertical-align: middle;
+    }
+
+
+    .live-product-row__name {
+        font-weight: 800;
+
+        color: #1f2937;
+    }
+
+
+    .live-product-row__sku {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #777;
+
+        font-size: 0.8rem;
+    }
+
+
+    .live-product-row__qr-status {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 5px 9px;
+
+        border-radius: 999px;
+
+        font-size: 0.76rem;
+
+        font-weight: 750;
+    }
+
+
+    .live-product-row__qr-status--ready {
+        background: #edf7f0;
+
+        color: #236847;
+    }
+
+
+    .live-product-row__qr-status--missing {
+        background: #fff4dd;
+
+        color: #8a6400;
+    }
+
+
+    .live-product-row__actions {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 8px;
+    }
+
+
+    .live-product-row__button {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 8px 11px;
+
+        border-radius: 9px;
+
+        border: 0;
+
+        text-decoration: none;
+
+        font: inherit;
+
+        font-size: 0.8rem;
+
+        font-weight: 750;
+
+        cursor: pointer;
+    }
+
+
+    .live-product-row__button--primary {
+        background: #1f6a43;
+
+        color: white;
+    }
+
+
+    .live-product-row__button--secondary {
+        background: #eef7f1;
+
+        color: #1f6a43;
+
+        border: 1px solid #d5eadb;
+    }
+
+
+    .live-product-row__button--qr {
+        background: #fff0f5;
+
+        color: #c2185b;
+
+        border: 1px solid #ffd2e4;
+    }
+
+
+    .live-products__empty {
+        padding: 45px 20px;
+
+        text-align: center;
+
+        color: #777;
+    }
+
+
+    @media (
+        max-width: 700px
+    ) {
+
+        .live-products__top {
+            flex-direction: column;
+
+            align-items: flex-start;
+        }
+
+
+        .live-products__search {
+            flex-direction: column;
+        }
+
+
+        .live-products__search button {
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+
+<section class="live-products">
+
+    <div class="live-products__container">
+
+
+        <div class="live-products__top">
+
+            <div>
+
+                <a
+                    href="{% url 'live_sales:dashboard' %}"
+                    class="live-products__back"
+                >
+
+                    <i data-lucide="arrow-left"></i>
+
+                    Pronty Live
+
+                </a>
+
+
+                <h1 class="live-products__title">
+
+                    Productos y códigos QR
+
+                </h1>
+
+
+                <p class="live-products__subtitle">
+
+                    Busca cualquier producto y administra
+                    su QR permanente para Pronty Live.
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <form
+            method="get"
+            class="live-products__search"
+        >
+
+            <input
+                type="search"
+                name="q"
+                value="{{ search }}"
+                placeholder="Buscar por nombre o SKU"
+                autocomplete="off"
+            >
+
+
+            <button type="submit">
+
+                <i data-lucide="search"></i>
+
+                Buscar
+
+            </button>
+
+        </form>
+
+
+        <section class="live-products__panel">
+
+            {% if rows %}
+
+                <div class="live-products__table-wrap">
+
+                    <table class="live-products__table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Categoría
+                                </th>
+
+                                <th>
+                                    Estado QR
+                                </th>
+
+                                <th>
+                                    Acciones
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for row in rows %}
+
+                                <tr>
+
+                                    <td>
+
+                                        <span class="live-product-row__name">
+
+                                            {{ row.product.name }}
+
+                                        </span>
+
+
+                                        <span class="live-product-row__sku">
+
+                                            SKU:
+                                            {{ row.product.sku }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ row.product.category.name }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if row.qr %}
+
+                                            {% if row.qr.is_active %}
+
+                                                <span
+                                                    class="
+                                                        live-product-row__qr-status
+                                                        live-product-row__qr-status--ready
+                                                    "
+                                                >
+
+                                                    <i data-lucide="circle-check"></i>
+
+                                                    QR listo
+
+                                                </span>
+
+                                            {% else %}
+
+                                                <span
+                                                    class="
+                                                        live-product-row__qr-status
+                                                        live-product-row__qr-status--missing
+                                                    "
+                                                >
+
+                                                    <i data-lucide="circle-off"></i>
+
+                                                    QR inactivo
+
+                                                </span>
+
+                                            {% endif %}
+
+                                        {% else %}
+
+                                            <span
+                                                class="
+                                                    live-product-row__qr-status
+                                                    live-product-row__qr-status--missing
+                                                "
+                                            >
+
+                                                <i data-lucide="qr-code"></i>
+
+                                                Sin QR
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <div class="live-product-row__actions">
+
+                                            {% if row.qr and row.qr.is_active %}
+
+                                                <a
+                                                    href="{% url 'live_sales:product_qr_label' row.qr.code %}"
+                                                    class="
+                                                        live-product-row__button
+                                                        live-product-row__button--primary
+                                                    "
+                                                >
+
+                                                    <i data-lucide="printer"></i>
+
+                                                    Etiqueta
+
+                                                </a>
+
+
+                                                <a
+                                                    href="{% url 'live_sales:scan_product' row.qr.code %}"
+                                                    class="
+                                                        live-product-row__button
+                                                        live-product-row__button--secondary
+                                                    "
+                                                >
+
+                                                    <i data-lucide="scan-line"></i>
+
+                                                    Abrir producto Live
+
+                                                </a>
+
+
+                                                <a
+                                                    href="{% url 'live_sales:product_qr_image' row.qr.code %}"
+                                                    target="_blank"
+                                                    class="
+                                                        live-product-row__button
+                                                        live-product-row__button--qr
+                                                    "
+                                                >
+
+                                                    <i data-lucide="qr-code"></i>
+
+                                                    Ver QR
+
+                                                </a>
+
+                                            {% else %}
+
+                                                <form
+                                                    method="post"
+                                                >
+
+                                                    {% csrf_token %}
+
+                                                    <input
+                                                        type="hidden"
+                                                        name="product_id"
+                                                        value="{{ row.product.id }}"
+                                                    >
+
+
+                                                    <button
+                                                        type="submit"
+                                                        class="
+                                                            live-product-row__button
+                                                            live-product-row__button--primary
+                                                        "
+                                                    >
+
+                                                        <i data-lucide="qr-code"></i>
+
+                                                        Generar QR
+
+                                                    </button>
+
+                                                </form>
+
+                                            {% endif %}
+
+                                        </div>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <div class="live-products__empty">
+
+                    No se encontraron productos.
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </div>
+
+</section>
+
+{% endblock %}

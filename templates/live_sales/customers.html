@@ -1,0 +1,921 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+Clientes Live | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-customers {
+        min-height: 70vh;
+
+        padding: 38px 18px 70px;
+
+        background: #fafafa;
+    }
+
+
+    .live-customers__container {
+        max-width: 1250px;
+
+        margin: 0 auto;
+    }
+
+
+    /* ======================================================
+       CABECERA
+       ====================================================== */
+
+    .live-customers__back {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        margin-bottom: 14px;
+
+        color: #1f6a43;
+
+        text-decoration: none;
+
+        font-weight: 750;
+    }
+
+
+    .live-customers__title {
+        margin: 0;
+
+        color: #1e362b;
+
+        font-size: 1.85rem;
+    }
+
+
+    .live-customers__subtitle {
+        margin: 7px 0 28px;
+
+        color: #6b7280;
+    }
+
+
+    /* ======================================================
+       MÉTRICAS
+       ====================================================== */
+
+    .live-customers__metrics {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+
+        gap: 16px;
+
+        margin-bottom: 24px;
+    }
+
+
+    .live-customers__metric {
+        padding: 20px;
+
+        border: 1px solid #e7e7e7;
+
+        border-radius: 17px;
+
+        background: white;
+
+        box-shadow:
+            0 6px 22px
+            rgba(0, 0, 0, 0.04);
+    }
+
+
+    .live-customers__metric-value {
+        display: block;
+
+        color: #1f2937;
+
+        font-size: 1.7rem;
+
+        font-weight: 800;
+    }
+
+
+    .live-customers__metric-label {
+        display: block;
+
+        margin-top: 4px;
+
+        color: #6b7280;
+
+        font-size: 0.84rem;
+    }
+
+
+    /* ======================================================
+       BUSCADOR
+       ====================================================== */
+
+    .live-customers__search {
+        display: flex;
+
+        gap: 10px;
+
+        margin-bottom: 22px;
+    }
+
+
+    .live-customers__search input {
+        flex: 1;
+
+        min-height: 46px;
+
+        box-sizing: border-box;
+
+        padding: 10px 14px;
+
+        border: 1px solid #d8dedb;
+
+        border-radius: 12px;
+
+        background: white;
+
+        font: inherit;
+    }
+
+
+    .live-customers__search button {
+        min-height: 46px;
+
+        padding: 10px 18px;
+
+        border: 0;
+
+        border-radius: 12px;
+
+        background: #1f6a43;
+
+        color: white;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    /* ======================================================
+       PANEL
+       ====================================================== */
+
+    .live-customers__panel {
+        overflow: hidden;
+
+        border: 1px solid #e8e8e8;
+
+        border-radius: 20px;
+
+        background: white;
+
+        box-shadow:
+            0 8px 28px
+            rgba(0, 0, 0, 0.05);
+    }
+
+
+    .live-customers__panel-header {
+        padding: 18px 22px;
+
+        border-bottom: 1px solid #eeeeee;
+    }
+
+
+    .live-customers__panel-title {
+        margin: 0;
+
+        color: #1f352b;
+
+        font-size: 1.05rem;
+    }
+
+
+    .live-customers__panel-text {
+        margin: 5px 0 0;
+
+        color: #777;
+
+        font-size: 0.82rem;
+    }
+
+
+    /* ======================================================
+       TABLA
+       ====================================================== */
+
+    .live-customers__table-wrap {
+        overflow-x: auto;
+    }
+
+
+    .live-customers__table {
+        width: 100%;
+
+        border-collapse: collapse;
+    }
+
+
+    .live-customers__table th {
+        padding: 13px 16px;
+
+        text-align: left;
+
+        background: #fafafa;
+
+        color: #6b7280;
+
+        font-size: 0.74rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    .live-customers__table td {
+        padding: 15px 16px;
+
+        border-top: 1px solid #eeeeee;
+
+        vertical-align: middle;
+    }
+
+
+    .live-customers__name {
+        display: block;
+
+        color: #1f2937;
+
+        font-weight: 800;
+    }
+
+
+    .live-customers__email {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #777;
+
+        font-size: 0.78rem;
+    }
+
+
+    .live-customers__code {
+        display: inline-flex;
+
+        padding: 6px 9px;
+
+        border-radius: 8px;
+
+        background: #eef7f1;
+
+        color: #17613e;
+
+        font-size: 0.8rem;
+
+        font-weight: 800;
+    }
+
+
+    .live-customers__no-code {
+        color: #999;
+
+        font-size: 0.8rem;
+    }
+
+
+    /* ======================================================
+       ESTADOS
+       ====================================================== */
+
+    .live-customers__status {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 5px 9px;
+
+        border-radius: 999px;
+
+        font-size: 0.74rem;
+
+        font-weight: 800;
+    }
+
+
+    .live-customers__status--active {
+        color: #17613e;
+
+        background: #eaf6ee;
+    }
+
+
+    .live-customers__status--inactive {
+        color: #8b6500;
+
+        background: #fff5d6;
+    }
+
+
+    .live-customers__status--none {
+        color: #777;
+
+        background: #efefef;
+    }
+
+
+    /* ======================================================
+       ACCIONES
+       ====================================================== */
+
+    .live-customers__actions {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 7px;
+    }
+
+
+    .live-customers__button {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 6px;
+
+        min-height: 34px;
+
+        padding: 7px 10px;
+
+        border: 0;
+
+        border-radius: 9px;
+
+        font: inherit;
+
+        font-size: 0.76rem;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    .live-customers__button--create {
+        color: white;
+
+        background: #1f6a43;
+    }
+
+
+    .live-customers__button--activate {
+        color: white;
+
+        background: #d81b60;
+    }
+
+
+    .live-customers__button--deactivate {
+        color: #855d00;
+
+        background: #fff1d3;
+    }
+
+
+    .live-customers__date {
+        color: #777;
+
+        font-size: 0.78rem;
+    }
+
+
+    .live-customers__empty {
+        padding: 45px 20px;
+
+        text-align: center;
+
+        color: #777;
+    }
+
+
+    /* ======================================================
+       RESPONSIVE
+       ====================================================== */
+
+    @media (
+        max-width: 800px
+    ) {
+
+        .live-customers__metrics {
+            grid-template-columns: 1fr;
+        }
+
+
+        .live-customers__search {
+            flex-direction: column;
+        }
+
+    }
+
+</style>
+
+
+<section class="live-customers">
+
+    <div class="live-customers__container">
+
+
+        <a
+            href="{% url 'live_sales:dashboard' %}"
+            class="live-customers__back"
+        >
+
+            <i data-lucide="arrow-left"></i>
+
+            Pronty Live
+
+        </a>
+
+
+        <h1 class="live-customers__title">
+
+            Clientes Live
+
+        </h1>
+
+
+        <p class="live-customers__subtitle">
+
+            Administra códigos permanentes y activaciones
+            de Pronty Live sin entrar al panel de Django.
+
+        </p>
+
+
+        <!-- ==============================================
+             MÉTRICAS
+             ============================================== -->
+
+        <div class="live-customers__metrics">
+
+
+            <article class="live-customers__metric">
+
+                <strong
+                    class="live-customers__metric-value"
+                >
+
+                    {{ total_live_customers }}
+
+                </strong>
+
+
+                <span
+                    class="live-customers__metric-label"
+                >
+
+                    Clientes con código Pronty Live
+
+                </span>
+
+            </article>
+
+
+            <article class="live-customers__metric">
+
+                <strong
+                    class="live-customers__metric-value"
+                >
+
+                    {{ active_live_customers }}
+
+                </strong>
+
+
+                <span
+                    class="live-customers__metric-label"
+                >
+
+                    Clientes Live activos
+
+                </span>
+
+            </article>
+
+
+            <article class="live-customers__metric">
+
+                <strong
+                    class="live-customers__metric-value"
+                >
+
+                    {{ inactive_live_customers }}
+
+                </strong>
+
+
+                <span
+                    class="live-customers__metric-label"
+                >
+
+                    Accesos pendientes o desactivados
+
+                </span>
+
+            </article>
+
+
+        </div>
+
+
+        <!-- ==============================================
+             BUSCADOR
+             ============================================== -->
+
+        <form
+            method="get"
+            class="live-customers__search"
+        >
+
+            <input
+                type="search"
+                name="q"
+                value="{{ search }}"
+                placeholder="
+                    Buscar por nombre, correo,
+                    usuario o código PRY-C...
+                "
+            >
+
+
+            <button type="submit">
+
+                <i data-lucide="search"></i>
+
+                Buscar
+
+            </button>
+
+        </form>
+
+
+        <!-- ==============================================
+             LISTADO
+             ============================================== -->
+
+        <section class="live-customers__panel">
+
+
+            <div class="live-customers__panel-header">
+
+                <h2
+                    class="live-customers__panel-title"
+                >
+
+                    Clientes registrados
+
+                </h2>
+
+
+                <p
+                    class="live-customers__panel-text"
+                >
+
+                    La activación de Pronty Live tiene un
+                    valor único de
+                    ${{ activation_amount|floatformat:0 }}.
+
+                </p>
+
+            </div>
+
+
+            {% if rows %}
+
+                <div
+                    class="live-customers__table-wrap"
+                >
+
+                    <table
+                        class="live-customers__table"
+                    >
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Cliente
+                                </th>
+
+                                <th>
+                                    Código Live
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
+                                <th>
+                                    Activado
+                                </th>
+
+                                <th>
+                                    Acciones
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for row in rows %}
+
+                                <tr>
+
+
+                                    <td>
+
+                                        <span
+                                            class="live-customers__name"
+                                        >
+
+                                            {% if row.user.get_full_name %}
+
+                                                {{ row.user.get_full_name }}
+
+                                            {% else %}
+
+                                                {{ row.user.username }}
+
+                                            {% endif %}
+
+                                        </span>
+
+
+                                        <span
+                                            class="live-customers__email"
+                                        >
+
+                                            {{ row.user.email|default:"Sin correo" }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if row.access %}
+
+                                            <span
+                                                class="live-customers__code"
+                                            >
+
+                                                {{ row.access.customer_code }}
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span
+                                                class="live-customers__no-code"
+                                            >
+
+                                                Sin código Live
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if row.access %}
+
+                                            {% if row.access.is_activated %}
+
+                                                <span
+                                                    class="
+                                                        live-customers__status
+                                                        live-customers__status--active
+                                                    "
+                                                >
+
+                                                    <i
+                                                        data-lucide="circle-check"
+                                                    ></i>
+
+                                                    Activo
+
+                                                </span>
+
+                                            {% else %}
+
+                                                <span
+                                                    class="
+                                                        live-customers__status
+                                                        live-customers__status--inactive
+                                                    "
+                                                >
+
+                                                    <i
+                                                        data-lucide="clock"
+                                                    ></i>
+
+                                                    Pendiente
+
+                                                </span>
+
+                                            {% endif %}
+
+                                        {% else %}
+
+                                            <span
+                                                class="
+                                                    live-customers__status
+                                                    live-customers__status--none
+                                                "
+                                            >
+
+                                                Sin acceso
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if row.access and row.access.activated_at %}
+
+                                            <span
+                                                class="live-customers__date"
+                                            >
+
+                                                {{ row.access.activated_at|date:"d/m/Y h:i A" }}
+
+                                            </span>
+
+                                        {% else %}
+
+                                            —
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <div
+                                            class="live-customers__actions"
+                                        >
+
+
+                                            {% if not row.access %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{% url 'live_sales:customer_create_access' row.user.id %}"
+                                                >
+
+                                                    {% csrf_token %}
+
+                                                    <button
+                                                        type="submit"
+                                                        class="
+                                                            live-customers__button
+                                                            live-customers__button--create
+                                                        "
+                                                    >
+
+                                                        <i
+                                                            data-lucide="key-round"
+                                                        ></i>
+
+                                                        Crear código
+
+                                                    </button>
+
+                                                </form>
+
+
+                                            {% elif not row.access.is_activated %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{% url 'live_sales:customer_activate' row.access.id %}"
+                                                >
+
+                                                    {% csrf_token %}
+
+                                                    <button
+                                                        type="submit"
+                                                        class="
+                                                            live-customers__button
+                                                            live-customers__button--activate
+                                                        "
+                                                    >
+
+                                                        <i
+                                                            data-lucide="radio"
+                                                        ></i>
+
+                                                        Activar Live
+
+                                                    </button>
+
+                                                </form>
+
+
+                                            {% else %}
+
+                                                <form
+                                                    method="post"
+                                                    action="{% url 'live_sales:customer_deactivate' row.access.id %}"
+                                                >
+
+                                                    {% csrf_token %}
+
+                                                    <button
+                                                        type="submit"
+                                                        class="
+                                                            live-customers__button
+                                                            live-customers__button--deactivate
+                                                        "
+                                                    >
+
+                                                        Desactivar
+
+                                                    </button>
+
+                                                </form>
+
+                                            {% endif %}
+
+
+                                        </div>
+
+                                    </td>
+
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+                <div class="live-customers__empty">
+
+                    No encontramos clientes con esa búsqueda.
+
+                </div>
+
+            {% endif %}
+
+
+        </section>
+
+
+    </div>
+
+</section>
+
+{% endblock %}

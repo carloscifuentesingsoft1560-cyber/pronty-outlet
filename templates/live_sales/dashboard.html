@@ -11,6 +11,7 @@ Pronty Live | Pronty Outlet
 
     .live-dashboard {
         padding: 40px 20px 70px;
+
         background:
             linear-gradient(
                 180deg,
@@ -18,6 +19,7 @@ Pronty Live | Pronty Outlet
                 #ffffff 45%,
                 #f8faf8 100%
             );
+
         min-height: 70vh;
     }
 
@@ -34,16 +36,22 @@ Pronty Live | Pronty Outlet
 
     .live-dashboard__header {
         display: flex;
+
         justify-content: space-between;
+
         align-items: center;
+
         gap: 24px;
+
         margin-bottom: 32px;
     }
 
 
     .live-dashboard__title-wrap {
         display: flex;
+
         align-items: center;
+
         gap: 16px;
     }
 
@@ -51,10 +59,13 @@ Pronty Live | Pronty Outlet
     .live-dashboard__icon {
         width: 58px;
         height: 58px;
+
         border-radius: 18px;
 
         display: flex;
+
         align-items: center;
+
         justify-content: center;
 
         background:
@@ -80,22 +91,29 @@ Pronty Live | Pronty Outlet
 
     .live-dashboard__title {
         margin: 0;
+
         color: #1e362b;
+
         font-size: 2rem;
+
         font-weight: 800;
     }
 
 
     .live-dashboard__subtitle {
         margin: 5px 0 0;
+
         color: #6b7280;
+
         font-size: 0.98rem;
     }
 
 
-    .live-dashboard__admin-link {
+    .live-dashboard__header-action {
         display: inline-flex;
+
         align-items: center;
+
         gap: 9px;
 
         padding: 11px 18px;
@@ -105,7 +123,9 @@ Pronty Live | Pronty Outlet
         text-decoration: none;
 
         color: #1f5135;
+
         background: #edf7f0;
+
         border: 1px solid #d5eadb;
 
         font-weight: 700;
@@ -116,7 +136,7 @@ Pronty Live | Pronty Outlet
     }
 
 
-    .live-dashboard__admin-link:hover {
+    .live-dashboard__header-action:hover {
         transform: translateY(-2px);
 
         box-shadow:
@@ -133,11 +153,14 @@ Pronty Live | Pronty Outlet
         display: grid;
 
         grid-template-columns:
-            repeat(3, minmax(0, 1fr));
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
 
         gap: 20px;
 
-        margin-bottom: 34px;
+        margin-bottom: 30px;
     }
 
 
@@ -169,7 +192,9 @@ Pronty Live | Pronty Outlet
         border-radius: 16px;
 
         display: flex;
+
         align-items: center;
+
         justify-content: center;
 
         flex-shrink: 0;
@@ -178,19 +203,29 @@ Pronty Live | Pronty Outlet
 
     .live-metric__icon--live {
         background: #fff0f5;
+
         color: #d81b60;
     }
 
 
     .live-metric__icon--clients {
         background: #edf7f0;
+
         color: #26734d;
     }
 
 
     .live-metric__icon--assignments {
         background: #fff7df;
+
         color: #a36b00;
+    }
+
+
+    .live-metric__icon--qr {
+        background: #eef7f1;
+
+        color: #17613e;
     }
 
 
@@ -219,7 +254,142 @@ Pronty Live | Pronty Outlet
 
 
     /* ======================================================
-       BLOQUE PRINCIPAL
+       ACCESOS RÁPIDOS
+       ====================================================== */
+
+    .live-dashboard__quick {
+        margin-bottom: 34px;
+    }
+
+
+    .live-dashboard__section-title {
+        margin: 0 0 14px;
+
+        color: #1e362b;
+
+        font-size: 1.15rem;
+    }
+
+
+    .live-dashboard__quick-grid {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
+
+        gap: 16px;
+    }
+
+
+    .live-quick-card {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 14px;
+
+        min-height: 165px;
+
+        padding: 22px;
+
+        box-sizing: border-box;
+
+        border-radius: 19px;
+
+        border: 1px solid #e7ebe8;
+
+        background: white;
+
+        text-decoration: none;
+
+        box-shadow:
+            0 7px 24px
+            rgba(0, 0, 0, 0.045);
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+
+    a.live-quick-card:hover {
+        transform: translateY(-3px);
+
+        border-color: #bddbc7;
+
+        box-shadow:
+            0 10px 27px
+            rgba(31, 106, 67, 0.10);
+    }
+
+
+    .live-quick-card__icon {
+        width: 45px;
+        height: 45px;
+
+        border-radius: 14px;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        background: #edf7f0;
+
+        color: #1f6a43;
+    }
+
+
+    .live-quick-card__icon--pink {
+        background: #fff0f5;
+
+        color: #d81b60;
+    }
+
+
+    .live-quick-card__icon--gold {
+        background: #fff7df;
+
+        color: #956800;
+    }
+
+
+    .live-quick-card__icon--blue {
+        background: #eef6ff;
+
+        color: #26649a;
+    }
+
+
+    .live-quick-card__title {
+        display: block;
+
+        color: #1f2937;
+
+        font-weight: 800;
+
+        font-size: 1rem;
+    }
+
+
+    .live-quick-card__text {
+        display: block;
+
+        color: #6b7280;
+
+        line-height: 1.45;
+
+        font-size: 0.84rem;
+    }
+
+
+    /* ======================================================
+       PANEL
        ====================================================== */
 
     .live-dashboard__panel {
@@ -299,7 +469,7 @@ Pronty Live | Pronty Outlet
 
 
     /* ======================================================
-       TABLA DE LIVES
+       TABLA
        ====================================================== */
 
     .live-table-wrapper {
@@ -401,13 +571,19 @@ Pronty Live | Pronty Outlet
 
         gap: 7px;
 
+        padding: 7px 10px;
+
+        border-radius: 9px;
+
         text-decoration: none;
 
         color: #1f6a43;
 
+        background: #edf7f0;
+
         font-weight: 700;
 
-        font-size: 0.85rem;
+        font-size: 0.82rem;
     }
 
 
@@ -420,23 +596,28 @@ Pronty Live | Pronty Outlet
     }
 
 
-    .live-empty svg {
-        width: 42px;
-
-        height: 42px;
-
-        margin-bottom: 12px;
-
-        color: #c2c2c2;
-    }
-
-
     /* ======================================================
        RESPONSIVE
        ====================================================== */
 
     @media (
-        max-width: 850px
+        max-width: 1050px
+    ) {
+
+        .live-dashboard__metrics,
+        .live-dashboard__quick-grid {
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+        }
+
+    }
+
+
+    @media (
+        max-width: 700px
     ) {
 
         .live-dashboard__header {
@@ -446,7 +627,8 @@ Pronty Live | Pronty Outlet
         }
 
 
-        .live-dashboard__metrics {
+        .live-dashboard__metrics,
+        .live-dashboard__quick-grid {
             grid-template-columns: 1fr;
         }
 
@@ -456,6 +638,7 @@ Pronty Live | Pronty Outlet
 
             align-items: flex-start;
         }
+
     }
 
 
@@ -479,6 +662,7 @@ Pronty Live | Pronty Outlet
             width: 48px;
             height: 48px;
         }
+
     }
 
 </style>
@@ -512,6 +696,7 @@ Pronty Live | Pronty Outlet
 
                     </h1>
 
+
                     <p class="live-dashboard__subtitle">
 
                         Centro de operación de ventas en vivo
@@ -524,13 +709,13 @@ Pronty Live | Pronty Outlet
 
 
             <a
-                href="/admin/live_sales/"
-                class="live-dashboard__admin-link"
+                href="{% url 'live_sales:products' %}"
+                class="live-dashboard__header-action"
             >
 
-                <i data-lucide="settings"></i>
+                <i data-lucide="qr-code"></i>
 
-                Administración Live
+                Productos y QR
 
             </a>
 
@@ -566,6 +751,7 @@ Pronty Live | Pronty Outlet
 
                     </strong>
 
+
                     <span class="live-metric__label">
 
                         Lives activos o programados
@@ -598,6 +784,7 @@ Pronty Live | Pronty Outlet
                         {{ active_customers }}
 
                     </strong>
+
 
                     <span class="live-metric__label">
 
@@ -632,6 +819,7 @@ Pronty Live | Pronty Outlet
 
                     </strong>
 
+
                     <span class="live-metric__label">
 
                         Asignaciones por convertir
@@ -642,7 +830,230 @@ Pronty Live | Pronty Outlet
 
             </article>
 
+
+            <article class="live-metric">
+
+                <div
+                    class="
+                        live-metric__icon
+                        live-metric__icon--qr
+                    "
+                >
+
+                    <i data-lucide="qr-code"></i>
+
+                </div>
+
+
+                <div>
+
+                    <strong class="live-metric__value">
+
+                        {{ qr_products }}
+
+                    </strong>
+
+
+                    <span class="live-metric__label">
+
+                        Productos con QR activo
+
+                    </span>
+
+                </div>
+
+            </article>
+
+
         </div>
+
+
+        <!-- ==============================================
+             ACCESOS RÁPIDOS
+             ============================================== -->
+
+        <section class="live-dashboard__quick">
+
+            <h2 class="live-dashboard__section-title">
+
+                Operación Pronty Live
+
+            </h2>
+
+
+            <div class="live-dashboard__quick-grid">
+
+
+                <!-- ======================================
+                     PRODUCTOS Y QR
+                     ====================================== -->
+
+                <a
+                    href="{% url 'live_sales:products' %}"
+                    class="live-quick-card"
+                >
+
+                    <div class="live-quick-card__icon">
+
+                        <i data-lucide="qr-code"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="live-quick-card__title">
+
+                            Productos y QR
+
+                        </span>
+
+
+                        <span class="live-quick-card__text">
+
+                            Busca productos, genera sus códigos QR,
+                            imprime etiquetas y abre el producto
+                            para asignarlo durante una transmisión.
+
+                        </span>
+
+                    </div>
+
+                </a>
+
+
+                <!-- ======================================
+                     LIVES
+                     ====================================== -->
+
+                <a
+                    href="{% url 'live_sales:sessions' %}"
+                    class="live-quick-card"
+                >
+
+                    <div
+                        class="
+                            live-quick-card__icon
+                            live-quick-card__icon--pink
+                        "
+                    >
+
+                        <i data-lucide="radio-tower"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="live-quick-card__title">
+
+                            Lives
+
+                        </span>
+
+
+                        <span class="live-quick-card__text">
+
+                            Crea, programa, edita, inicia y
+                            finaliza las transmisiones directamente
+                            desde Pronty Live.
+
+                        </span>
+
+                    </div>
+
+                </a>
+
+
+                <!-- ======================================
+                     CLIENTES LIVE
+                     ====================================== -->
+
+                <a
+                    href="{% url 'live_sales:customers' %}"
+                    class="live-quick-card"
+                >
+
+                    <div
+                        class="
+                            live-quick-card__icon
+                            live-quick-card__icon--blue
+                        "
+                    >
+
+                        <i data-lucide="users"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="live-quick-card__title">
+
+                            Clientes Live
+
+                        </span>
+
+
+                        <span class="live-quick-card__text">
+
+                            Busca clientes, administra sus códigos
+                            permanentes y activa o desactiva
+                            su acceso a Pronty Live.
+
+                        </span>
+
+                    </div>
+
+                </a>
+
+
+                <!-- ======================================
+                     ASIGNACIONES
+                     ====================================== -->
+
+                <a
+                    href="{% url 'live_sales:assignments' %}"
+                    class="live-quick-card"
+                >
+
+                    <div
+                        class="
+                            live-quick-card__icon
+                            live-quick-card__icon--gold
+                        "
+                    >
+
+                        <i data-lucide="shopping-basket"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="live-quick-card__title">
+
+                            Asignaciones
+
+                        </span>
+
+
+                        <span class="live-quick-card__text">
+
+                            Consulta reservas, productos asignados,
+                            pedidos generados y asignaciones
+                            liberadas durante los Lives.
+
+                        </span>
+
+                    </div>
+
+                </a>
+
+
+            </div>
+
+        </section>
 
 
         <!-- ==============================================
@@ -662,10 +1073,11 @@ Pronty Live | Pronty Outlet
 
                     </h2>
 
+
                     <p class="live-dashboard__panel-text">
 
-                        Selecciona un Live para continuar
-                        con la operación.
+                        Revisa y administra las transmisiones
+                        recientes de Pronty Live.
 
                     </p>
 
@@ -673,7 +1085,7 @@ Pronty Live | Pronty Outlet
 
 
                 <a
-                    href="/admin/live_sales/livesession/add/"
+                    href="{% url 'live_sales:session_create' %}"
                     class="live-dashboard__create"
                 >
 
@@ -833,11 +1245,11 @@ Pronty Live | Pronty Outlet
                                     <td>
 
                                         <a
-                                            href="/admin/live_sales/livesession/{{ session.id }}/change/"
+                                            href="{% url 'live_sales:session_edit' session.id %}"
                                             class="live-table__action"
                                         >
 
-                                            <i data-lucide="arrow-right"></i>
+                                            <i data-lucide="pencil"></i>
 
                                             Administrar
 
@@ -874,6 +1286,7 @@ Pronty Live | Pronty Outlet
 
 
         </section>
+
 
     </div>
 

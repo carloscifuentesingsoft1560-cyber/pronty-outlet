@@ -1,0 +1,403 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+{{ page_title }} | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-admin-form {
+        min-height: 70vh;
+
+        padding: 38px 18px 70px;
+
+        background: #fafafa;
+    }
+
+
+    .live-admin-form__container {
+        max-width: 760px;
+
+        margin: 0 auto;
+    }
+
+
+    .live-admin-form__back {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        margin-bottom: 18px;
+
+        color: #1f6a43;
+
+        text-decoration: none;
+
+        font-weight: 750;
+    }
+
+
+    .live-admin-form__card {
+        padding: 28px;
+
+        border: 1px solid #e8e8e8;
+
+        border-radius: 20px;
+
+        background: white;
+
+        box-shadow:
+            0 8px 28px
+            rgba(0, 0, 0, 0.05);
+    }
+
+
+    .live-admin-form__title {
+        margin: 0;
+
+        color: #1f352b;
+
+        font-size: 1.7rem;
+    }
+
+
+    .live-admin-form__subtitle {
+        margin: 6px 0 24px;
+
+        color: #6b7280;
+    }
+
+
+    .live-admin-form__group {
+        margin-bottom: 18px;
+    }
+
+
+    .live-admin-form__group label {
+        display: block;
+
+        margin-bottom: 7px;
+
+        color: #283c32;
+
+        font-weight: 750;
+    }
+
+
+    .live-admin-form__input {
+        width: 100%;
+
+        box-sizing: border-box;
+
+        min-height: 46px;
+
+        padding: 10px 13px;
+
+        border: 1px solid #d8dedb;
+
+        border-radius: 11px;
+
+        background: white;
+
+        font: inherit;
+
+        outline: none;
+    }
+
+
+    textarea.live-admin-form__input {
+        resize: vertical;
+    }
+
+
+    .live-admin-form__input:focus {
+        border-color: #268152;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(38, 129, 82, 0.10);
+    }
+
+
+    .live-admin-form__error {
+        margin-top: 6px;
+
+        color: #b42318;
+
+        font-size: 0.8rem;
+    }
+
+
+    .live-admin-form__actions {
+        display: flex;
+
+        justify-content: flex-end;
+
+        gap: 10px;
+
+        margin-top: 25px;
+    }
+
+
+    .live-admin-form__button {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 7px;
+
+        padding: 11px 17px;
+
+        border-radius: 11px;
+
+        border: 0;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+
+        text-decoration: none;
+    }
+
+
+    .live-admin-form__button--secondary {
+        color: #1f6a43;
+
+        background: #edf7f0;
+    }
+
+
+    .live-admin-form__button--primary {
+        color: white;
+
+        background: #1f6a43;
+    }
+
+
+    @media (
+        max-width: 600px
+    ) {
+
+        .live-admin-form__card {
+            padding: 20px;
+        }
+
+
+        .live-admin-form__actions {
+            flex-direction: column-reverse;
+        }
+
+
+        .live-admin-form__button {
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+
+<section class="live-admin-form">
+
+    <div class="live-admin-form__container">
+
+
+        <a
+            href="{% url 'live_sales:sessions' %}"
+            class="live-admin-form__back"
+        >
+
+            <i data-lucide="arrow-left"></i>
+
+            Lives
+
+        </a>
+
+
+        <section class="live-admin-form__card">
+
+
+            <h1 class="live-admin-form__title">
+
+                {{ page_title }}
+
+            </h1>
+
+
+            <p class="live-admin-form__subtitle">
+
+                Administra la información de la transmisión
+                directamente desde Pronty Live.
+
+            </p>
+
+
+            <form method="post">
+
+                {% csrf_token %}
+
+
+                {% if form.non_field_errors %}
+
+                    <div class="live-admin-form__error">
+
+                        {{ form.non_field_errors }}
+
+                    </div>
+
+                {% endif %}
+
+
+                <div class="live-admin-form__group">
+
+                    <label for="{{ form.name.id_for_label }}">
+
+                        Nombre del Live
+
+                    </label>
+
+
+                    {{ form.name }}
+
+
+                    {% for error in form.name.errors %}
+
+                        <div class="live-admin-form__error">
+
+                            {{ error }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="live-admin-form__group">
+
+                    <label for="{{ form.platform.id_for_label }}">
+
+                        Plataforma
+
+                    </label>
+
+
+                    {{ form.platform }}
+
+
+                    {% for error in form.platform.errors %}
+
+                        <div class="live-admin-form__error">
+
+                            {{ error }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="live-admin-form__group">
+
+                    <label for="{{ form.scheduled_at.id_for_label }}">
+
+                        Fecha y hora programada
+
+                    </label>
+
+
+                    {{ form.scheduled_at }}
+
+
+                    {% for error in form.scheduled_at.errors %}
+
+                        <div class="live-admin-form__error">
+
+                            {{ error }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="live-admin-form__group">
+
+                    <label for="{{ form.notes.id_for_label }}">
+
+                        Observaciones
+
+                    </label>
+
+
+                    {{ form.notes }}
+
+
+                    {% for error in form.notes.errors %}
+
+                        <div class="live-admin-form__error">
+
+                            {{ error }}
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+
+                <div class="live-admin-form__actions">
+
+
+                    <a
+                        href="{% url 'live_sales:sessions' %}"
+                        class="
+                            live-admin-form__button
+                            live-admin-form__button--secondary
+                        "
+                    >
+
+                        Cancelar
+
+                    </a>
+
+
+                    <button
+                        type="submit"
+                        class="
+                            live-admin-form__button
+                            live-admin-form__button--primary
+                        "
+                    >
+
+                        <i data-lucide="save"></i>
+
+                        {{ submit_text }}
+
+                    </button>
+
+
+                </div>
+
+            </form>
+
+
+        </section>
+
+    </div>
+
+</section>
+
+{% endblock %}

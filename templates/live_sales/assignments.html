@@ -1,0 +1,1089 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+Asignaciones | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-assignments {
+        min-height: 70vh;
+
+        padding: 38px 18px 70px;
+
+        background: #fafafa;
+    }
+
+
+    .live-assignments__container {
+        max-width: 1300px;
+
+        margin: 0 auto;
+    }
+
+
+    /* ======================================================
+       CABECERA
+       ====================================================== */
+
+    .live-assignments__back {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        margin-bottom: 14px;
+
+        color: #1f6a43;
+
+        text-decoration: none;
+
+        font-weight: 750;
+    }
+
+
+    .live-assignments__title {
+        margin: 0;
+
+        color: #1e362b;
+
+        font-size: 1.85rem;
+    }
+
+
+    .live-assignments__subtitle {
+        margin: 7px 0 28px;
+
+        color: #6b7280;
+    }
+
+
+    /* ======================================================
+       MÉTRICAS
+       ====================================================== */
+
+    .live-assignments__metrics {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
+
+        gap: 15px;
+
+        margin-bottom: 24px;
+    }
+
+
+    .live-assignments__metric {
+        padding: 19px;
+
+        border: 1px solid #e7e7e7;
+
+        border-radius: 17px;
+
+        background: white;
+
+        box-shadow:
+            0 6px 22px
+            rgba(0, 0, 0, 0.04);
+    }
+
+
+    .live-assignments__metric-value {
+        display: block;
+
+        color: #1f2937;
+
+        font-size: 1.7rem;
+
+        font-weight: 800;
+    }
+
+
+    .live-assignments__metric-label {
+        display: block;
+
+        margin-top: 5px;
+
+        color: #6b7280;
+
+        font-size: 0.83rem;
+    }
+
+
+    /* ======================================================
+       FILTROS
+       ====================================================== */
+
+    .live-assignments__filters {
+        display: grid;
+
+        grid-template-columns:
+            minmax(0, 1fr)
+            210px
+            auto;
+
+        gap: 10px;
+
+        margin-bottom: 22px;
+    }
+
+
+    .live-assignments__filters input,
+    .live-assignments__filters select {
+        width: 100%;
+
+        min-height: 46px;
+
+        box-sizing: border-box;
+
+        padding: 10px 14px;
+
+        border: 1px solid #d8dedb;
+
+        border-radius: 12px;
+
+        background: white;
+
+        font: inherit;
+    }
+
+
+    .live-assignments__search-button {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 7px;
+
+        min-height: 46px;
+
+        padding: 10px 18px;
+
+        border: 0;
+
+        border-radius: 12px;
+
+        background: #1f6a43;
+
+        color: white;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    .live-assignments__clear {
+        display: inline-flex;
+
+        align-items: center;
+
+        margin-top: -10px;
+
+        margin-bottom: 22px;
+
+        color: #1f6a43;
+
+        text-decoration: none;
+
+        font-size: 0.82rem;
+
+        font-weight: 750;
+    }
+
+
+    /* ======================================================
+       PANEL
+       ====================================================== */
+
+    .live-assignments__panel {
+        overflow: hidden;
+
+        border: 1px solid #e8e8e8;
+
+        border-radius: 20px;
+
+        background: white;
+
+        box-shadow:
+            0 8px 28px
+            rgba(0, 0, 0, 0.05);
+    }
+
+
+    .live-assignments__panel-header {
+        padding: 18px 22px;
+
+        border-bottom: 1px solid #eeeeee;
+    }
+
+
+    .live-assignments__panel-title {
+        margin: 0;
+
+        color: #1f352b;
+
+        font-size: 1.05rem;
+    }
+
+
+    .live-assignments__panel-text {
+        margin: 5px 0 0;
+
+        color: #777;
+
+        font-size: 0.82rem;
+    }
+
+
+    /* ======================================================
+       TABLA
+       ====================================================== */
+
+    .live-assignments__table-wrap {
+        overflow-x: auto;
+    }
+
+
+    .live-assignments__table {
+        width: 100%;
+
+        min-width: 1100px;
+
+        border-collapse: collapse;
+    }
+
+
+    .live-assignments__table th {
+        padding: 13px 15px;
+
+        text-align: left;
+
+        background: #fafafa;
+
+        color: #6b7280;
+
+        font-size: 0.72rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    .live-assignments__table td {
+        padding: 15px;
+
+        border-top: 1px solid #eeeeee;
+
+        vertical-align: middle;
+
+        color: #374151;
+
+        font-size: 0.84rem;
+    }
+
+
+    .live-assignments__id {
+        color: #777;
+
+        font-weight: 750;
+    }
+
+
+    .live-assignments__customer {
+        display: block;
+
+        color: #1f2937;
+
+        font-weight: 800;
+    }
+
+
+    .live-assignments__code {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #1f6a43;
+
+        font-size: 0.76rem;
+
+        font-weight: 750;
+    }
+
+
+    .live-assignments__product {
+        display: block;
+
+        color: #1f2937;
+
+        font-weight: 750;
+    }
+
+
+    .live-assignments__sku {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #888;
+
+        font-size: 0.75rem;
+    }
+
+
+    .live-assignments__price {
+        white-space: nowrap;
+
+        font-weight: 750;
+    }
+
+
+    /* ======================================================
+       ESTADOS
+       ====================================================== */
+
+    .live-assignment-status {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 5px 9px;
+
+        border-radius: 999px;
+
+        font-size: 0.72rem;
+
+        font-weight: 800;
+
+        white-space: nowrap;
+    }
+
+
+    .live-assignment-status--assigned {
+        color: #855d00;
+
+        background: #fff4d3;
+    }
+
+
+    .live-assignment-status--ordered {
+        color: #17613e;
+
+        background: #eaf6ee;
+    }
+
+
+    .live-assignment-status--released {
+        color: #6b7280;
+
+        background: #eeeeee;
+    }
+
+
+    /* ======================================================
+       ACCIONES
+       ====================================================== */
+
+    .live-assignments__release {
+        display: inline-flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 6px;
+
+        padding: 7px 10px;
+
+        border: 0;
+
+        border-radius: 9px;
+
+        background: #fff1d3;
+
+        color: #855d00;
+
+        font: inherit;
+
+        font-size: 0.75rem;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    .live-assignments__order {
+        display: inline-flex;
+
+        padding: 6px 9px;
+
+        border-radius: 8px;
+
+        background: #edf7f0;
+
+        color: #17613e;
+
+        font-size: 0.76rem;
+
+        font-weight: 800;
+
+        white-space: nowrap;
+    }
+
+
+    .live-assignments__none {
+        color: #aaa;
+    }
+
+
+    .live-assignments__empty {
+        padding: 45px 20px;
+
+        text-align: center;
+
+        color: #777;
+    }
+
+
+    /* ======================================================
+       RESPONSIVE
+       ====================================================== */
+
+    @media (
+        max-width: 950px
+    ) {
+
+        .live-assignments__metrics {
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+        }
+
+
+        .live-assignments__filters {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+
+    @media (
+        max-width: 600px
+    ) {
+
+        .live-assignments__metrics {
+            grid-template-columns: 1fr;
+        }
+
+
+        .live-assignments {
+            padding:
+                28px 14px
+                50px;
+        }
+
+    }
+
+</style>
+
+
+<section class="live-assignments">
+
+    <div class="live-assignments__container">
+
+
+        <!-- ==============================================
+             CABECERA
+             ============================================== -->
+
+        <a
+            href="{% url 'live_sales:dashboard' %}"
+            class="live-assignments__back"
+        >
+
+            <i data-lucide="arrow-left"></i>
+
+            Pronty Live
+
+        </a>
+
+
+        <h1 class="live-assignments__title">
+
+            Asignaciones
+
+        </h1>
+
+
+        <p class="live-assignments__subtitle">
+
+            Consulta las reservas realizadas durante los Lives,
+            los pedidos generados y las asignaciones liberadas.
+
+        </p>
+
+
+        <!-- ==============================================
+             MÉTRICAS
+             ============================================== -->
+
+        <div class="live-assignments__metrics">
+
+
+            <article class="live-assignments__metric">
+
+                <strong
+                    class="live-assignments__metric-value"
+                >
+
+                    {{ total_count }}
+
+                </strong>
+
+
+                <span
+                    class="live-assignments__metric-label"
+                >
+
+                    Asignaciones totales
+
+                </span>
+
+            </article>
+
+
+            <article class="live-assignments__metric">
+
+                <strong
+                    class="live-assignments__metric-value"
+                >
+
+                    {{ assigned_count }}
+
+                </strong>
+
+
+                <span
+                    class="live-assignments__metric-label"
+                >
+
+                    Actualmente asignadas
+
+                </span>
+
+            </article>
+
+
+            <article class="live-assignments__metric">
+
+                <strong
+                    class="live-assignments__metric-value"
+                >
+
+                    {{ ordered_count }}
+
+                </strong>
+
+
+                <span
+                    class="live-assignments__metric-label"
+                >
+
+                    Convertidas en pedido
+
+                </span>
+
+            </article>
+
+
+            <article class="live-assignments__metric">
+
+                <strong
+                    class="live-assignments__metric-value"
+                >
+
+                    {{ released_count }}
+
+                </strong>
+
+
+                <span
+                    class="live-assignments__metric-label"
+                >
+
+                    Liberadas
+
+                </span>
+
+            </article>
+
+
+        </div>
+
+
+        <!-- ==============================================
+             BUSCADOR Y FILTRO
+             ============================================== -->
+
+        <form
+            method="get"
+            class="live-assignments__filters"
+        >
+
+            <input
+                type="search"
+                name="q"
+                value="{{ search }}"
+                placeholder="Buscar cliente, código PRY-C, producto, SKU, Live o pedido"
+            >
+
+
+            <select name="status">
+
+                <option value="">
+                    Todos los estados
+                </option>
+
+
+                <option
+                    value="ASSIGNED"
+                    {% if status_filter == 'ASSIGNED' %}
+                        selected
+                    {% endif %}
+                >
+                    Asignados
+                </option>
+
+
+                <option
+                    value="ORDERED"
+                    {% if status_filter == 'ORDERED' %}
+                        selected
+                    {% endif %}
+                >
+                    Convertidos en pedido
+                </option>
+
+
+                <option
+                    value="RELEASED"
+                    {% if status_filter == 'RELEASED' %}
+                        selected
+                    {% endif %}
+                >
+                    Liberados
+                </option>
+
+            </select>
+
+
+            <button
+                type="submit"
+                class="live-assignments__search-button"
+            >
+
+                <i data-lucide="search"></i>
+
+                Buscar
+
+            </button>
+
+        </form>
+
+
+        {% if search or status_filter %}
+
+            <a
+                href="{% url 'live_sales:assignments' %}"
+                class="live-assignments__clear"
+            >
+
+                <i data-lucide="x"></i>
+
+                Limpiar filtros
+
+            </a>
+
+        {% endif %}
+
+
+        <!-- ==============================================
+             LISTADO
+             ============================================== -->
+
+        <section class="live-assignments__panel">
+
+
+            <div class="live-assignments__panel-header">
+
+                <h2
+                    class="live-assignments__panel-title"
+                >
+
+                    Historial de asignaciones
+
+                </h2>
+
+
+                <p
+                    class="live-assignments__panel-text"
+                >
+
+                    Las asignaciones activas mantienen reservado
+                    el inventario hasta convertirse en pedido
+                    o ser liberadas.
+
+                </p>
+
+            </div>
+
+
+            {% if assignments %}
+
+                <div
+                    class="live-assignments__table-wrap"
+                >
+
+                    <table
+                        class="live-assignments__table"
+                    >
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    ID
+                                </th>
+
+                                <th>
+                                    Cliente
+                                </th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Live
+                                </th>
+
+                                <th>
+                                    Cant.
+                                </th>
+
+                                <th>
+                                    Valor
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
+                                <th>
+                                    Pedido
+                                </th>
+
+                                <th>
+                                    Fecha
+                                </th>
+
+                                <th>
+                                    Acción
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for assignment in assignments %}
+
+                                <tr>
+
+
+                                    <td>
+
+                                        <span
+                                            class="live-assignments__id"
+                                        >
+
+                                            #{{ assignment.id }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span
+                                            class="live-assignments__customer"
+                                        >
+
+                                            {% if assignment.customer.user.get_full_name %}
+
+                                                {{ assignment.customer.user.get_full_name }}
+
+                                            {% else %}
+
+                                                {{ assignment.customer.user.username }}
+
+                                            {% endif %}
+
+                                        </span>
+
+
+                                        <span
+                                            class="live-assignments__code"
+                                        >
+
+                                            {{ assignment.customer.customer_code }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span
+                                            class="live-assignments__product"
+                                        >
+
+                                            {{ assignment.product.name }}
+
+                                        </span>
+
+
+                                        <span
+                                            class="live-assignments__sku"
+                                        >
+
+                                            {{ assignment.product.sku }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ assignment.live_session.name }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ assignment.quantity }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span
+                                            class="live-assignments__price"
+                                        >
+
+                                            ${{ assignment.subtotal|floatformat:0 }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if assignment.status == 'ASSIGNED' %}
+
+                                            <span
+                                                class="
+                                                    live-assignment-status
+                                                    live-assignment-status--assigned
+                                                "
+                                            >
+
+                                                <i data-lucide="clock"></i>
+
+                                                Asignado
+
+                                            </span>
+
+
+                                        {% elif assignment.status == 'ORDERED' %}
+
+                                            <span
+                                                class="
+                                                    live-assignment-status
+                                                    live-assignment-status--ordered
+                                                "
+                                            >
+
+                                                <i data-lucide="circle-check"></i>
+
+                                                Pedido
+
+                                            </span>
+
+
+                                        {% else %}
+
+                                            <span
+                                                class="
+                                                    live-assignment-status
+                                                    live-assignment-status--released
+                                                "
+                                            >
+
+                                                <i data-lucide="undo-2"></i>
+
+                                                Liberado
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if assignment.order %}
+
+                                            <span
+                                                class="live-assignments__order"
+                                            >
+
+                                                {{ assignment.order.order_number }}
+
+                                            </span>
+
+                                        {% else %}
+
+                                            <span
+                                                class="live-assignments__none"
+                                            >
+
+                                                —
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ assignment.assigned_at|date:"d/m/Y h:i A" }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if assignment.status == 'ASSIGNED' %}
+
+                                            <form
+                                                method="post"
+                                                action="{% url 'live_sales:assignment_release' assignment.id %}"
+                                                onsubmit="
+                                                    return confirm(
+                                                        '¿Seguro que deseas liberar esta asignación? El inventario reservado volverá a estar disponible.'
+                                                    );
+                                                "
+                                            >
+
+                                                {% csrf_token %}
+
+
+                                                <button
+                                                    type="submit"
+                                                    class="live-assignments__release"
+                                                >
+
+                                                    <i data-lucide="undo-2"></i>
+
+                                                    Liberar
+
+                                                </button>
+
+                                            </form>
+
+
+                                        {% else %}
+
+                                            <span
+                                                class="live-assignments__none"
+                                            >
+
+                                                —
+
+                                            </span>
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+                <div class="live-assignments__empty">
+
+                    <i data-lucide="shopping-basket"></i>
+
+                    <p>
+
+                        No encontramos asignaciones
+                        con los filtros seleccionados.
+
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+
+        </section>
+
+
+    </div>
+
+</section>
+
+{% endblock %}

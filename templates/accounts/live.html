@@ -1,0 +1,1241 @@
+{% extends 'base.html' %}
+{% load pronty_filters %}
+
+
+{% block title %}
+Pronty Live | Mi cuenta
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .customer-live {
+        min-height: 70vh;
+
+        padding: 38px 18px 70px;
+
+        background:
+            linear-gradient(
+                180deg,
+                #fffafc 0%,
+                #ffffff 45%,
+                #f8faf8 100%
+            );
+    }
+
+
+    .customer-live__container {
+        max-width: 1120px;
+
+        margin: 0 auto;
+    }
+
+
+    .customer-live__layout {
+        display: grid;
+
+        grid-template-columns:
+            240px minmax(0, 1fr);
+
+        gap: 28px;
+    }
+
+
+    /* ======================================================
+       MENÚ
+       ====================================================== */
+
+    .customer-live__sidebar {
+        align-self: start;
+
+        background: white;
+
+        border: 1px solid #e8ece9;
+
+        border-radius: 18px;
+
+        padding: 18px;
+
+        box-shadow:
+            0 7px 24px
+            rgba(0, 0, 0, 0.045);
+    }
+
+
+    .customer-live__profile {
+        padding: 6px 4px 17px;
+
+        border-bottom: 1px solid #eeeeee;
+    }
+
+
+    .customer-live__profile strong {
+        display: block;
+
+        color: #1f2937;
+    }
+
+
+    .customer-live__profile span {
+        display: block;
+
+        margin-top: 4px;
+
+        color: #777;
+
+        font-size: 0.8rem;
+
+        word-break: break-word;
+    }
+
+
+    .customer-live__nav {
+        display: grid;
+
+        gap: 7px;
+
+        margin-top: 15px;
+    }
+
+
+    .customer-live__nav-link {
+        display: flex;
+
+        align-items: center;
+
+        gap: 9px;
+
+        padding: 11px 12px;
+
+        border-radius: 11px;
+
+        color: #44534b;
+
+        text-decoration: none;
+
+        font-weight: 700;
+
+        font-size: 0.88rem;
+    }
+
+
+    .customer-live__nav-link--active {
+        color: #17613e;
+
+        background: #edf7f0;
+    }
+
+
+    /* ======================================================
+       CABECERA
+       ====================================================== */
+
+    .customer-live__header {
+        display: flex;
+
+        justify-content: space-between;
+
+        gap: 20px;
+
+        align-items: flex-start;
+
+        margin-bottom: 22px;
+    }
+
+
+    .customer-live__eyebrow {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        color: #d81b60;
+
+        font-size: 0.78rem;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.05em;
+    }
+
+
+    .customer-live__title {
+        margin: 8px 0 6px;
+
+        color: #1d352a;
+
+        font-size: 2rem;
+    }
+
+
+    .customer-live__subtitle {
+        margin: 0;
+
+        color: #6b7280;
+    }
+
+
+    /* ======================================================
+       TARJETA DE ACCESO
+       ====================================================== */
+
+    .customer-live__access {
+        margin-bottom: 22px;
+
+        padding: 24px;
+
+        border-radius: 20px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #174f35,
+                #22744c
+            );
+
+        color: white;
+
+        box-shadow:
+            0 10px 28px
+            rgba(23, 79, 53, 0.18);
+    }
+
+
+    .customer-live__access-top {
+        display: flex;
+
+        justify-content: space-between;
+
+        gap: 20px;
+
+        align-items: flex-start;
+    }
+
+
+    .customer-live__access-label {
+        display: block;
+
+        opacity: 0.78;
+
+        font-size: 0.78rem;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.06em;
+    }
+
+
+    .customer-live__code {
+        display: block;
+
+        margin-top: 6px;
+
+        font-size: 1.65rem;
+
+        font-weight: 850;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    .customer-live__status {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 6px;
+
+        padding: 6px 10px;
+
+        border-radius: 999px;
+
+        background: rgba(
+            255,
+            255,
+            255,
+            0.16
+        );
+
+        font-size: 0.78rem;
+
+        font-weight: 800;
+    }
+
+
+    .customer-live__access-help {
+        margin: 16px 0 0;
+
+        opacity: 0.88;
+
+        line-height: 1.5;
+
+        font-size: 0.88rem;
+    }
+
+
+    /* ======================================================
+       NO ACTIVADO
+       ====================================================== */
+
+    .customer-live__inactive {
+        padding: 26px;
+
+        margin-bottom: 22px;
+
+        border: 1px solid #f0ddb0;
+
+        border-radius: 20px;
+
+        background: #fff9e9;
+    }
+
+
+    .customer-live__inactive h2 {
+        margin: 0 0 7px;
+
+        color: #6f5200;
+
+        font-size: 1.25rem;
+    }
+
+
+    .customer-live__inactive p {
+        margin: 0;
+
+        color: #795f1d;
+
+        line-height: 1.55;
+    }
+
+
+    .customer-live__activation-price {
+        display: inline-block;
+
+        margin-top: 14px;
+
+        padding: 7px 11px;
+
+        border-radius: 999px;
+
+        background: white;
+
+        color: #6f5200;
+
+        font-weight: 850;
+    }
+
+
+    /* ======================================================
+       PRODUCTOS
+       ====================================================== */
+
+    .customer-live__panel {
+        background: white;
+
+        border: 1px solid #e8ece9;
+
+        border-radius: 20px;
+
+        padding: 24px;
+
+        box-shadow:
+            0 8px 27px
+            rgba(0, 0, 0, 0.045);
+    }
+
+
+    .customer-live__panel-heading {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 20px;
+
+        margin-bottom: 18px;
+    }
+
+
+    .customer-live__panel-title {
+        margin: 0;
+
+        color: #1f352b;
+
+        font-size: 1.2rem;
+    }
+
+
+    .customer-live__count {
+        display: inline-flex;
+
+        padding: 5px 9px;
+
+        border-radius: 999px;
+
+        background: #edf7f0;
+
+        color: #26734d;
+
+        font-size: 0.75rem;
+
+        font-weight: 800;
+    }
+
+
+    .customer-live__list {
+        display: grid;
+
+        gap: 12px;
+    }
+
+
+    .customer-live__item {
+        display: grid;
+
+        grid-template-columns:
+            auto 1fr auto;
+
+        align-items: center;
+
+        gap: 14px;
+
+        padding: 15px;
+
+        border: 1px solid #e3eae5;
+
+        border-radius: 14px;
+
+        cursor: pointer;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
+    }
+
+
+    .customer-live__item:has(
+        .customer-live__checkbox:checked
+    ) {
+        border-color: #72ad8b;
+
+        box-shadow:
+            0 5px 18px
+            rgba(31, 106, 67, 0.08);
+    }
+
+
+    .customer-live__checkbox {
+        width: 19px;
+        height: 19px;
+
+        accent-color: #17613e;
+    }
+
+
+    .customer-live__product {
+        display: block;
+
+        color: #1f2937;
+
+        font-weight: 800;
+    }
+
+
+    .customer-live__meta {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #6b7280;
+
+        font-size: 0.82rem;
+    }
+
+
+    .customer-live__price {
+        text-align: right;
+    }
+
+
+    .customer-live__price strong {
+        display: block;
+
+        color: #17613e;
+    }
+
+
+    .customer-live__reserved {
+        display: inline-flex;
+
+        margin-top: 5px;
+
+        padding: 4px 7px;
+
+        border-radius: 999px;
+
+        background: #edf7f0;
+
+        color: #26734d;
+
+        font-size: 0.7rem;
+    }
+
+
+    /* ======================================================
+       RESUMEN
+       ====================================================== */
+
+    .customer-live__summary {
+        display: flex;
+
+        justify-content: space-between;
+
+        align-items: center;
+
+        gap: 20px;
+
+        margin-top: 19px;
+
+        padding-top: 17px;
+
+        border-top: 1px solid #e8ece9;
+    }
+
+
+    .customer-live__select-all {
+        display: flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        color: #57625c;
+
+        font-size: 0.84rem;
+    }
+
+
+    .customer-live__select-all input {
+        width: 17px;
+        height: 17px;
+
+        accent-color: #17613e;
+    }
+
+
+    .customer-live__total {
+        text-align: right;
+    }
+
+
+    .customer-live__total span {
+        display: block;
+
+        color: #777;
+
+        font-size: 0.76rem;
+    }
+
+
+    .customer-live__total strong {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #153f2d;
+
+        font-size: 1.3rem;
+    }
+
+
+    .customer-live__checkout {
+        display: flex;
+
+        justify-content: flex-end;
+
+        margin-top: 16px;
+    }
+
+
+    .customer-live__button {
+        display: inline-flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding: 12px 19px;
+
+        border: 0;
+
+        border-radius: 12px;
+
+        background:
+            linear-gradient(
+                135deg,
+                #17613e,
+                #278657
+            );
+
+        color: white;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    .customer-live__button:disabled {
+        opacity: 0.45;
+
+        cursor: not-allowed;
+    }
+
+
+    .customer-live__empty {
+        padding: 35px 15px;
+
+        text-align: center;
+
+        color: #777;
+    }
+
+
+    @media (
+        max-width: 800px
+    ) {
+
+        .customer-live__layout {
+            grid-template-columns: 1fr;
+        }
+
+
+        .customer-live__sidebar {
+            order: 2;
+        }
+
+    }
+
+
+    @media (
+        max-width: 600px
+    ) {
+
+        .customer-live {
+            padding:
+                25px 13px
+                50px;
+        }
+
+
+        .customer-live__title {
+            font-size: 1.55rem;
+        }
+
+
+        .customer-live__access-top {
+            flex-direction: column;
+        }
+
+
+        .customer-live__code {
+            font-size: 1.35rem;
+        }
+
+
+        .customer-live__item {
+            grid-template-columns:
+                auto 1fr;
+        }
+
+
+        .customer-live__price {
+            grid-column: 2;
+
+            text-align: left;
+        }
+
+
+        .customer-live__summary {
+            flex-direction: column;
+
+            align-items: flex-start;
+        }
+
+
+        .customer-live__total {
+            text-align: left;
+        }
+
+
+        .customer-live__checkout {
+            justify-content: stretch;
+        }
+
+
+        .customer-live__button {
+            width: 100%;
+        }
+
+    }
+
+</style>
+
+
+<section class="customer-live">
+
+    <div class="customer-live__container">
+
+        <div class="customer-live__layout">
+
+
+            <!-- ==========================================
+                 NAVEGACIÓN
+                 ========================================== -->
+
+            <aside class="customer-live__sidebar">
+
+                <div class="customer-live__profile">
+
+                    <strong>
+
+                        {{ request.user.get_full_name|default:request.user.username }}
+
+                    </strong>
+
+
+                    <span>
+
+                        {{ request.user.email }}
+
+                    </span>
+
+                </div>
+
+
+                <nav class="customer-live__nav">
+
+
+                    <a
+                        href="{% url 'accounts:dashboard' %}"
+                        class="customer-live__nav-link"
+                    >
+
+                        <i data-lucide="package"></i>
+
+                        Mis pedidos
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'accounts:live' %}"
+                        class="
+                            customer-live__nav-link
+                            customer-live__nav-link--active
+                        "
+                    >
+
+                        <i data-lucide="radio"></i>
+
+                        Pronty Live
+
+                    </a>
+
+
+                </nav>
+
+            </aside>
+
+
+            <!-- ==========================================
+                 CONTENIDO
+                 ========================================== -->
+
+            <div>
+
+
+                <header class="customer-live__header">
+
+                    <div>
+
+                        <span class="customer-live__eyebrow">
+
+                            <i data-lucide="radio"></i>
+
+                            Pronty Live
+
+                        </span>
+
+
+                        <h1 class="customer-live__title">
+
+                            Mi Pronty Live
+
+                        </h1>
+
+
+                        <p class="customer-live__subtitle">
+
+                            Consulta tu código permanente y
+                            administra los productos que te
+                            fueron separados durante los Lives.
+
+                        </p>
+
+                    </div>
+
+                </header>
+
+
+                {% if live_access and live_access.is_activated %}
+
+
+                    <!-- ==================================
+                         ACCESO ACTIVO
+                         ================================== -->
+
+                    <section class="customer-live__access">
+
+                        <div class="customer-live__access-top">
+
+                            <div>
+
+                                <span class="customer-live__access-label">
+
+                                    Mi código permanente
+
+                                </span>
+
+
+                                <strong class="customer-live__code">
+
+                                    {{ live_access.customer_code }}
+
+                                </strong>
+
+                            </div>
+
+
+                            <span class="customer-live__status">
+
+                                <i data-lucide="circle-check"></i>
+
+                                Pronty Live activo
+
+                            </span>
+
+                        </div>
+
+
+                        <p class="customer-live__access-help">
+
+                            Usa este código durante nuestras
+                            transmisiones para que podamos
+                            asignarte tus productos inmediatamente.
+
+                        </p>
+
+                    </section>
+
+
+                    <!-- ==================================
+                         PRODUCTOS RESERVADOS
+                         ================================== -->
+
+                    <section class="customer-live__panel">
+
+
+                        <div class="customer-live__panel-heading">
+
+                            <h2 class="customer-live__panel-title">
+
+                                Mis productos del Live
+
+                            </h2>
+
+
+                            <span class="customer-live__count">
+
+                                {{ live_assignments|length }}
+                                asignado(s)
+
+                            </span>
+
+                        </div>
+
+
+                        {% if live_assignments %}
+
+                            <form
+                                method="post"
+                                action="{% url 'accounts:generate_live_order' %}"
+                                id="customer-live-form"
+                            >
+
+                                {% csrf_token %}
+
+
+                                <div class="customer-live__list">
+
+
+                                    {% for assignment in live_assignments %}
+
+                                        <label class="customer-live__item">
+
+
+                                            <input
+                                                type="checkbox"
+                                                name="assignment_ids"
+                                                value="{{ assignment.id }}"
+                                                class="customer-live__checkbox"
+                                                data-subtotal="{{ assignment.subtotal|floatformat:'0u' }}"
+                                            >
+
+
+                                            <div>
+
+                                                <strong class="customer-live__product">
+
+                                                    {{ assignment.product.name }}
+
+                                                </strong>
+
+
+                                                <span class="customer-live__meta">
+
+                                                    {{ assignment.live_session.name }}
+
+                                                </span>
+
+
+                                                <span class="customer-live__meta">
+
+                                                    Cantidad:
+                                                    {{ assignment.quantity }}
+
+                                                </span>
+
+                                            </div>
+
+
+                                            <div class="customer-live__price">
+
+                                                <strong>
+
+                                                    ${{ assignment.subtotal|currency_co }}
+
+                                                </strong>
+
+
+                                                <span class="customer-live__reserved">
+
+                                                    Reservado
+
+                                                </span>
+
+                                            </div>
+
+
+                                        </label>
+
+                                    {% endfor %}
+
+
+                                </div>
+
+
+                                <div class="customer-live__summary">
+
+
+                                    <label class="customer-live__select-all">
+
+                                        <input
+                                            type="checkbox"
+                                            id="customer-live-select-all"
+                                        >
+
+                                        Seleccionar todos
+
+                                    </label>
+
+
+                                    <div class="customer-live__total">
+
+                                        <span>
+                                            Total seleccionado
+                                        </span>
+
+
+                                        <strong id="customer-live-total">
+
+                                            $0
+
+                                        </strong>
+
+                                    </div>
+
+
+                                </div>
+
+
+                                <div class="customer-live__checkout">
+
+                                    <button
+                                        type="submit"
+                                        class="customer-live__button"
+                                        id="customer-live-submit"
+                                        disabled
+                                    >
+
+                                        <i data-lucide="shopping-bag"></i>
+
+                                        Generar pedido
+
+                                    </button>
+
+                                </div>
+
+
+                            </form>
+
+
+                        {% else %}
+
+                            <div class="customer-live__empty">
+
+                                <i data-lucide="shopping-bag"></i>
+
+                                <p>
+
+                                    En este momento no tienes
+                                    productos pendientes de
+                                    convertir en pedido.
+
+                                </p>
+
+                            </div>
+
+                        {% endif %}
+
+
+                    </section>
+
+
+                {% else %}
+
+
+                    <!-- ==================================
+                         NO ACTIVADO
+                         ================================== -->
+
+                    <section class="customer-live__inactive">
+
+                        <h2>
+
+                            Pronty Live aún no está activo
+
+                        </h2>
+
+
+                        <p>
+
+                            La activación de Pronty Live es
+                            permanente y tiene un valor único
+                            de $20.000. Una vez activado,
+                            recibirás tu código personal para
+                            participar en nuestras ventas en vivo.
+
+                        </p>
+
+
+                        <span class="customer-live__activation-price">
+
+                            Activación única: $20.000
+
+                        </span>
+
+                    </section>
+
+
+                {% endif %}
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<script>
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            const form = (
+                document.getElementById(
+                    'customer-live-form'
+                )
+            );
+
+
+            if (!form) {
+                return;
+            }
+
+
+            const checkboxes = Array.from(
+                form.querySelectorAll(
+                    '.customer-live__checkbox'
+                )
+            );
+
+
+            const selectAll = (
+                document.getElementById(
+                    'customer-live-select-all'
+                )
+            );
+
+
+            const totalElement = (
+                document.getElementById(
+                    'customer-live-total'
+                )
+            );
+
+
+            const submitButton = (
+                document.getElementById(
+                    'customer-live-submit'
+                )
+            );
+
+
+            function formatCurrency(value) {
+
+                return new Intl.NumberFormat(
+                    'es-CO',
+                    {
+                        style: 'currency',
+                        currency: 'COP',
+                        maximumFractionDigits: 0,
+                    }
+                ).format(value);
+
+            }
+
+
+            function updateSummary() {
+
+                let selectedCount = 0;
+                let total = 0;
+
+
+                checkboxes.forEach(
+                    function (checkbox) {
+
+                        if (checkbox.checked) {
+
+                            selectedCount += 1;
+
+                            total += Number(
+                                checkbox.dataset.subtotal
+                                || 0
+                            );
+
+                        }
+
+                    }
+                );
+
+
+                totalElement.textContent = (
+                    formatCurrency(total)
+                );
+
+
+                submitButton.disabled = (
+                    selectedCount === 0
+                );
+
+
+                if (selectAll) {
+
+                    selectAll.checked = (
+                        checkboxes.length > 0
+                        && selectedCount
+                            === checkboxes.length
+                    );
+
+
+                    selectAll.indeterminate = (
+                        selectedCount > 0
+                        && selectedCount
+                            < checkboxes.length
+                    );
+
+                }
+
+            }
+
+
+            checkboxes.forEach(
+                function (checkbox) {
+
+                    checkbox.addEventListener(
+                        'change',
+                        updateSummary
+                    );
+
+                }
+            );
+
+
+            if (selectAll) {
+
+                selectAll.addEventListener(
+                    'change',
+                    function () {
+
+                        checkboxes.forEach(
+                            function (checkbox) {
+
+                                checkbox.checked = (
+                                    selectAll.checked
+                                );
+
+                            }
+                        );
+
+
+                        updateSummary();
+
+                    }
+                );
+
+            }
+
+
+            updateSummary();
+
+        }
+    );
+
+</script>
+
+{% endblock %}

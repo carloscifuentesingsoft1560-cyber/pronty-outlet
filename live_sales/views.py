@@ -1,9 +1,21 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import Q
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+    render,
+)
 from django.urls import reverse
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
+from catalog.models import Product
+
+from .forms import LiveSessionForm
 
 from .models import (
     LiveAssignment,
@@ -15,6 +27,7 @@ from .models import (
 
 from .services import (
     build_product_qr_image_bytes,
+    get_or_create_product_qr,
     reserve_new_live_assignment,
 )
 
@@ -53,6 +66,7 @@ def live_dashboard(request):
         )[:10]
     )
 
+
     active_sessions = (
         LiveSession.objects
         .filter(
@@ -64,6 +78,7 @@ def live_dashboard(request):
         .count()
     )
 
+
     active_customers = (
         LiveCustomerAccess.objects
         .filter(
@@ -71,6 +86,7 @@ def live_dashboard(request):
         )
         .count()
     )
+
 
     pending_assignments = (
         LiveAssignment.objects
@@ -82,12 +98,24 @@ def live_dashboard(request):
         .count()
     )
 
+
+    qr_products = (
+        LiveProductQR.objects
+        .filter(
+            is_active=True
+        )
+        .count()
+    )
+
+
     context = {
         'sessions': sessions,
         'active_sessions': active_sessions,
         'active_customers': active_customers,
         'pending_assignments': pending_assignments,
+        'qr_products': qr_products,
     }
+
 
     return render(
         request,
@@ -97,7 +125,645 @@ def live_dashboard(request):
 
 
 # ============================================================
-# IMAGEN PNG DEL QR DE PRODUCTO
+# LISTADO DE LIVES
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+def live_sessions(request):
+
+    search = (
+        request.GET
+        .get(
+            'q',
+            ''
+        )
+        .strip()
+    )
+
+
+    sessions = (
+        LiveSession.objects
+        .all()
+    )
+
+
+    if search:
+
+        sessions = (
+            sessions
+            .filter(
+                Q(
+                    name__icontains=search
+                )
+                |
+                Q(
+                    notes__icontains=search
+                )
+            )
+        )
+
+
+    sessions = (
+        sessions
+        .order_by(
+            '-scheduled_at',
+            '-created_at',
+        )
+    )
+
+
+    context = {
+        'sessions': sessions,
+        'search': search,
+    }
+
+
+    return render(
+        request,
+        'live_sales/sessions.html',
+        context
+    )
+
+
+# ============================================================
+# CREAR LIVE
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+def live_session_create(request):
+
+    if request.method == 'POST':
+
+        form = LiveSessionForm(
+            request.POST
+        )
+
+
+        if form.is_valid():
+
+            session = form.save(
+                commit=False
+            )
+
+            session.status = (
+                LiveSession.Status.SCHEDULED
+            )
+
+            session.created_by = (
+                request.user
+            )
+
+            session.save()
+
+
+            messages.success(
+                request,
+                (
+                    f'El Live "{session.name}" '
+                    f'fue creado correctamente.'
+                )
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+    else:
+
+        form = LiveSessionForm()
+
+
+    context = {
+        'form': form,
+        'page_title': 'Crear Live',
+        'submit_text': 'Crear Live',
+        'session': None,
+    }
+
+
+    return render(
+        request,
+        'live_sales/session_form.html',
+        context
+    )
+
+
+# ============================================================
+# EDITAR LIVE
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+def live_session_edit(
+    request,
+    session_id
+):
+
+    session = get_object_or_404(
+        LiveSession,
+        pk=session_id,
+    )
+
+
+    if request.method == 'POST':
+
+        form = LiveSessionForm(
+            request.POST,
+            instance=session,
+        )
+
+
+        if form.is_valid():
+
+            session = form.save()
+
+
+            messages.success(
+                request,
+                (
+                    f'El Live "{session.name}" '
+                    f'fue actualizado.'
+                )
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+    else:
+
+        form = LiveSessionForm(
+            instance=session
+        )
+
+
+    context = {
+        'form': form,
+        'page_title': 'Editar Live',
+        'submit_text': 'Guardar cambios',
+        'session': session,
+    }
+
+
+    return render(
+        request,
+        'live_sales/session_form.html',
+        context
+    )
+
+
+# ============================================================
+# INICIAR LIVE
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+@require_POST
+def live_session_start(
+    request,
+    session_id
+):
+
+    with transaction.atomic():
+
+        session = (
+            LiveSession.objects
+            .select_for_update()
+            .get(
+                pk=session_id
+            )
+        )
+
+
+        if (
+            session.status
+            == LiveSession.Status.LIVE
+        ):
+
+            messages.info(
+                request,
+                (
+                    'Este Live ya está '
+                    'en transmisión.'
+                )
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+
+        if (
+            session.status
+            in [
+                LiveSession.Status.CLOSED,
+                LiveSession.Status.CANCELED,
+            ]
+        ):
+
+            messages.error(
+                request,
+                (
+                    'Este Live ya fue cerrado '
+                    'o cancelado y no puede iniciarse.'
+                )
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+
+        session.status = (
+            LiveSession.Status.LIVE
+        )
+
+        session.started_at = (
+            timezone.now()
+        )
+
+        session.ended_at = None
+
+
+        session.save(
+            update_fields=[
+                'status',
+                'started_at',
+                'ended_at',
+                'updated_at',
+            ]
+        )
+
+
+    messages.success(
+        request,
+        (
+            f'El Live "{session.name}" '
+            f'ahora está EN VIVO.'
+        )
+    )
+
+
+    return redirect(
+        'live_sales:sessions'
+    )
+
+
+# ============================================================
+# FINALIZAR LIVE
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+@require_POST
+def live_session_close(
+    request,
+    session_id
+):
+
+    with transaction.atomic():
+
+        session = (
+            LiveSession.objects
+            .select_for_update()
+            .get(
+                pk=session_id
+            )
+        )
+
+
+        if (
+            session.status
+            == LiveSession.Status.CLOSED
+        ):
+
+            messages.info(
+                request,
+                'Este Live ya está finalizado.'
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+
+        if (
+            session.status
+            != LiveSession.Status.LIVE
+        ):
+
+            messages.error(
+                request,
+                (
+                    'Solo se puede finalizar '
+                    'un Live que esté EN VIVO.'
+                )
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+
+        session.status = (
+            LiveSession.Status.CLOSED
+        )
+
+        session.ended_at = (
+            timezone.now()
+        )
+
+
+        session.save(
+            update_fields=[
+                'status',
+                'ended_at',
+                'updated_at',
+            ]
+        )
+
+
+    messages.success(
+        request,
+        (
+            f'El Live "{session.name}" '
+            f'fue finalizado correctamente.'
+        )
+    )
+
+
+    return redirect(
+        'live_sales:sessions'
+    )
+
+
+# ============================================================
+# CANCELAR LIVE
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+@require_POST
+def live_session_cancel(
+    request,
+    session_id
+):
+
+    with transaction.atomic():
+
+        session = (
+            LiveSession.objects
+            .select_for_update()
+            .get(
+                pk=session_id
+            )
+        )
+
+
+        if (
+            session.status
+            == LiveSession.Status.CANCELED
+        ):
+
+            messages.info(
+                request,
+                'Este Live ya está cancelado.'
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+
+        if (
+            session.status
+            == LiveSession.Status.LIVE
+        ):
+
+            messages.error(
+                request,
+                (
+                    'Un Live que está EN VIVO '
+                    'debe finalizarse, no cancelarse.'
+                )
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+
+        if (
+            session.status
+            == LiveSession.Status.CLOSED
+        ):
+
+            messages.error(
+                request,
+                (
+                    'Un Live finalizado no puede '
+                    'marcarse como cancelado.'
+                )
+            )
+
+
+            return redirect(
+                'live_sales:sessions'
+            )
+
+
+        session.status = (
+            LiveSession.Status.CANCELED
+        )
+
+
+        session.save(
+            update_fields=[
+                'status',
+                'updated_at',
+            ]
+        )
+
+
+    messages.success(
+        request,
+        (
+            f'El Live "{session.name}" '
+            f'fue cancelado.'
+        )
+    )
+
+
+    return redirect(
+        'live_sales:sessions'
+    )
+
+
+# ============================================================
+# PRODUCTOS Y CÓDIGOS QR
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+def live_products(request):
+
+    search = (
+        request.GET
+        .get(
+            'q',
+            ''
+        )
+        .strip()
+    )
+
+
+    if request.method == 'POST':
+
+        product_pk = (
+            request.POST
+            .get(
+                'product_id'
+            )
+        )
+
+
+        product = get_object_or_404(
+            Product,
+            pk=product_pk,
+        )
+
+
+        qr_record = (
+            get_or_create_product_qr(
+                product
+            )
+        )
+
+
+        messages.success(
+            request,
+            (
+                f'El QR permanente de '
+                f'{product.name} está listo.'
+            )
+        )
+
+
+        return redirect(
+            'live_sales:product_qr_label',
+            code=qr_record.code,
+        )
+
+
+    products = (
+        Product.objects
+        .select_related(
+            'category',
+            'brand',
+        )
+        .all()
+    )
+
+
+    if search:
+
+        products = (
+            products
+            .filter(
+                Q(
+                    name__icontains=search
+                )
+                |
+                Q(
+                    sku__icontains=search
+                )
+            )
+        )
+
+
+    products = list(
+        products
+        .order_by(
+            'name'
+        )[:100]
+    )
+
+
+    product_pks = [
+        product.pk
+        for product in products
+    ]
+
+
+    qr_records = (
+        LiveProductQR.objects
+        .filter(
+            product__pk__in=product_pks
+        )
+        .select_related(
+            'product'
+        )
+    )
+
+
+    qr_by_product = {
+        qr_record.product.pk: qr_record
+        for qr_record in qr_records
+    }
+
+
+    rows = [
+        {
+            'product': product,
+            'qr': (
+                qr_by_product.get(
+                    product.pk
+                )
+            ),
+        }
+        for product in products
+    ]
+
+
+    context = {
+        'rows': rows,
+        'search': search,
+    }
+
+
+    return render(
+        request,
+        'live_sales/products.html',
+        context
+    )
+
+
+# ============================================================
+# IMAGEN PNG DEL QR
 # ============================================================
 
 @user_passes_test(
@@ -145,7 +811,7 @@ def product_qr_image(
 
 
 # ============================================================
-# ETIQUETA QR DEL PRODUCTO
+# ETIQUETA QR
 # ============================================================
 
 @user_passes_test(
@@ -183,7 +849,7 @@ def product_qr_label(
 
 
 # ============================================================
-# ESCANEO DE QR DE PRODUCTO
+# ESCANEO DE QR
 # ============================================================
 
 @user_passes_test(
@@ -195,10 +861,6 @@ def scan_product_qr(
     code
 ):
 
-    # ========================================================
-    # IDENTIFICAR QR Y PRODUCTO
-    # ========================================================
-
     qr = get_object_or_404(
         LiveProductQR.objects.select_related(
             'product'
@@ -207,12 +869,9 @@ def scan_product_qr(
         is_active=True,
     )
 
+
     product = qr.product
 
-
-    # ========================================================
-    # LIVES DONDE EL PRODUCTO ESTÁ HABILITADO
-    # ========================================================
 
     session_products = list(
         LiveSessionProduct.objects
@@ -236,19 +895,16 @@ def scan_product_qr(
     )
 
 
-    # ========================================================
-    # SESIÓN SELECCIONADA
-    # ========================================================
-
     selected_session_product = None
 
-    requested_live_id = (
+
+    requested_live_pk = (
         request.GET.get('live')
         or request.POST.get('live_session')
     )
 
 
-    if requested_live_id:
+    if requested_live_pk:
 
         for session_product in session_products:
 
@@ -256,7 +912,7 @@ def scan_product_qr(
                 str(
                     session_product.live_session.pk
                 )
-                == str(requested_live_id)
+                == str(requested_live_pk)
             ):
 
                 selected_session_product = (
@@ -275,10 +931,6 @@ def scan_product_qr(
             session_products[0]
         )
 
-
-    # ========================================================
-    # CREAR ASIGNACIÓN
-    # ========================================================
 
     if request.method == 'POST':
 
@@ -303,6 +955,7 @@ def scan_product_qr(
                 .strip()
                 .upper()
             )
+
 
             quantity_raw = (
                 request.POST
@@ -475,10 +1128,6 @@ def scan_product_qr(
                             )
                         )
 
-
-    # ========================================================
-    # ASIGNACIONES RECIENTES
-    # ========================================================
 
     recent_assignments = (
         LiveAssignment.objects

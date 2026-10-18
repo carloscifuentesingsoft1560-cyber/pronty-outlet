@@ -1,0 +1,114 @@
+{% extends "admin/base.html" %}
+
+
+{% block title %}
+
+    {% if subtitle %}
+        {{ subtitle }} |
+    {% endif %}
+
+    {{ title }} | Administración Pronty Outlet
+
+{% endblock %}
+
+
+{% block branding %}
+
+    <div
+        style="
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        "
+    >
+
+        <h1
+            id="site-name"
+            style="
+                margin: 0;
+            "
+        >
+
+            <a
+                href="{% url 'admin:index' %}"
+                style="
+                    text-decoration: none;
+                "
+            >
+
+                Administración Pronty Outlet
+
+            </a>
+
+        </h1>
+
+
+        <a
+            href="{% url 'live_sales:dashboard' %}"
+            style="
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+
+                padding: 8px 14px;
+
+                border-radius: 7px;
+
+                background: #d81b60;
+                color: #ffffff;
+
+                text-decoration: none;
+
+                font-size: 13px;
+                font-weight: 700;
+            "
+        >
+
+            ● Pronty Live
+
+        </a>
+
+    </div>
+
+{% endblock %}
+
+
+{% block nav-global %}
+
+    <div
+        style="
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            flex-wrap: wrap;
+        "
+    >
+
+        <a
+            href="/"
+            style="
+                display: inline-flex;
+                align-items: center;
+
+                padding: 7px 12px;
+
+                border: 1px solid rgba(255, 255, 255, 0.35);
+                border-radius: 6px;
+
+                color: #ffffff;
+
+                text-decoration: none;
+
+                font-size: 12px;
+                font-weight: 700;
+            "
+        >
+
+            Ver tienda
+
+        </a>
+
+    </div>
+
+{% endblock %}

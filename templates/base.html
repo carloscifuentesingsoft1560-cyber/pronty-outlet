@@ -84,6 +84,29 @@
 
                     {% if request.user.is_staff or request.user.is_superuser %}
 
+                        <!-- ==================================
+                             PRONTY LIVE ADMINISTRADOR
+                             ================================== -->
+
+                        <a
+                            href="{% url 'live_sales:dashboard' %}"
+                            class="site-header__action"
+                            aria-label="Pronty Live"
+                        >
+
+                            <i data-lucide="radio"></i>
+
+                            <span>
+                                Pronty Live
+                            </span>
+
+                        </a>
+
+
+                        <!-- ==================================
+                             ADMINISTRACIÓN DJANGO
+                             ================================== -->
+
                         <a
                             href="/admin/"
                             class="site-header__action"
@@ -99,6 +122,29 @@
                         </a>
 
                     {% else %}
+
+                        <!-- ==================================
+                             PRONTY LIVE CLIENTE
+                             ================================== -->
+
+                        <a
+                            href="{% url 'accounts:live' %}"
+                            class="site-header__action"
+                            aria-label="Mi Pronty Live"
+                        >
+
+                            <i data-lucide="radio"></i>
+
+                            <span>
+                                Pronty Live
+                            </span>
+
+                        </a>
+
+
+                        <!-- ==================================
+                             MI CUENTA
+                             ================================== -->
 
                         <a
                             href="{% url 'accounts:dashboard' %}"
@@ -118,6 +164,10 @@
 
                 {% else %}
 
+                    <!-- ======================================
+                         USUARIO NO AUTENTICADO
+                         ====================================== -->
+
                     <a
                         href="{% url 'accounts:login' %}"
                         class="site-header__action"
@@ -134,6 +184,10 @@
 
                 {% endif %}
 
+
+                <!-- ==========================================
+                     CARRITO
+                     ========================================== -->
 
                 <a
                     href="{% url 'cart:cart_detail' %}"
@@ -200,6 +254,10 @@
     </header>
 
 
+    <!-- ==============================================
+         BARRA COMERCIAL
+         ============================================== -->
+
     <section class="commercial-bar">
 
         <div class="container commercial-bar__inner">
@@ -210,9 +268,11 @@
 
                 <span>
                     Mayorista desde
+
                     <strong>
                         $300.000
                     </strong>
+
                 </span>
 
             </div>
@@ -224,9 +284,11 @@
 
                 <span>
                     Envío gratis desde
+
                     <strong>
                         $1.000.000
                     </strong>
+
                 </span>
 
             </div>
@@ -247,6 +309,10 @@
     </section>
 
 
+    <!-- ==============================================
+         CONTENIDO PRINCIPAL
+         ============================================== -->
+
     <main>
 
         {% block content %}
@@ -254,6 +320,10 @@
 
     </main>
 
+
+    <!-- ==============================================
+         WHATSAPP
+         ============================================== -->
 
     <a
         href="https://wa.me/573183473482"
@@ -268,6 +338,10 @@
     </a>
 
 
+    <!-- ==============================================
+         FOOTER
+         ============================================== -->
+
     <footer class="site-footer">
 
         <div class="container site-footer__grid">
@@ -276,10 +350,13 @@
 
                 <h2>
                     PRONTY
+
                     <span>
                         OUTLET
                     </span>
+
                 </h2>
+
 
                 <p>
                     Calidad, tendencia y precio para tus compras
@@ -293,22 +370,31 @@
                         href="#"
                         aria-label="Instagram"
                     >
+
                         <i class="fa-brands fa-instagram"></i>
+
                     </a>
+
 
                     <a
                         href="#"
                         aria-label="Facebook"
                     >
+
                         <i class="fa-brands fa-facebook-f"></i>
+
                     </a>
+
 
                     <a
                         href="#"
                         aria-label="TikTok"
                     >
+
                         <i class="fa-brands fa-tiktok"></i>
+
                     </a>
+
 
                     <a
                         href="https://wa.me/573183473482"
@@ -316,7 +402,9 @@
                         rel="noopener noreferrer"
                         aria-label="WhatsApp"
                     >
+
                         <i class="fa-brands fa-whatsapp"></i>
+
                     </a>
 
                 </div>
@@ -325,7 +413,7 @@
 
 
             <!-- ==========================================
-                 CATEGORÍAS DINÁMICAS EN EL FOOTER
+                 TIENDA
                  ========================================== -->
 
             <div class="site-footer__column">
@@ -334,18 +422,23 @@
                     Tienda
                 </h3>
 
+
                 {% for category in navigation_categories %}
 
                     <a
                         href="{% url 'product_list' %}?category={{ category.slug }}"
                     >
+
                         {{ category.name }}
+
                     </a>
 
                 {% empty %}
 
                     <a href="{% url 'product_list' %}">
+
                         Ver productos
+
                     </a>
 
                 {% endfor %}
@@ -353,27 +446,36 @@
             </div>
 
 
+            <!-- ==========================================
+                 AYUDA
+                 ========================================== -->
+
             <div class="site-footer__column">
 
                 <h3>
                     Ayuda
                 </h3>
 
+
                 <a href="#">
                     Cómo comprar
                 </a>
+
 
                 <a href="#">
                     Contáctanos
                 </a>
 
+
                 <a href="#">
                     Envíos
                 </a>
 
+
                 <a href="#">
                     Cambios y devoluciones
                 </a>
+
 
                 <a href="#">
                     Preguntas frecuentes
@@ -382,23 +484,31 @@
             </div>
 
 
+            <!-- ==========================================
+                 INFORMACIÓN LEGAL
+                 ========================================== -->
+
             <div class="site-footer__column">
 
                 <h3>
                     Información legal
                 </h3>
 
+
                 <a href="#">
                     Términos y condiciones
                 </a>
+
 
                 <a href="#">
                     Política de privacidad
                 </a>
 
+
                 <a href="#">
                     Tratamiento de datos
                 </a>
+
 
                 <a href="#">
                     Política de cookies
@@ -407,11 +517,16 @@
             </div>
 
 
+            <!-- ==========================================
+                 MEDIOS DE PAGO
+                 ========================================== -->
+
             <div class="site-footer__column">
 
                 <h3>
                     Medios de pago
                 </h3>
+
 
                 <div class="site-footer__payments">
 
@@ -424,6 +539,7 @@
                         </span>
 
                     </div>
+
 
                     <div>
 
@@ -442,6 +558,10 @@
         </div>
 
 
+        <!-- ==============================================
+             PIE INFERIOR
+             ============================================== -->
+
         <div class="site-footer__bottom">
 
             <div class="container">
@@ -450,6 +570,7 @@
                     © 2026 Pronty Outlet.
                     Todos los derechos reservados.
                 </p>
+
 
                 <span>
                     Colombia
@@ -462,9 +583,20 @@
     </footer>
 
 
+    <!-- ==============================================
+         ICONOS
+         ============================================== -->
+
     <script>
+
         lucide.createIcons();
+
     </script>
+
+
+    <!-- ==============================================
+         JS GENERAL
+         ============================================== -->
 
     <script
         src="{% static 'js/main.js' %}"

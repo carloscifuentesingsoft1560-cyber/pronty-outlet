@@ -1,6 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 
+from accounts import live_views
 from accounts import views
 
 
@@ -20,8 +21,14 @@ urlpatterns = [
     ),
 
     # ========================================================
-    # PRONTY LIVE
+    # PRONTY LIVE DEL CLIENTE
     # ========================================================
+
+    path(
+        'pronty-live/',
+        live_views.customer_live_dashboard,
+        name='live'
+    ),
 
     path(
         'pronty-live/generar-pedido/',
