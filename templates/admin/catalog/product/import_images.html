@@ -1,0 +1,1695 @@
+{% extends "admin/base_site.html" %}
+
+
+{% block title %}
+    Importar imágenes |
+    Administración Pronty Outlet
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .image-import {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding-bottom: 40px;
+    }
+
+
+    .image-import * {
+        box-sizing: border-box;
+    }
+
+
+    .image-card {
+        margin-bottom: 20px;
+        overflow: hidden;
+        border: 1px solid #dfe7e2;
+        border-radius: 14px;
+        background: #ffffff;
+        box-shadow:
+            0 8px 24px
+            rgba(0, 0, 0, 0.10);
+    }
+
+
+    .image-card__header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #e6ece8;
+        background:
+            linear-gradient(
+                135deg,
+                #edf7f1,
+                #f8fbf9
+            );
+    }
+
+
+    .image-card__title {
+        margin: 0 !important;
+        color: #174f35 !important;
+        font-size: 18px !important;
+        font-weight: 900 !important;
+    }
+
+
+    .image-card__subtitle {
+        margin-top: 5px;
+        color: #607268;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+
+    .image-card__body {
+        padding: 20px;
+        color: #1f2937;
+    }
+
+
+    .image-card__body p {
+        margin: 0 0 8px;
+        color: #475569;
+        font-size: 14px;
+        line-height: 1.55;
+    }
+
+
+    /* ======================================================
+       BOTONES
+       ====================================================== */
+
+    .image-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+    }
+
+
+    .image-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+
+        min-height: 40px;
+
+        padding:
+            9px
+            16px;
+
+        border: 0;
+        border-radius: 8px;
+
+        background: #17613e;
+
+        color: #ffffff !important;
+
+        text-decoration: none !important;
+
+        font-size: 13px;
+        font-weight: 850;
+
+        cursor: pointer;
+    }
+
+
+    .image-button:hover {
+        filter: brightness(1.05);
+    }
+
+
+    .image-button--neutral {
+        background: #475569;
+    }
+
+
+    .image-button--confirm {
+        min-height: 46px;
+
+        padding:
+            11px
+            22px;
+
+        font-size: 14px;
+
+        background: #17613e;
+    }
+
+
+    /* ======================================================
+       ARCHIVO
+       ====================================================== */
+
+    .image-file-input {
+        width: 100%;
+        max-width: 680px;
+
+        padding: 12px;
+
+        border: 1px solid #cbd5d1;
+        border-radius: 9px;
+
+        background: #f8faf9;
+
+        color: #1f2937;
+
+        font-size: 13px;
+    }
+
+
+    .image-help {
+        margin:
+            7px
+            0
+            14px !important;
+
+        color: #76837c !important;
+
+        font-size: 12px !important;
+    }
+
+
+    .image-error {
+        margin-top: 10px;
+
+        padding:
+            10px
+            12px;
+
+        border-radius: 8px;
+
+        background: #fff1f2;
+
+        color: #9f1239;
+
+        font-size: 13px;
+
+        font-weight: 700;
+    }
+
+
+    /* ======================================================
+       RESULTADOS
+       ====================================================== */
+
+    .image-result-title {
+        margin:
+            28px
+            0
+            8px !important;
+
+        color: #ffffff !important;
+
+        font-size: 22px !important;
+
+        font-weight: 900 !important;
+    }
+
+
+    .image-result-file {
+        margin-bottom: 16px;
+
+        color: #cbd5e1;
+
+        font-size: 12px;
+    }
+
+
+    .image-result-file strong {
+        color: #ffffff;
+    }
+
+
+    /* ======================================================
+       MÉTRICAS
+       ====================================================== */
+
+    .image-metrics {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                6,
+                minmax(
+                    135px,
+                    1fr
+                )
+            );
+
+        gap: 12px;
+
+        margin-bottom: 24px;
+    }
+
+
+    .image-metric {
+        position: relative;
+
+        min-height: 92px;
+
+        padding:
+            15px
+            16px;
+
+        overflow: hidden;
+
+        border: 1px solid #e2e8e4;
+        border-radius: 12px;
+
+        background: #ffffff;
+
+        box-shadow:
+            0 5px 16px
+            rgba(0, 0, 0, 0.08);
+    }
+
+
+    .image-metric::before {
+        position: absolute;
+
+        top: 0;
+        left: 0;
+        bottom: 0;
+
+        width: 4px;
+
+        content: "";
+
+        background: #17613e;
+    }
+
+
+    .image-metric--warning::before {
+        background: #d97706;
+    }
+
+
+    .image-metric--error::before {
+        background: #dc2626;
+    }
+
+
+    .image-metric--info::before {
+        background: #2563eb;
+    }
+
+
+    .image-metric__value {
+        display: block;
+
+        margin-bottom: 5px;
+
+        color: #111827;
+
+        font-size: 28px;
+
+        line-height: 1;
+
+        font-weight: 900;
+    }
+
+
+    .image-metric__label {
+        color: #5b6670;
+
+        font-size: 12px;
+
+        line-height: 1.35;
+
+        font-weight: 750;
+    }
+
+
+    /* ======================================================
+       SECCIONES
+       ====================================================== */
+
+    .image-section {
+        margin-bottom: 22px;
+
+        overflow: hidden;
+
+        border: 1px solid #dce4df;
+        border-radius: 13px;
+
+        background: #ffffff;
+
+        box-shadow:
+            0 6px 18px
+            rgba(0, 0, 0, 0.08);
+    }
+
+
+    .image-section__header {
+        display: flex;
+
+        align-items: center;
+        justify-content: space-between;
+
+        gap: 12px;
+
+        padding:
+            14px
+            18px;
+
+        border-bottom: 1px solid #e5ebe7;
+
+        background: #f5f8f6;
+    }
+
+
+    .image-section__title {
+        margin: 0 !important;
+
+        color: #233c31 !important;
+
+        font-size: 16px !important;
+
+        font-weight: 900 !important;
+    }
+
+
+    .image-section__description {
+        margin-top: 4px;
+
+        color: #76837c;
+
+        font-size: 11px;
+    }
+
+
+    .image-badge {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        min-width: 30px;
+        height: 26px;
+
+        padding:
+            0
+            9px;
+
+        border-radius: 999px;
+
+        background: #e6f3eb;
+
+        color: #17613e;
+
+        font-size: 11px;
+
+        font-weight: 900;
+    }
+
+
+    .image-badge--warning {
+        background: #fff3cd;
+
+        color: #8a5b00;
+    }
+
+
+    .image-badge--error {
+        background: #fee2e2;
+
+        color: #991b1b;
+    }
+
+
+    /* ======================================================
+       TABLAS
+       ====================================================== */
+
+    .image-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+
+    .image-table {
+        width: 100%;
+        min-width: 780px;
+
+        border-collapse: collapse;
+
+        background: #ffffff;
+
+        color: #1f2937;
+    }
+
+
+    .image-table th {
+        padding:
+            11px
+            13px;
+
+        border-bottom: 1px solid #dde5e0;
+
+        background: #eef3f0;
+
+        color: #425249 !important;
+
+        text-align: left;
+
+        font-size: 10px;
+
+        font-weight: 900;
+
+        text-transform: uppercase;
+
+        white-space: nowrap;
+    }
+
+
+    .image-table td {
+        padding:
+            12px
+            13px;
+
+        border-bottom: 1px solid #edf0ee;
+
+        background: #ffffff;
+
+        color: #26332d !important;
+
+        font-size: 12px;
+
+        line-height: 1.4;
+
+        vertical-align: top;
+    }
+
+
+    .image-table tbody tr:nth-child(even) td {
+        background: #fbfcfb;
+    }
+
+
+    .image-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+
+    .image-sku {
+        color: #174f35;
+
+        font-weight: 900;
+    }
+
+
+    .image-name-list {
+        margin: 0;
+
+        padding-left: 16px;
+    }
+
+
+    .image-name-list li {
+        margin-bottom: 4px;
+
+        color: #475569 !important;
+
+        font-size: 11px;
+    }
+
+
+    /* ======================================================
+       ADVERTENCIAS
+       ====================================================== */
+
+    .image-warning-box {
+        margin-top: 8px;
+
+        padding:
+            10px
+            12px;
+
+        border-radius: 8px;
+
+        background: #fff8e7;
+
+        color: #7c5700;
+
+        font-size: 11px;
+
+        line-height: 1.45;
+    }
+
+
+    /* ======================================================
+       VALIDACIÓN SEGURA
+       ====================================================== */
+
+    .image-safe {
+        margin-top: 22px;
+
+        padding:
+            14px
+            16px;
+
+        border: 1px solid #b7d9c4;
+        border-radius: 11px;
+
+        background: #edf7f1;
+
+        color: #174f35;
+
+        font-size: 12px;
+
+        line-height: 1.5;
+    }
+
+
+    /* ======================================================
+       CONFIRMACIÓN
+       ====================================================== */
+
+    .image-confirm {
+        margin-top: 22px;
+
+        overflow: hidden;
+
+        border: 1px solid #b7d9c4;
+        border-radius: 13px;
+
+        background: #ffffff;
+
+        box-shadow:
+            0 6px 18px
+            rgba(0, 0, 0, 0.08);
+    }
+
+
+    .image-confirm__header {
+        padding:
+            15px
+            18px;
+
+        border-bottom: 1px solid #d9e9df;
+
+        background: #edf7f1;
+    }
+
+
+    .image-confirm__title {
+        margin: 0 !important;
+
+        color: #174f35 !important;
+
+        font-size: 16px !important;
+
+        font-weight: 900 !important;
+    }
+
+
+    .image-confirm__body {
+        padding: 18px;
+
+        color: #374151;
+    }
+
+
+    .image-confirm__body p {
+        margin:
+            0
+            0
+            8px;
+
+        color: #475569;
+
+        font-size: 13px;
+
+        line-height: 1.5;
+    }
+
+
+    .image-confirm__rule {
+        margin-top: 12px;
+
+        padding:
+            11px
+            13px;
+
+        border-radius: 8px;
+
+        background: #f3f8f5;
+
+        color: #355445;
+
+        font-size: 12px;
+
+        line-height: 1.55;
+    }
+
+
+    .image-confirm__warning {
+        margin-top: 12px;
+
+        padding:
+            11px
+            13px;
+
+        border-radius: 8px;
+
+        background: #fff8e7;
+
+        color: #7c5700;
+
+        font-size: 12px;
+
+        line-height: 1.5;
+    }
+
+
+    /* ======================================================
+       RESPONSIVE
+       ====================================================== */
+
+    @media (
+        max-width: 1100px
+    ) {
+
+        .image-metrics {
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(
+                        135px,
+                        1fr
+                    )
+                );
+        }
+
+    }
+
+
+    @media (
+        max-width: 700px
+    ) {
+
+        .image-section__header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+
+        .image-metrics {
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(
+                        0,
+                        1fr
+                    )
+                );
+        }
+
+
+        .image-actions {
+            flex-direction: column;
+        }
+
+
+        .image-button {
+            width: 100%;
+        }
+
+    }
+
+
+    @media (
+        max-width: 420px
+    ) {
+
+        .image-metrics {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+</style>
+
+
+<div class="image-import">
+
+
+    <!-- ==================================================
+         INFORMACIÓN
+         ================================================== -->
+
+    <section class="image-card">
+
+        <div class="image-card__header">
+
+            <h2 class="image-card__title">
+
+                Importación masiva de imágenes
+
+            </h2>
+
+
+            <div class="image-card__subtitle">
+
+                Valida un ZIP antes de guardar
+                fotografías en el catálogo.
+
+            </div>
+
+        </div>
+
+
+        <div class="image-card__body">
+
+            <p>
+
+                Los archivos deben estar
+                nombrados usando el
+
+                <strong>
+                    SKU del producto.
+                </strong>
+
+            </p>
+
+
+            <p>
+
+                Una imagen:
+
+                <strong>
+                    P82.jpg
+                </strong>
+
+            </p>
+
+
+            <p>
+
+                Varias imágenes:
+
+                <strong>
+
+                    P82-1.jpg,
+                    P82-2.jpg,
+                    P82-3.jpg
+
+                </strong>
+
+            </p>
+
+
+            <div class="image-actions">
+
+                <a
+                    href="{% url 'admin:catalog_product_changelist' %}"
+                    class="image-button image-button--neutral"
+                >
+
+                    Volver a productos
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ==================================================
+         ZIP
+         ================================================== -->
+
+    <section class="image-card">
+
+        <div class="image-card__header">
+
+            <h2 class="image-card__title">
+
+                Archivo ZIP
+
+            </h2>
+
+
+            <div class="image-card__subtitle">
+
+                Selecciona las fotografías
+                que deseas revisar.
+
+            </div>
+
+        </div>
+
+
+        <div class="image-card__body">
+
+            <form
+                method="post"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+
+                <input
+                    type="file"
+                    name="{{ form.images_zip.name }}"
+                    id="{{ form.images_zip.id_for_label }}"
+                    class="image-file-input"
+                    accept=".zip"
+                >
+
+
+                {% if form.images_zip.help_text %}
+
+                    <p class="image-help">
+
+                        {{ form.images_zip.help_text }}
+
+                    </p>
+
+                {% endif %}
+
+
+                {% for error in form.images_zip.errors %}
+
+                    <div class="image-error">
+
+                        {{ error }}
+
+                    </div>
+
+                {% endfor %}
+
+
+                <div class="image-actions">
+
+                    <button
+                        type="submit"
+                        class="image-button"
+                    >
+
+                        Validar imágenes
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+    <!-- ==================================================
+         RESULTADOS
+         ================================================== -->
+
+    {% if result %}
+
+
+        <h2 class="image-result-title">
+
+            Resultado de la validación
+
+        </h2>
+
+
+        <div class="image-result-file">
+
+            Archivo:
+
+            <strong>
+
+                {{ result.filename }}
+
+            </strong>
+
+        </div>
+
+
+        <!-- ==============================================
+             MÉTRICAS
+             ============================================== -->
+
+        <div class="image-metrics">
+
+
+            <div class="image-metric image-metric--info">
+
+                <span class="image-metric__value">
+
+                    {{ result.total_files }}
+
+                </span>
+
+                <span class="image-metric__label">
+
+                    Imágenes detectadas
+
+                </span>
+
+            </div>
+
+
+            <div class="image-metric">
+
+                <span class="image-metric__value">
+
+                    {{ result.valid_image_count }}
+
+                </span>
+
+                <span class="image-metric__label">
+
+                    Imágenes válidas
+
+                </span>
+
+            </div>
+
+
+            <div class="image-metric">
+
+                <span class="image-metric__value">
+
+                    {{ result.product_count }}
+
+                </span>
+
+                <span class="image-metric__label">
+
+                    Productos encontrados
+
+                </span>
+
+            </div>
+
+
+            <div class="image-metric image-metric--warning">
+
+                <span class="image-metric__value">
+
+                    {{ result.missing_product_count }}
+
+                </span>
+
+                <span class="image-metric__label">
+
+                    SKU no encontrados
+
+                </span>
+
+            </div>
+
+
+            <div class="image-metric image-metric--error">
+
+                <span class="image-metric__value">
+
+                    {{ result.invalid_file_count }}
+
+                </span>
+
+                <span class="image-metric__label">
+
+                    Archivos inválidos
+
+                </span>
+
+            </div>
+
+
+            <div class="image-metric image-metric--warning">
+
+                <span class="image-metric__value">
+
+                    {{ result.warning_count }}
+
+                </span>
+
+                <span class="image-metric__label">
+
+                    Advertencias
+
+                </span>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- ==============================================
+             IMÁGENES VÁLIDAS
+             ============================================== -->
+
+        {% if result.product_groups %}
+
+            <section class="image-section">
+
+                <div class="image-section__header">
+
+                    <div>
+
+                        <h3 class="image-section__title">
+
+                            Imágenes listas para asociar
+
+                        </h3>
+
+
+                        <div class="image-section__description">
+
+                            Productos reconocidos por SKU.
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="image-badge">
+
+                        {{ result.product_count }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="image-table-wrap">
+
+                    <table class="image-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    SKU
+                                </th>
+
+                                <th>
+                                    Producto
+                                </th>
+
+                                <th>
+                                    Cantidad
+                                </th>
+
+                                <th>
+                                    Archivos
+                                </th>
+
+                                <th>
+                                    Advertencias
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for group in result.product_groups %}
+
+                                <tr>
+
+                                    <td>
+
+                                        <span class="image-sku">
+
+                                            {{ group.sku }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ group.product_name }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ group.image_count }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <ul class="image-name-list">
+
+                                            {% for image in group.images %}
+
+                                                <li>
+
+                                                    {{ image.filename }}
+
+                                                    {% if image.is_numbered %}
+
+                                                        {% if image.order == 1 %}
+
+                                                            —
+                                                            principal
+
+                                                        {% else %}
+
+                                                            —
+                                                            galería
+                                                            {{ image.order }}
+
+                                                        {% endif %}
+
+                                                    {% else %}
+
+                                                        —
+                                                        principal
+
+                                                    {% endif %}
+
+                                                </li>
+
+                                            {% endfor %}
+
+                                        </ul>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if group.warnings %}
+
+                                            {% for warning in group.warnings %}
+
+                                                <div class="image-warning-box">
+
+                                                    {{ warning }}
+
+                                                </div>
+
+                                            {% endfor %}
+
+                                        {% else %}
+
+                                            —
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+        <!-- ==============================================
+             SKU NO ENCONTRADOS
+             ============================================== -->
+
+        {% if result.missing_products %}
+
+            <section class="image-section">
+
+                <div class="image-section__header">
+
+                    <div>
+
+                        <h3 class="image-section__title">
+
+                            SKU no encontrados
+
+                        </h3>
+
+
+                        <div class="image-section__description">
+
+                            Estas imágenes no tienen
+                            un producto correspondiente.
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="image-badge image-badge--warning">
+
+                        {{ result.missing_product_count }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="image-table-wrap">
+
+                    <table class="image-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Archivo
+                                </th>
+
+                                <th>
+                                    SKU interpretado
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for item in result.missing_products %}
+
+                                <tr>
+
+                                    <td>
+
+                                        {{ item.filename }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="image-sku">
+
+                                            {{ item.sku }}
+
+                                        </span>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+        <!-- ==============================================
+             ARCHIVOS INVÁLIDOS
+             ============================================== -->
+
+        {% if result.invalid_files %}
+
+            <section class="image-section">
+
+                <div class="image-section__header">
+
+                    <div>
+
+                        <h3 class="image-section__title">
+
+                            Archivos inválidos
+
+                        </h3>
+
+
+                        <div class="image-section__description">
+
+                            Archivos que no cumplen
+                            las reglas de importación.
+
+                        </div>
+
+                    </div>
+
+
+                    <span class="image-badge image-badge--error">
+
+                        {{ result.invalid_file_count }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="image-table-wrap">
+
+                    <table class="image-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Archivo
+                                </th>
+
+                                <th>
+                                    Motivo
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for item in result.invalid_files %}
+
+                                <tr>
+
+                                    <td>
+
+                                        {{ item.filename }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ item.reason }}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+        <!-- ==============================================
+             ARCHIVOS GRANDES
+             ============================================== -->
+
+        {% if result.oversized_images %}
+
+            <section class="image-section">
+
+                <div class="image-section__header">
+
+                    <div>
+
+                        <h3 class="image-section__title">
+
+                            Imágenes demasiado grandes
+
+                        </h3>
+
+                    </div>
+
+
+                    <span class="image-badge image-badge--error">
+
+                        {{ result.oversized_count }}
+
+                    </span>
+
+                </div>
+
+
+                <div class="image-table-wrap">
+
+                    <table class="image-table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Archivo
+                                </th>
+
+                                <th>
+                                    Tamaño en bytes
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for item in result.oversized_images %}
+
+                                <tr>
+
+                                    <td>
+
+                                        {{ item.filename }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ item.size }}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+        <!-- ==============================================
+             VALIDACIÓN SEGURA
+             ============================================== -->
+
+        <div class="image-safe">
+
+            <strong>
+
+                Validación segura.
+
+            </strong>
+
+            Ninguna imagen ha sido guardada,
+            reemplazada o eliminada todavía.
+
+        </div>
+
+
+        <!-- ==============================================
+             CONFIRMAR
+             ============================================== -->
+
+        {% if result.valid_image_count > 0 %}
+
+            <section class="image-confirm">
+
+                <div class="image-confirm__header">
+
+                    <h3 class="image-confirm__title">
+
+                        Confirmar importación de imágenes
+
+                    </h3>
+
+                </div>
+
+
+                <div class="image-confirm__body">
+
+
+                    <p>
+
+                        Se procesarán
+
+                        <strong>
+
+                            {{ result.valid_image_count }}
+
+                        </strong>
+
+                        imágenes válidas correspondientes a
+
+                        <strong>
+
+                            {{ result.product_count }}
+
+                        </strong>
+
+                        productos.
+
+                    </p>
+
+
+                    <div class="image-confirm__rule">
+
+                        <strong>
+                            Regla de imágenes:
+                        </strong>
+
+                        <br>
+
+                        <strong>
+                            SKU.jpg
+                        </strong>
+                        o
+                        <strong>
+                            SKU-1.jpg
+                        </strong>
+                        reemplazará la imagen principal.
+
+                        <br>
+
+                        <strong>
+                            SKU-2.jpg,
+                            SKU-3.jpg,
+                            etc.
+                        </strong>
+                        se agregarán a la galería.
+
+                        <br>
+
+                        Las imágenes que ya existen
+                        en la galería no se eliminarán.
+
+                    </div>
+
+
+                    {% if result.missing_product_count > 0 %}
+
+                        <div class="image-confirm__warning">
+
+                            Se omitirán
+
+                            <strong>
+
+                                {{ result.missing_product_count }}
+
+                            </strong>
+
+                            imágenes cuyo SKU no existe
+                            en el catálogo.
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if result.invalid_file_count > 0 %}
+
+                        <div class="image-confirm__warning">
+
+                            Se omitirán
+
+                            <strong>
+
+                                {{ result.invalid_file_count }}
+
+                            </strong>
+
+                            archivos inválidos.
+
+                        </div>
+
+                    {% endif %}
+
+
+                    {% if result.oversized_count > 0 %}
+
+                        <div class="image-confirm__warning">
+
+                            Se omitirán
+
+                            <strong>
+
+                                {{ result.oversized_count }}
+
+                            </strong>
+
+                            imágenes que superan
+                            el tamaño permitido.
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <form
+                        method="post"
+                        action="{% url 'admin:catalog_product_image_import_confirm' %}"
+                        onsubmit="return confirm('¿Confirmas la importación de las imágenes válidas?');"
+                    >
+
+                        {% csrf_token %}
+
+
+                        <div class="image-actions">
+
+                            <button
+                                type="submit"
+                                class="image-button image-button--confirm"
+                            >
+
+                                Confirmar importación de imágenes
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+
+                </div>
+
+            </section>
+
+        {% endif %}
+
+
+    {% endif %}
+
+
+</div>
+
+{% endblock %}

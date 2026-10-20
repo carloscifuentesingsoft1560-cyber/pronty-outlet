@@ -1,0 +1,32 @@
+{% extends "admin/change_list.html" %}
+
+
+{% block object-tools-items %}
+
+    <li>
+
+        <a
+            href="{% url 'admin:catalog_product_image_import' %}"
+            class="addlink"
+        >
+            Importar imágenes
+        </a>
+
+    </li>
+
+
+    <li>
+
+        <a
+            href="{% url 'admin:catalog_product_import' %}"
+            class="addlink"
+        >
+            Importar productos
+        </a>
+
+    </li>
+
+
+    {{ block.super }}
+
+{% endblock %}
