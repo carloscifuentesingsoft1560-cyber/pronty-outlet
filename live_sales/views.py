@@ -861,6 +861,10 @@ def scan_product_qr(
     code
 ):
 
+    # ========================================================
+    # IDENTIFICAR QR Y PRODUCTO
+    # ========================================================
+
     qr = get_object_or_404(
         LiveProductQR.objects.select_related(
             'product'
@@ -872,6 +876,10 @@ def scan_product_qr(
 
     product = qr.product
 
+
+    # ========================================================
+    # OBTENER LIVES DONDE EL PRODUCTO ESTÁ HABILITADO
+    # ========================================================
 
     session_products = list(
         LiveSessionProduct.objects
@@ -895,7 +903,13 @@ def scan_product_qr(
     )
 
 
+    # ========================================================
+    # LIVE SOLICITADO EXPLÍCITAMENTE
+    # ========================================================
+
     selected_session_product = None
+
+    selected_live_automatically = False
 
 
     requested_live_pk = (
@@ -922,6 +936,37 @@ def scan_product_qr(
                 break
 
 
+    # ========================================================
+    # DETECTAR LIVE EN VIVO AUTOMÁTICAMENTE
+    # ========================================================
+
+    if selected_session_product is None:
+
+        live_session_products = [
+            session_product
+            for session_product
+            in session_products
+            if (
+                session_product.live_session.status
+                == LiveSession.Status.LIVE
+            )
+        ]
+
+
+        if len(live_session_products) == 1:
+
+            selected_session_product = (
+                live_session_products[0]
+            )
+
+            selected_live_automatically = True
+
+
+    # ========================================================
+    # SI NO HAY LIVE EN VIVO Y SOLO HAY UNO DISPONIBLE,
+    # SELECCIONARLO AUTOMÁTICAMENTE
+    # ========================================================
+
     if (
         selected_session_product is None
         and len(session_products) == 1
@@ -931,6 +976,12 @@ def scan_product_qr(
             session_products[0]
         )
 
+        selected_live_automatically = True
+
+
+    # ========================================================
+    # CREAR ASIGNACIÓN
+    # ========================================================
 
     if request.method == 'POST':
 
@@ -1129,6 +1180,10 @@ def scan_product_qr(
                         )
 
 
+    # ========================================================
+    # ASIGNACIONES RECIENTES
+    # ========================================================
+
     recent_assignments = (
         LiveAssignment.objects
         .select_related(
@@ -1165,12 +1220,19 @@ def scan_product_qr(
     )
 
 
+    # ========================================================
+    # CONTEXTO
+    # ========================================================
+
     context = {
         'qr': qr,
         'product': product,
         'session_products': session_products,
         'selected_session_product': (
             selected_session_product
+        ),
+        'selected_live_automatically': (
+            selected_live_automatically
         ),
         'recent_assignments': (
             recent_assignments

@@ -3,12 +3,16 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test
 from django.db import transaction
 from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import (
     get_object_or_404,
     redirect,
     render,
 )
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import (
+    require_GET,
+    require_POST,
+)
 
 from .models import LiveCustomerAccess
 
@@ -182,6 +186,70 @@ def live_customers(request):
         'live_sales/customers.html',
         context
     )
+
+
+# ============================================================
+# BUSCAR CÓDIGOS DE CLIENTES LIVE ACTIVOS
+# ============================================================
+
+@user_passes_test(
+    _staff_required,
+    login_url='/admin/login/'
+)
+@require_GET
+def live_customer_code_search(request):
+
+    search = (
+        request.GET
+        .get(
+            'q',
+            ''
+        )
+        .strip()
+        .upper()
+    )
+
+
+    accesses = (
+        LiveCustomerAccess.objects
+        .filter(
+            is_activated=True
+        )
+        .exclude(
+            customer_code=''
+        )
+    )
+
+
+    if search:
+
+        accesses = (
+            accesses
+            .filter(
+                customer_code__icontains=search
+            )
+        )
+
+
+    accesses = (
+        accesses
+        .order_by(
+            'customer_code'
+        )[:30]
+    )
+
+
+    results = [
+        {
+            'code': access.customer_code,
+        }
+        for access in accesses
+    ]
+
+
+    return JsonResponse({
+        'results': results,
+    })
 
 
 # ============================================================

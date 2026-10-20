@@ -100,6 +100,12 @@ urlpatterns = [
     ),
 
     path(
+        'clientes/codigos/buscar/',
+        customer_views.live_customer_code_search,
+        name='customer_code_search'
+    ),
+
+    path(
         'clientes/<int:user_id>/crear-acceso/',
         customer_views.live_customer_create_access,
         name='customer_create_access'

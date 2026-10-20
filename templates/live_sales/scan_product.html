@@ -12,27 +12,34 @@ Asignar producto | Pronty Live
 
     .live-scan {
         min-height: 70vh;
+
         padding: 28px 16px 60px;
+
         background: #fafafa;
     }
 
 
     .live-scan__container {
         max-width: 760px;
+
         margin: 0 auto;
     }
 
 
     .live-scan__back {
         display: inline-flex;
+
         align-items: center;
+
         gap: 7px;
 
-        color: #1f6a43;
-        text-decoration: none;
-        font-weight: 700;
-
         margin-bottom: 18px;
+
+        color: #1f6a43;
+
+        text-decoration: none;
+
+        font-weight: 700;
     }
 
 
@@ -43,25 +50,30 @@ Asignar producto | Pronty Live
 
     .live-scan__header h1 {
         margin: 0 0 5px;
+
         color: #1d352a;
+
         font-size: 1.65rem;
     }
 
 
     .live-scan__header p {
         margin: 0;
+
         color: #6b7280;
     }
 
 
     .live-scan__card {
-        background: white;
-        border: 1px solid #ececec;
-        border-radius: 20px;
+        margin-bottom: 20px;
 
         padding: 22px;
 
-        margin-bottom: 20px;
+        border: 1px solid #ececec;
+
+        border-radius: 20px;
+
+        background: white;
 
         box-shadow:
             0 7px 25px
@@ -69,27 +81,36 @@ Asignar producto | Pronty Live
     }
 
 
+    /* ======================================================
+       PRODUCTO
+       ====================================================== */
+
     .live-product {
         display: flex;
+
         align-items: center;
+
         gap: 18px;
     }
 
 
     .live-product__icon {
+        display: flex;
+
+        flex-shrink: 0;
+
+        align-items: center;
+
+        justify-content: center;
+
         width: 58px;
         height: 58px;
 
         border-radius: 17px;
 
         background: #fff0f5;
+
         color: #d81b60;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        flex-shrink: 0;
     }
 
 
@@ -105,6 +126,7 @@ Asignar producto | Pronty Live
         color: #202d27;
 
         font-size: 1.25rem;
+
         font-weight: 800;
     }
 
@@ -119,20 +141,24 @@ Asignar producto | Pronty Live
 
 
     .live-product__stock {
-        margin-top: 8px;
-
         display: inline-flex;
+
         align-items: center;
+
         gap: 6px;
+
+        margin-top: 8px;
 
         padding: 5px 9px;
 
         border-radius: 999px;
 
         background: #edf7f0;
+
         color: #266a48;
 
         font-size: 0.78rem;
+
         font-weight: 700;
     }
 
@@ -157,21 +183,168 @@ Asignar producto | Pronty Live
 
         padding: 9px 12px;
 
+        border: 1px solid #d5eadb;
+
         border-radius: 10px;
+
+        background: #edf7f0;
+
+        color: #1f6a43;
 
         text-decoration: none;
 
         font-size: 0.82rem;
 
         font-weight: 750;
-
-        color: #1f6a43;
-
-        background: #edf7f0;
-
-        border: 1px solid #d5eadb;
     }
 
+
+    /* ======================================================
+       LIVE SELECCIONADO
+       ====================================================== */
+
+    .live-selected {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 14px;
+
+        margin-bottom: 18px;
+
+        padding: 14px;
+
+        border: 1px solid #cfe7d7;
+
+        border-radius: 14px;
+
+        background: #edf7f0;
+    }
+
+
+    .live-selected__main {
+        display: flex;
+
+        align-items: flex-start;
+
+        gap: 11px;
+
+        min-width: 0;
+    }
+
+
+    .live-selected__icon {
+        display: flex;
+
+        flex-shrink: 0;
+
+        align-items: center;
+
+        justify-content: center;
+
+        width: 38px;
+        height: 38px;
+
+        border-radius: 11px;
+
+        background: white;
+
+        color: #17613e;
+    }
+
+
+    .live-selected__label {
+        display: block;
+
+        color: #537061;
+
+        font-size: 0.72rem;
+
+        font-weight: 800;
+
+        text-transform: uppercase;
+
+        letter-spacing: 0.04em;
+    }
+
+
+    .live-selected__name {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #174f35;
+
+        font-size: 0.95rem;
+
+        font-weight: 850;
+    }
+
+
+    .live-selected__meta {
+        display: block;
+
+        margin-top: 3px;
+
+        color: #557263;
+
+        font-size: 0.78rem;
+    }
+
+
+    .live-selected__badge {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 5px;
+
+        margin-top: 6px;
+
+        padding: 4px 7px;
+
+        border-radius: 999px;
+
+        background: #d81b60;
+
+        color: white;
+
+        font-size: 0.68rem;
+
+        font-weight: 850;
+
+        text-transform: uppercase;
+    }
+
+
+    .live-selected__change {
+        flex-shrink: 0;
+
+        padding: 7px 9px;
+
+        border: 0;
+
+        border-radius: 9px;
+
+        background: white;
+
+        color: #17613e;
+
+        font: inherit;
+
+        font-size: 0.75rem;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    /* ======================================================
+       FORMULARIO
+       ====================================================== */
 
     .live-form__group {
         margin-bottom: 18px;
@@ -193,15 +366,15 @@ Asignar producto | Pronty Live
     .live-form__select {
         width: 100%;
 
+        min-height: 50px;
+
         box-sizing: border-box;
+
+        padding: 11px 13px;
 
         border: 1px solid #d9dedb;
 
         border-radius: 12px;
-
-        min-height: 48px;
-
-        padding: 11px 13px;
 
         background: white;
 
@@ -224,20 +397,28 @@ Asignar producto | Pronty Live
     .live-form__hint {
         margin: 6px 0 0;
 
-        font-size: 0.8rem;
-
         color: #858585;
+
+        font-size: 0.8rem;
     }
 
 
     .live-form__button {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: center;
+
+        gap: 9px;
+
         width: 100%;
+
+        padding: 14px 18px;
 
         border: 0;
 
         border-radius: 13px;
-
-        padding: 14px 18px;
 
         background:
             linear-gradient(
@@ -253,12 +434,6 @@ Asignar producto | Pronty Live
         font-weight: 800;
 
         cursor: pointer;
-
-        display: flex;
-
-        justify-content: center;
-        align-items: center;
-        gap: 9px;
     }
 
 
@@ -266,6 +441,229 @@ Asignar producto | Pronty Live
         filter: brightness(1.04);
     }
 
+
+    .live-form__switch {
+        display: none;
+
+        margin-bottom: 18px;
+
+        padding: 14px;
+
+        border: 1px solid #e0e6e2;
+
+        border-radius: 13px;
+
+        background: #fafafa;
+    }
+
+
+    .live-form__switch--visible {
+        display: block;
+    }
+
+
+    /* ======================================================
+       SELECTOR DE CLIENTE
+       ====================================================== */
+
+    .customer-selector {
+        position: relative;
+    }
+
+
+    .customer-selector__control {
+        position: relative;
+    }
+
+
+    .customer-selector__input {
+        width: 100%;
+
+        min-height: 54px;
+
+        box-sizing: border-box;
+
+        padding:
+            11px 44px
+            11px 13px;
+
+        border: 1px solid #d9dedb;
+
+        border-radius: 12px;
+
+        background: white;
+
+        color: #1f2937;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        letter-spacing: 0.03em;
+
+        text-transform: uppercase;
+
+        outline: none;
+    }
+
+
+    .customer-selector__input:focus {
+        border-color: #268152;
+
+        box-shadow:
+            0 0 0 3px
+            rgba(38, 129, 82, 0.10);
+    }
+
+
+    .customer-selector__arrow {
+        position: absolute;
+
+        top: 50%;
+        right: 13px;
+
+        transform: translateY(-50%);
+
+        color: #64736b;
+
+        pointer-events: none;
+    }
+
+
+    .customer-selector__dropdown {
+        position: absolute;
+
+        z-index: 50;
+
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+
+        display: none;
+
+        max-height: 270px;
+
+        overflow-y: auto;
+
+        border: 1px solid #dde5e0;
+
+        border-radius: 13px;
+
+        background: white;
+
+        box-shadow:
+            0 14px 35px
+            rgba(0, 0, 0, 0.12);
+    }
+
+
+    .customer-selector__dropdown--open {
+        display: block;
+    }
+
+
+    .customer-selector__option {
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        width: 100%;
+
+        padding: 13px 14px;
+
+        border: 0;
+        border-bottom: 1px solid #eeeeee;
+
+        background: white;
+
+        color: #1f2937;
+
+        text-align: left;
+
+        font: inherit;
+
+        font-weight: 800;
+
+        cursor: pointer;
+    }
+
+
+    .customer-selector__option:last-child {
+        border-bottom: 0;
+    }
+
+
+    .customer-selector__option:hover,
+    .customer-selector__option:focus {
+        background: #edf7f0;
+
+        color: #17613e;
+
+        outline: none;
+    }
+
+
+    .customer-selector__empty {
+        padding: 15px;
+
+        color: #777;
+
+        text-align: center;
+
+        font-size: 0.84rem;
+    }
+
+
+    .customer-selector__selected {
+        display: none;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 10px;
+
+        margin-top: 8px;
+
+        padding: 9px 11px;
+
+        border-radius: 10px;
+
+        background: #edf7f0;
+
+        color: #17613e;
+
+        font-size: 0.8rem;
+
+        font-weight: 800;
+    }
+
+
+    .customer-selector__selected--visible {
+        display: flex;
+    }
+
+
+    .customer-selector__clear {
+        border: 0;
+
+        background: transparent;
+
+        color: #17613e;
+
+        font: inherit;
+
+        font-weight: 850;
+
+        cursor: pointer;
+    }
+
+
+    /* ======================================================
+       ADVERTENCIA
+       ====================================================== */
 
     .live-warning {
         padding: 17px;
@@ -279,6 +677,10 @@ Asignar producto | Pronty Live
         font-size: 0.9rem;
     }
 
+
+    /* ======================================================
+       ASIGNACIONES RECIENTES
+       ====================================================== */
 
     .live-recent__title {
         margin: 0 0 16px;
@@ -308,8 +710,9 @@ Asignar producto | Pronty Live
 
 
     .live-assignment__customer {
-        font-weight: 800;
         color: #232323;
+
+        font-weight: 800;
     }
 
 
@@ -328,19 +731,24 @@ Asignar producto | Pronty Live
 
 
     .live-assignment__price {
-        font-weight: 800;
         color: #1e5e40;
+
+        font-weight: 800;
     }
 
 
     .live-assignment__status {
         margin-top: 4px;
 
-        font-size: 0.76rem;
-
         color: #777;
+
+        font-size: 0.76rem;
     }
 
+
+    /* ======================================================
+       MÓVIL
+       ====================================================== */
 
     @media (
         max-width: 600px
@@ -348,24 +756,76 @@ Asignar producto | Pronty Live
 
         .live-scan {
             padding:
-                20px 12px
-                45px;
+                18px 11px
+                40px;
         }
 
 
         .live-scan__card {
-            padding: 18px;
+            padding: 17px;
+
             border-radius: 17px;
         }
 
 
+        .live-scan__header {
+            margin-bottom: 16px;
+        }
+
+
         .live-scan__header h1 {
-            font-size: 1.4rem;
+            font-size: 1.35rem;
         }
 
 
         .live-product {
             align-items: flex-start;
+        }
+
+
+        .live-product__icon {
+            width: 48px;
+            height: 48px;
+        }
+
+
+        .live-product__actions {
+            flex-direction: column;
+
+            align-items: stretch;
+        }
+
+
+        .live-product__action {
+            justify-content: center;
+        }
+
+
+        .live-selected {
+            align-items: flex-start;
+
+            flex-direction: column;
+        }
+
+
+        .live-selected__change {
+            width: 100%;
+        }
+
+
+        .live-form__input,
+        .live-form__select,
+        .customer-selector__input {
+            min-height: 54px;
+
+            font-size: 16px;
+        }
+
+
+        .live-form__button {
+            min-height: 54px;
+
+            font-size: 0.95rem;
         }
 
     }
@@ -393,15 +853,25 @@ Asignar producto | Pronty Live
         <header class="live-scan__header">
 
             <h1>
+
                 Producto escaneado
+
             </h1>
 
+
             <p>
-                Identifica al cliente y confirma la asignación.
+
+                Selecciona el código del cliente
+                y confirma la asignación.
+
             </p>
 
         </header>
 
+
+        <!-- ==============================================
+             PRODUCTO
+             ============================================== -->
 
         <section class="live-scan__card">
 
@@ -450,7 +920,7 @@ Asignar producto | Pronty Live
 
                             <i data-lucide="printer"></i>
 
-                            Ver etiqueta QR
+                            Etiqueta QR
 
                         </a>
 
@@ -476,95 +946,308 @@ Asignar producto | Pronty Live
         </section>
 
 
+        <!-- ==============================================
+             FORMULARIO
+             ============================================== -->
+
         <section class="live-scan__card">
+
 
             {% if session_products %}
 
                 <form
                     method="post"
                     class="live-form"
+                    id="live-assignment-form"
                 >
 
                     {% csrf_token %}
 
 
-                    <div class="live-form__group">
+                    {% if selected_session_product %}
 
-                        <label
-                            for="live_session"
-                            class="live-form__label"
-                        >
-                            Live
-                        </label>
-
-
-                        <select
-                            id="live_session"
-                            name="live_session"
-                            class="live-form__select"
-                            required
+                        <div
+                            class="live-selected"
                         >
 
-                            <option value="">
-                                Selecciona el Live
-                            </option>
+                            <div class="live-selected__main">
+
+                                <div class="live-selected__icon">
+
+                                    <i data-lucide="radio"></i>
+
+                                </div>
 
 
-                            {% for session_product in session_products %}
+                                <div>
 
-                                <option
-                                    value="{{ session_product.live_session.id }}"
-                                    {% if selected_session_product %}
-                                        {% if session_product.live_session.id == selected_session_product.live_session.id %}
-                                            selected
-                                        {% endif %}
+                                    <span class="live-selected__label">
+
+                                        Live seleccionado
+
+                                    </span>
+
+
+                                    <strong class="live-selected__name">
+
+                                        {{ selected_session_product.live_session.name }}
+
+                                    </strong>
+
+
+                                    <span class="live-selected__meta">
+
+                                        {{ selected_session_product.live_session.get_platform_display }}
+
+                                    </span>
+
+
+                                    {% if selected_session_product.live_session.status == 'LIVE' %}
+
+                                        <span class="live-selected__badge">
+
+                                            <i data-lucide="radio"></i>
+
+                                            En vivo
+
+                                        </span>
+
                                     {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                            {% if session_products|length > 1 %}
+
+                                <button
+                                    type="button"
+                                    class="live-selected__change"
+                                    id="change-live-button"
                                 >
 
-                                    {{ session_product.live_session.name }}
-                                    -
-                                    {{ session_product.live_session.get_platform_display }}
+                                    Cambiar Live
 
-                                </option>
+                                </button>
 
-                            {% endfor %}
+                            {% endif %}
 
-                        </select>
-
-                    </div>
-
-
-                    <div class="live-form__group">
-
-                        <label
-                            for="customer_code"
-                            class="live-form__label"
-                        >
-                            Código del cliente
-                        </label>
+                        </div>
 
 
                         <input
-                            id="customer_code"
-                            name="customer_code"
-                            type="text"
-                            class="live-form__input"
-                            placeholder="Ej. PRY-C000002"
-                            autocomplete="off"
-                            autocapitalize="characters"
-                            required
+                            type="hidden"
+                            name="live_session"
+                            id="selected-live-input"
+                            value="{{ selected_session_product.live_session.id }}"
                         >
+
+
+                        {% if session_products|length > 1 %}
+
+                            <div
+                                class="live-form__switch"
+                                id="live-switch-panel"
+                            >
+
+                                <label
+                                    for="live_session_select"
+                                    class="live-form__label"
+                                >
+
+                                    Cambiar Live
+
+                                </label>
+
+
+                                <select
+                                    id="live_session_select"
+                                    class="live-form__select"
+                                >
+
+                                    {% for session_product in session_products %}
+
+                                        <option
+                                            value="{{ session_product.live_session.id }}"
+                                            {% if session_product.live_session.id == selected_session_product.live_session.id %}
+                                                selected
+                                            {% endif %}
+                                        >
+
+                                            {{ session_product.live_session.name }}
+                                            -
+                                            {{ session_product.live_session.get_platform_display }}
+
+                                            {% if session_product.live_session.status == 'LIVE' %}
+                                                - EN VIVO
+                                            {% else %}
+                                                - Programado
+                                            {% endif %}
+
+                                        </option>
+
+                                    {% endfor %}
+
+                                </select>
+
+                            </div>
+
+                        {% endif %}
+
+
+                    {% else %}
+
+                        <div class="live-form__group">
+
+                            <label
+                                for="live_session"
+                                class="live-form__label"
+                            >
+
+                                Live
+
+                            </label>
+
+
+                            <select
+                                id="live_session"
+                                name="live_session"
+                                class="live-form__select"
+                                required
+                            >
+
+                                <option value="">
+
+                                    Selecciona el Live
+
+                                </option>
+
+
+                                {% for session_product in session_products %}
+
+                                    <option
+                                        value="{{ session_product.live_session.id }}"
+                                    >
+
+                                        {{ session_product.live_session.name }}
+                                        -
+                                        {{ session_product.live_session.get_platform_display }}
+
+                                    </option>
+
+                                {% endfor %}
+
+                            </select>
+
+                        </div>
+
+                    {% endif %}
+
+
+                    <!-- ==================================
+                         CLIENTE LIVE
+                         ================================== -->
+
+                    <div class="live-form__group">
+
+                        <label
+                            for="customer_code_search"
+                            class="live-form__label"
+                        >
+
+                            Código del cliente
+
+                        </label>
+
+
+                        <div
+                            class="customer-selector"
+                            id="customer-selector"
+                        >
+
+                            <div
+                                class="customer-selector__control"
+                            >
+
+                                <input
+                                    id="customer_code_search"
+                                    type="text"
+                                    class="customer-selector__input"
+                                    placeholder="Seleccionar código..."
+                                    autocomplete="off"
+                                    autocorrect="off"
+                                    autocapitalize="characters"
+                                    spellcheck="false"
+                                >
+
+
+                                <span
+                                    class="customer-selector__arrow"
+                                >
+
+                                    <i data-lucide="chevron-down"></i>
+
+                                </span>
+
+                            </div>
+
+
+                            <input
+                                type="hidden"
+                                name="customer_code"
+                                id="customer_code"
+                                value=""
+                            >
+
+
+                            <div
+                                class="customer-selector__dropdown"
+                                id="customer-code-dropdown"
+                            >
+
+                            </div>
+
+
+                            <div
+                                class="customer-selector__selected"
+                                id="customer-code-selected"
+                            >
+
+                                <span
+                                    id="customer-code-selected-text"
+                                >
+                                </span>
+
+
+                                <button
+                                    type="button"
+                                    class="customer-selector__clear"
+                                    id="customer-code-clear"
+                                >
+
+                                    Cambiar
+
+                                </button>
+
+                            </div>
+
+                        </div>
 
 
                         <p class="live-form__hint">
 
-                            Digita el código permanente
-                            de Pronty Live del cliente.
+                            Solo aparecen códigos con
+                            Pronty Live autorizado.
 
                         </p>
 
                     </div>
 
+
+                    <!-- ==================================
+                         CANTIDAD
+                         ================================== -->
 
                     <div class="live-form__group">
 
@@ -572,7 +1255,9 @@ Asignar producto | Pronty Live
                             for="quantity"
                             class="live-form__label"
                         >
+
                             Cantidad
+
                         </label>
 
 
@@ -619,6 +1304,10 @@ Asignar producto | Pronty Live
         </section>
 
 
+        <!-- ==============================================
+             ASIGNACIONES RECIENTES
+             ============================================== -->
+
         {% if recent_assignments %}
 
             <section class="live-scan__card">
@@ -645,17 +1334,6 @@ Asignar producto | Pronty Live
 
                             <div class="live-assignment__name">
 
-                                {% if assignment.customer.user.get_full_name %}
-
-                                    {{ assignment.customer.user.get_full_name }}
-
-                                {% else %}
-
-                                    {{ assignment.customer.user.username }}
-
-                                {% endif %}
-
-                                ·
                                 {{ assignment.quantity }}
                                 unidad(es)
 
@@ -693,5 +1371,604 @@ Asignar producto | Pronty Live
     </div>
 
 </section>
+
+
+<script>
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        function () {
+
+            const assignmentForm = (
+                document.getElementById(
+                    'live-assignment-form'
+                )
+            );
+
+
+            const searchInput = (
+                document.getElementById(
+                    'customer_code_search'
+                )
+            );
+
+
+            const hiddenCodeInput = (
+                document.getElementById(
+                    'customer_code'
+                )
+            );
+
+
+            const dropdown = (
+                document.getElementById(
+                    'customer-code-dropdown'
+                )
+            );
+
+
+            const selectedBox = (
+                document.getElementById(
+                    'customer-code-selected'
+                )
+            );
+
+
+            const selectedText = (
+                document.getElementById(
+                    'customer-code-selected-text'
+                )
+            );
+
+
+            const clearButton = (
+                document.getElementById(
+                    'customer-code-clear'
+                )
+            );
+
+
+            const changeLiveButton = (
+                document.getElementById(
+                    'change-live-button'
+                )
+            );
+
+
+            const liveSwitchPanel = (
+                document.getElementById(
+                    'live-switch-panel'
+                )
+            );
+
+
+            const liveSessionSelect = (
+                document.getElementById(
+                    'live_session_select'
+                )
+            );
+
+
+            const selectedLiveInput = (
+                document.getElementById(
+                    'selected-live-input'
+                )
+            );
+
+
+            const searchUrl = (
+                "{% url 'live_sales:customer_code_search' %}"
+            );
+
+
+            let searchTimer = null;
+
+
+            /* ============================================
+               RENDERIZAR CÓDIGOS
+               ============================================ */
+
+            function renderCodes(
+                results
+            ) {
+
+                if (!dropdown) {
+                    return;
+                }
+
+
+                dropdown.innerHTML = '';
+
+
+                if (!results.length) {
+
+                    const empty = (
+                        document.createElement(
+                            'div'
+                        )
+                    );
+
+
+                    empty.className = (
+                        'customer-selector__empty'
+                    );
+
+
+                    empty.textContent = (
+                        'No hay códigos autorizados.'
+                    );
+
+
+                    dropdown.appendChild(
+                        empty
+                    );
+
+
+                    dropdown.classList.add(
+                        'customer-selector__dropdown--open'
+                    );
+
+
+                    return;
+                }
+
+
+                results.forEach(
+                    function (item) {
+
+                        const button = (
+                            document.createElement(
+                                'button'
+                            )
+                        );
+
+
+                        button.type = 'button';
+
+
+                        button.className = (
+                            'customer-selector__option'
+                        );
+
+
+                        button.textContent = (
+                            item.code
+                        );
+
+
+                        button.addEventListener(
+                            'click',
+                            function () {
+
+                                selectCode(
+                                    item.code
+                                );
+
+                            }
+                        );
+
+
+                        dropdown.appendChild(
+                            button
+                        );
+
+                    }
+                );
+
+
+                dropdown.classList.add(
+                    'customer-selector__dropdown--open'
+                );
+
+            }
+
+
+            /* ============================================
+               CONSULTAR CÓDIGOS ACTIVOS
+               ============================================ */
+
+            async function loadCodes(
+                query
+            ) {
+
+                if (!dropdown) {
+                    return;
+                }
+
+
+                try {
+
+                    const url = (
+                        searchUrl
+                        + '?q='
+                        + encodeURIComponent(
+                            query || ''
+                        )
+                    );
+
+
+                    const response = (
+                        await fetch(
+                            url,
+                            {
+                                headers: {
+                                    'X-Requested-With':
+                                        'XMLHttpRequest'
+                                }
+                            }
+                        )
+                    );
+
+
+                    if (!response.ok) {
+
+                        throw new Error(
+                            'No fue posible consultar los códigos.'
+                        );
+
+                    }
+
+
+                    const data = (
+                        await response.json()
+                    );
+
+
+                    renderCodes(
+                        data.results || []
+                    );
+
+
+                } catch (error) {
+
+                    dropdown.innerHTML = '';
+
+
+                    const empty = (
+                        document.createElement(
+                            'div'
+                        )
+                    );
+
+
+                    empty.className = (
+                        'customer-selector__empty'
+                    );
+
+
+                    empty.textContent = (
+                        'No fue posible cargar los códigos.'
+                    );
+
+
+                    dropdown.appendChild(
+                        empty
+                    );
+
+
+                    dropdown.classList.add(
+                        'customer-selector__dropdown--open'
+                    );
+
+                }
+
+            }
+
+
+            /* ============================================
+               SELECCIONAR CÓDIGO
+               ============================================ */
+
+            function selectCode(
+                code
+            ) {
+
+                if (
+                    !hiddenCodeInput
+                    || !searchInput
+                ) {
+
+                    return;
+                }
+
+
+                hiddenCodeInput.value = code;
+
+                searchInput.value = code;
+
+
+                if (selectedText) {
+
+                    selectedText.textContent = (
+                        code
+                    );
+
+                }
+
+
+                if (selectedBox) {
+
+                    selectedBox.classList.add(
+                        'customer-selector__selected--visible'
+                    );
+
+                }
+
+
+                if (dropdown) {
+
+                    dropdown.classList.remove(
+                        'customer-selector__dropdown--open'
+                    );
+
+                }
+
+            }
+
+
+            /* ============================================
+               LIMPIAR CÓDIGO
+               ============================================ */
+
+            function clearCode() {
+
+                if (hiddenCodeInput) {
+
+                    hiddenCodeInput.value = '';
+
+                }
+
+
+                if (searchInput) {
+
+                    searchInput.value = '';
+
+                    searchInput.focus();
+
+                }
+
+
+                if (selectedBox) {
+
+                    selectedBox.classList.remove(
+                        'customer-selector__selected--visible'
+                    );
+
+                }
+
+
+                loadCodes(
+                    ''
+                );
+
+            }
+
+
+            /* ============================================
+               ABRIR LISTA
+               ============================================ */
+
+            if (searchInput) {
+
+                searchInput.addEventListener(
+                    'focus',
+                    function () {
+
+                        loadCodes(
+                            searchInput.value
+                        );
+
+                    }
+                );
+
+
+                searchInput.addEventListener(
+                    'click',
+                    function () {
+
+                        loadCodes(
+                            searchInput.value
+                        );
+
+                    }
+                );
+
+
+                searchInput.addEventListener(
+                    'input',
+                    function () {
+
+                        hiddenCodeInput.value = '';
+
+
+                        if (selectedBox) {
+
+                            selectedBox.classList.remove(
+                                'customer-selector__selected--visible'
+                            );
+
+                        }
+
+
+                        searchInput.value = (
+                            searchInput.value
+                            .toUpperCase()
+                            .replace(
+                                /\s+/g,
+                                ''
+                            )
+                        );
+
+
+                        window.clearTimeout(
+                            searchTimer
+                        );
+
+
+                        searchTimer = (
+                            window.setTimeout(
+                                function () {
+
+                                    loadCodes(
+                                        searchInput.value
+                                    );
+
+                                },
+                                180
+                            )
+                        );
+
+                    }
+                );
+
+
+                window.setTimeout(
+                    function () {
+
+                        searchInput.focus();
+
+                    },
+                    250
+                );
+
+            }
+
+
+            /* ============================================
+               CAMBIAR CLIENTE
+               ============================================ */
+
+            if (clearButton) {
+
+                clearButton.addEventListener(
+                    'click',
+                    clearCode
+                );
+
+            }
+
+
+            /* ============================================
+               CERRAR AL TOCAR FUERA
+               ============================================ */
+
+            document.addEventListener(
+                'click',
+                function (event) {
+
+                    const selector = (
+                        document.getElementById(
+                            'customer-selector'
+                        )
+                    );
+
+
+                    if (
+                        selector
+                        && !selector.contains(
+                            event.target
+                        )
+                        && dropdown
+                    ) {
+
+                        dropdown.classList.remove(
+                            'customer-selector__dropdown--open'
+                        );
+
+                    }
+
+                }
+            );
+
+
+            /* ============================================
+               VALIDAR ANTES DE ASIGNAR
+               ============================================ */
+
+            if (assignmentForm) {
+
+                assignmentForm.addEventListener(
+                    'submit',
+                    function (event) {
+
+                        if (
+                            hiddenCodeInput
+                            && !hiddenCodeInput.value
+                        ) {
+
+                            event.preventDefault();
+
+
+                            if (searchInput) {
+
+                                searchInput.focus();
+
+                            }
+
+
+                            loadCodes(
+                                searchInput
+                                    ? searchInput.value
+                                    : ''
+                            );
+
+
+                            alert(
+                                'Selecciona un código autorizado de la lista.'
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            /* ============================================
+               CAMBIAR LIVE
+               ============================================ */
+
+            if (
+                changeLiveButton
+                && liveSwitchPanel
+            ) {
+
+                changeLiveButton.addEventListener(
+                    'click',
+                    function () {
+
+                        liveSwitchPanel.classList.toggle(
+                            'live-form__switch--visible'
+                        );
+
+                    }
+                );
+
+            }
+
+
+            if (
+                liveSessionSelect
+                && selectedLiveInput
+            ) {
+
+                liveSessionSelect.addEventListener(
+                    'change',
+                    function () {
+
+                        selectedLiveInput.value = (
+                            liveSessionSelect.value
+                        );
+
+                    }
+                );
+
+            }
+
+        }
+    );
+
+</script>
 
 {% endblock %}
