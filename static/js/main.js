@@ -3,17 +3,8 @@ document.addEventListener(
     () => {
 
         // ====================================================
-        // MENÚ HAMBURGUESA
+        // ICONOS LUCIDE
         // ====================================================
-
-        const menuToggle = document.querySelector(
-            ".site-header__menu-toggle"
-        );
-
-        const mainNav = document.querySelector(
-            ".main-nav"
-        );
-
 
         function refreshLucideIcons() {
 
@@ -26,6 +17,19 @@ document.addEventListener(
             }
 
         }
+
+
+        // ====================================================
+        // MENÚ HAMBURGUESA
+        // ====================================================
+
+        const menuToggle = document.querySelector(
+            ".site-header__menu-toggle"
+        );
+
+        const mainNav = document.querySelector(
+            ".main-nav"
+        );
 
 
         function closeMobileMenu() {
@@ -156,22 +160,6 @@ document.addEventListener(
             );
 
 
-            document.addEventListener(
-                "keydown",
-                (event) => {
-
-                    if (
-                        event.key === "Escape"
-                    ) {
-
-                        closeMobileMenu();
-
-                    }
-
-                }
-            );
-
-
             window.addEventListener(
                 "resize",
                 () => {
@@ -191,11 +179,321 @@ document.addEventListener(
 
 
         // ====================================================
-        // CONTADOR DEL LIVE
+        // MODAL DE CORREO
+        // ====================================================
+
+        const emailModal = document.getElementById(
+            "pronty-email-modal"
+        );
+
+        const emailOpenButton = document.getElementById(
+            "contact-email-open"
+        );
+
+        const emailCloseButtons = document.querySelectorAll(
+            "[data-email-close]"
+        );
+
+        const emailSubject = document.getElementById(
+            "contact-email-subject"
+        );
+
+        const emailMessage = document.getElementById(
+            "contact-email-message"
+        );
+
+        const emailGmailButton = document.getElementById(
+            "contact-email-gmail"
+        );
+
+        const emailCopyButton = document.getElementById(
+            "contact-email-copy"
+        );
+
+        const emailFeedback = document.getElementById(
+            "contact-email-feedback"
+        );
+
+        const prontyEmail = (
+            "prontyoutlet@gmail.com"
+        );
+
+
+        function openEmailModal() {
+
+            if (!emailModal) {
+
+                return;
+
+            }
+
+
+            emailModal.classList.add(
+                "pronty-email-modal--open"
+            );
+
+
+            emailModal.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+
+            document.body.classList.add(
+                "pronty-modal-open"
+            );
+
+
+            if (emailSubject) {
+
+                window.setTimeout(
+                    () => {
+
+                        emailSubject.focus();
+
+                    },
+                    100
+                );
+
+            }
+
+        }
+
+
+        function closeEmailModal() {
+
+            if (!emailModal) {
+
+                return;
+
+            }
+
+
+            emailModal.classList.remove(
+                "pronty-email-modal--open"
+            );
+
+
+            emailModal.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            document.body.classList.remove(
+                "pronty-modal-open"
+            );
+
+
+            if (emailFeedback) {
+
+                emailFeedback.textContent = "";
+
+            }
+
+        }
+
+
+        if (
+            emailOpenButton
+            && emailModal
+        ) {
+
+            emailOpenButton.addEventListener(
+                "click",
+                openEmailModal
+            );
+
+        }
+
+
+        emailCloseButtons.forEach(
+            (button) => {
+
+                button.addEventListener(
+                    "click",
+                    closeEmailModal
+                );
+
+            }
+        );
+
+
+        if (emailCopyButton) {
+
+            emailCopyButton.addEventListener(
+                "click",
+                async () => {
+
+                    try {
+
+                        await navigator.clipboard.writeText(
+                            prontyEmail
+                        );
+
+
+                        if (emailFeedback) {
+
+                            emailFeedback.textContent = (
+                                "Correo copiado."
+                            );
+
+                        }
+
+                    } catch (error) {
+
+                        if (emailFeedback) {
+
+                            emailFeedback.textContent = (
+                                "Correo: "
+                                + prontyEmail
+                            );
+
+                        }
+
+                    }
+
+                }
+            );
+
+        }
+
+
+        if (emailGmailButton) {
+
+            emailGmailButton.addEventListener(
+                "click",
+                () => {
+
+                    const subject = (
+                        emailSubject
+                        ? emailSubject.value.trim()
+                        : ""
+                    );
+
+
+                    const message = (
+                        emailMessage
+                        ? emailMessage.value.trim()
+                        : ""
+                    );
+
+
+                    if (!subject) {
+
+                        if (emailFeedback) {
+
+                            emailFeedback.textContent = (
+                                "Escribe el asunto del correo."
+                            );
+
+                        }
+
+
+                        if (emailSubject) {
+
+                            emailSubject.focus();
+
+                        }
+
+
+                        return;
+
+                    }
+
+
+                    if (!message) {
+
+                        if (emailFeedback) {
+
+                            emailFeedback.textContent = (
+                                "Escribe el mensaje que deseas enviar."
+                            );
+
+                        }
+
+
+                        if (emailMessage) {
+
+                            emailMessage.focus();
+
+                        }
+
+
+                        return;
+
+                    }
+
+
+                    if (emailFeedback) {
+
+                        emailFeedback.textContent = "";
+
+                    }
+
+
+                    const gmailUrl = (
+                        "https://mail.google.com/mail/"
+                        + "?view=cm"
+                        + "&fs=1"
+                        + "&to="
+                        + encodeURIComponent(
+                            prontyEmail
+                        )
+                        + "&su="
+                        + encodeURIComponent(
+                            subject
+                        )
+                        + "&body="
+                        + encodeURIComponent(
+                            message
+                        )
+                    );
+
+
+                    window.open(
+                        gmailUrl,
+                        "_blank",
+                        "noopener,noreferrer"
+                    );
+
+                }
+            );
+
+        }
+
+
+        // ====================================================
+        // ESC
+        // ====================================================
+
+        document.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (
+                    event.key !== "Escape"
+                ) {
+
+                    return;
+
+                }
+
+
+                closeMobileMenu();
+
+                closeEmailModal();
+
+            }
+        );
+
+
+        // ====================================================
+        // CONTADOR REAL DE PRONTY LIVE
         // ====================================================
 
         const countdown = document.querySelector(
-            ".live-countdown"
+            ".live-countdown[data-live-target]"
         );
 
 
@@ -206,13 +504,32 @@ document.addEventListener(
         }
 
 
-        // Fecha de ejemplo del próximo Live.
-        // Más adelante esta fecha vendrá desde el panel
-        // del administrador.
+        const liveTarget = countdown.getAttribute(
+            "data-live-target"
+        );
+
+
+        if (!liveTarget) {
+
+            return;
+
+        }
+
 
         const liveDate = new Date(
-            "2026-09-06T20:00:00"
+            liveTarget
         );
+
+
+        if (
+            Number.isNaN(
+                liveDate.getTime()
+            )
+        ) {
+
+            return;
+
+        }
 
 
         const units = countdown.querySelectorAll(
@@ -220,21 +537,54 @@ document.addEventListener(
         );
 
 
+        if (
+            units.length < 4
+        ) {
+
+            return;
+
+        }
+
+
+        let countdownInterval = null;
+
+
+        function setCountdownToZero() {
+
+            units[0].textContent = "00";
+            units[1].textContent = "00";
+            units[2].textContent = "00";
+            units[3].textContent = "00";
+
+        }
+
+
         function updateCountdown() {
 
             const now = new Date();
 
+
             const difference = (
-                liveDate - now
+                liveDate.getTime()
+                - now.getTime()
             );
 
 
-            if (difference <= 0) {
+            if (
+                difference <= 0
+            ) {
 
-                units[0].textContent = "00";
-                units[1].textContent = "00";
-                units[2].textContent = "00";
-                units[3].textContent = "00";
+                setCountdownToZero();
+
+
+                if (countdownInterval) {
+
+                    window.clearInterval(
+                        countdownInterval
+                    );
+
+                }
+
 
                 return;
 
@@ -294,6 +644,7 @@ document.addEventListener(
                 )
             );
 
+
             units[1].textContent = (
                 String(hours)
                 .padStart(
@@ -302,6 +653,7 @@ document.addEventListener(
                 )
             );
 
+
             units[2].textContent = (
                 String(minutes)
                 .padStart(
@@ -309,6 +661,7 @@ document.addEventListener(
                     "0"
                 )
             );
+
 
             units[3].textContent = (
                 String(seconds)
@@ -324,7 +677,7 @@ document.addEventListener(
         updateCountdown();
 
 
-        setInterval(
+        countdownInterval = window.setInterval(
             updateCountdown,
             1000
         );

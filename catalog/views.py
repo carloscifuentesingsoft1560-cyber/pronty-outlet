@@ -2,6 +2,9 @@ from decimal import Decimal, InvalidOperation
 
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
+
+from live_sales.models import LiveSession
 
 from .models import (
     Brand,
@@ -11,13 +14,152 @@ from .models import (
 )
 
 
+# ============================================================
+# PLATAFORMAS DE LIVE
+# ============================================================
+
+def get_live_platform_label(
+    platform: str
+) -> str:
+
+    if (
+        platform
+        == LiveSession.Platform.TIKTOK
+    ):
+
+        return 'TikTok'
+
+
+    if (
+        platform
+        == LiveSession.Platform.INSTAGRAM
+    ):
+
+        return 'Instagram'
+
+
+    if (
+        platform
+        == LiveSession.Platform.FACEBOOK
+    ):
+
+        return 'Facebook'
+
+
+    if (
+        platform
+        == LiveSession.Platform.MIXED
+    ):
+
+        return 'Multiplataforma'
+
+
+    return 'Live'
+
+
+# ============================================================
+# INICIO
+# ============================================================
+
 def home(request):
+
+    # =========================================================
+    # LIVE ACTUAL
+    # =========================================================
+
+    current_live = (
+        LiveSession.objects
+        .filter(
+            status=LiveSession.Status.LIVE
+        )
+        .order_by(
+            '-started_at',
+            '-scheduled_at',
+            '-created_at',
+        )
+        .first()
+    )
+
+
+    # =========================================================
+    # PRÓXIMO LIVE PROGRAMADO
+    # =========================================================
+
+    upcoming_live = None
+
+
+    if current_live is None:
+
+        upcoming_live = (
+            LiveSession.objects
+            .filter(
+                status=(
+                    LiveSession
+                    .Status
+                    .SCHEDULED
+                ),
+                scheduled_at__isnull=False,
+                scheduled_at__gte=timezone.now(),
+            )
+            .order_by(
+                'scheduled_at',
+                'created_at',
+            )
+            .first()
+        )
+
+
+    # =========================================================
+    # LIVE QUE MOSTRARÁ EL HOME
+    # =========================================================
+
+    home_live = (
+        current_live
+        or upcoming_live
+    )
+
+
+    home_live_platform_label = None
+
+
+    if home_live:
+
+        home_live_platform_label = (
+            get_live_platform_label(
+                home_live.platform
+            )
+        )
+
+
+    # =========================================================
+    # CONTEXTO
+    # =========================================================
+
+    context = {
+        'home_live': (
+            home_live
+        ),
+
+        'home_live_is_active': (
+            current_live is not None
+        ),
+
+        'home_live_platform_label': (
+            home_live_platform_label
+        ),
+    }
+
 
     return render(
         request,
-        'home.html'
+        'home.html',
+        context
     )
 
+
+# ============================================================
+# LISTADO DE PRODUCTOS
+# ============================================================
 
 def product_list(request):
 
@@ -85,6 +227,7 @@ def product_list(request):
         .strip()
     )
 
+
     if search_query:
 
         products = products.filter(
@@ -97,19 +240,27 @@ def product_list(request):
             )
             |
             Q(
-                short_description__icontains=search_query
+                short_description__icontains=(
+                    search_query
+                )
             )
             |
             Q(
-                description__icontains=search_query
+                description__icontains=(
+                    search_query
+                )
             )
             |
             Q(
-                category__name__icontains=search_query
+                category__name__icontains=(
+                    search_query
+                )
             )
             |
             Q(
-                brand__name__icontains=search_query
+                brand__name__icontains=(
+                    search_query
+                )
             )
         )
 
@@ -125,6 +276,7 @@ def product_list(request):
         )
     )
 
+
     selected_brand = (
         request.GET
         .get(
@@ -133,6 +285,7 @@ def product_list(request):
         )
         .strip()
     )
+
 
     price_min_raw = (
         request.GET
@@ -143,6 +296,7 @@ def product_list(request):
         .strip()
     )
 
+
     price_max_raw = (
         request.GET
         .get(
@@ -152,6 +306,7 @@ def product_list(request):
         .strip()
     )
 
+
     on_sale = (
         request.GET
         .get(
@@ -159,6 +314,7 @@ def product_list(request):
             ''
         )
     )
+
 
     ordering = (
         request.GET
@@ -175,11 +331,13 @@ def product_list(request):
 
     if selected_categories:
 
-        products = products.filter(
-            category__slug__in=(
-                selected_categories
-            ),
-            category__is_active=True,
+        products = (
+            products.filter(
+                category__slug__in=(
+                    selected_categories
+                ),
+                category__is_active=True,
+            )
         )
 
 
@@ -189,9 +347,13 @@ def product_list(request):
 
     if selected_brand:
 
-        products = products.filter(
-            brand__slug=selected_brand,
-            brand__is_active=True,
+        products = (
+            products.filter(
+                brand__slug=(
+                    selected_brand
+                ),
+                brand__is_active=True,
+            )
         )
 
 
@@ -206,6 +368,7 @@ def product_list(request):
             price_min = Decimal(
                 price_min_raw
             )
+
 
             if price_min >= 0:
 
@@ -234,6 +397,7 @@ def product_list(request):
                 price_max_raw
             )
 
+
             if price_max >= 0:
 
                 products = (
@@ -255,8 +419,10 @@ def product_list(request):
 
     if on_sale:
 
-        products = products.filter(
-            is_on_sale=True
+        products = (
+            products.filter(
+                is_on_sale=True
+            )
         )
 
 
@@ -314,11 +480,17 @@ def product_list(request):
     # =========================================================
 
     context = {
-        'products': products,
+        'products': (
+            products
+        ),
 
-        'categories': categories,
+        'categories': (
+            categories
+        ),
 
-        'brands': brands,
+        'brands': (
+            brands
+        ),
 
         'search_query': (
             search_query
@@ -356,6 +528,10 @@ def product_list(request):
         context
     )
 
+
+# ============================================================
+# DETALLE DE PRODUCTO
+# ============================================================
 
 def product_detail(
     request,
@@ -410,7 +586,9 @@ def product_detail(
 
 
     context = {
-        'product': product,
+        'product': (
+            product
+        ),
 
         'gallery_images': (
             gallery_images

@@ -1,0 +1,85 @@
+{% extends 'content/base_content.html' %}
+
+{% block page_content %}
+
+<article class="content-card">
+
+    <h2>
+        Estamos para ayudarte
+    </h2>
+
+    <p>
+        Puedes contactarnos para resolver dudas relacionadas
+        con productos, pedidos, pagos, envíos, Pronty Live
+        o compras para tu emprendimiento.
+    </p>
+
+</article>
+
+
+<article class="content-card">
+
+    <h2>
+        WhatsApp
+    </h2>
+
+    <p>
+        Nuestro canal principal de atención comercial es WhatsApp.
+    </p>
+
+    <div class="content-actions">
+
+        <a
+            href="https://wa.me/573183473482"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn--primary"
+        >
+
+            <i class="fa-brands fa-whatsapp"></i>
+
+            Escribir por WhatsApp
+
+        </a>
+
+    </div>
+
+</article>
+
+
+<article class="content-card">
+
+    <h2>
+        Correo electrónico
+    </h2>
+
+    <p>
+        También puedes escribirnos a:
+    </p>
+
+    <p>
+        <strong>
+            prontyoutlet@gmail.com
+        </strong>
+    </p>
+
+    <p>
+        Si estás en la página principal, también puedes utilizar
+        el formulario de correo de Pronty para preparar tu mensaje
+        y abrir Gmail con la información lista.
+    </p>
+
+    <div class="content-actions">
+
+        <a
+            href="{% url 'home' %}#contacto"
+            class="btn btn--secondary"
+        >
+            Ir al formulario de contacto
+        </a>
+
+    </div>
+
+</article>
+
+{% endblock %}

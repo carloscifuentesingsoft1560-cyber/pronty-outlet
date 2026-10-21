@@ -1,0 +1,98 @@
+{% extends 'content/base_content.html' %}
+
+{% block page_content %}
+
+<article class="content-card">
+
+    <h2>
+        Comprar en Pronty es fácil
+    </h2>
+
+    <p>
+        Puedes explorar nuestro catálogo, seleccionar tus productos
+        y realizar tu pedido directamente desde la tienda.
+    </p>
+
+</article>
+
+
+<article class="content-card">
+
+    <h2>
+        Paso a paso
+    </h2>
+
+    <ol>
+
+        <li>
+            Explora las categorías o utiliza el buscador
+            para encontrar los productos que deseas.
+        </li>
+
+        <li>
+            Revisa la información del producto y agrégalo
+            al carrito.
+        </li>
+
+        <li>
+            Verifica las cantidades y productos seleccionados.
+        </li>
+
+        <li>
+            Completa la información necesaria para generar
+            tu pedido.
+        </li>
+
+        <li>
+            Continúa por WhatsApp para confirmar el pago
+            y coordinar el proceso de envío.
+        </li>
+
+    </ol>
+
+    <div class="content-actions">
+
+        <a
+            href="{% url 'product_list' %}"
+            class="btn btn--primary"
+        >
+            <i data-lucide="shopping-bag"></i>
+            Ver productos
+        </a>
+
+    </div>
+
+</article>
+
+
+<article class="content-card content-card--highlight">
+
+    <h2>
+        Compra mayorista
+    </h2>
+
+    <p>
+        En Pronty puedes acceder a beneficios mayoristas
+        cuando tu compra alcanza las condiciones comerciales
+        vigentes.
+    </p>
+
+    <p>
+        Actualmente el beneficio mayorista se activa desde
+        una compra de referencia de $300.000.
+    </p>
+
+    <div class="content-actions">
+
+        <a
+            href="{% url 'accounts:register' %}"
+            class="btn btn--secondary"
+        >
+            Crear mi cuenta
+        </a>
+
+    </div>
+
+</article>
+
+{% endblock %}

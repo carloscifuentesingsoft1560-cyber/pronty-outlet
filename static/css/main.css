@@ -603,11 +603,9 @@ p {
     padding: 1.6rem;
   }
 }
-.categories-section {
-  padding: 4.5rem 0;
-  background-color: #ffffff;
-}
-
+/* ==========================================================
+   ENCABEZADOS DE SECCIÓN
+   ========================================================== */
 .section-heading {
   max-width: 680px;
   margin-bottom: 2rem;
@@ -639,97 +637,154 @@ p {
   font-size: 1rem;
 }
 
+/* ==========================================================
+   CATEGORÍAS DINÁMICAS
+   ========================================================== */
+.categories-section {
+  padding: 4.5rem 0;
+  background: linear-gradient(180deg, #ffffff 0%, #fffdf9 100%);
+}
+
 .categories-grid {
   display: grid;
-  grid-template-columns: repeat(12, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1.25rem;
 }
 
 .category-card {
   position: relative;
-  min-height: 230px;
+  min-width: 0;
+  min-height: 245px;
   padding: 1.6rem;
   border-radius: 24px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  border: 1px solid rgba(31, 92, 74, 0.08);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.055);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .category-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.09);
+  border-color: rgba(31, 92, 74, 0.18);
+}
+
+.category-card::after {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  right: -45px;
+  top: -50px;
+  background-color: rgba(255, 255, 255, 0.26);
+}
+
+.category-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  position: relative;
+  z-index: 2;
 }
 
 .category-card__icon {
-  width: 54px;
-  height: 54px;
-  border-radius: 16px;
+  width: 56px;
+  height: 56px;
+  border-radius: 17px;
   display: grid;
   place-items: center;
-  background-color: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 7px 18px rgba(0, 0, 0, 0.05);
 }
 
 .category-card__icon svg {
-  width: 26px;
-  height: 26px;
+  width: 27px;
+  height: 27px;
+}
+
+.category-card__highlight-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.86);
+  color: #f04c8b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .category-card__content {
   position: relative;
-  z-index: 1;
+  z-index: 2;
+  min-width: 0;
 }
 
 .category-card__content h3 {
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.5rem;
   font-size: 1.35rem;
+  line-height: 1.15;
+  color: inherit;
 }
 
 .category-card__content p {
   margin-bottom: 1rem;
-  color: rgba(44, 44, 44, 0.78);
   font-size: 0.92rem;
+  line-height: 1.5;
+  color: rgba(44, 44, 44, 0.74);
 }
 
-.category-card__content span {
+.category-card__link {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  font-weight: 700;
+  color: inherit;
   font-size: 0.9rem;
+  font-weight: 800;
 }
 
-.category-card__content span svg {
+.category-card__link svg {
   width: 17px;
   height: 17px;
 }
 
-.category-card--makeup {
-  grid-column: span 4;
-  background: linear-gradient(145deg, rgba(240, 76, 139, 0.18), rgba(255, 255, 255, 0.95));
-  color: #8d2d59;
-}
-
-.category-card--kawaii {
-  grid-column: span 4;
-  background: linear-gradient(145deg, rgba(216, 178, 91, 0.2), rgba(255, 250, 245, 0.95));
-  color: #9a6b18;
-}
-
-.category-card--care {
-  grid-column: span 4;
-  background: linear-gradient(145deg, rgba(31, 92, 74, 0.12), rgba(255, 255, 255, 0.95));
+/* ==========================================================
+   ACCESORIOS
+   ========================================================== */
+.category-card--accessories {
+  background: linear-gradient(145deg, rgba(31, 92, 74, 0.14), rgba(239, 249, 244, 0.95));
   color: #1f5c4a;
 }
 
+.category-card--accessories .category-card__icon {
+  color: #1f5c4a;
+}
+
+/* ==========================================================
+   CUIDADO
+   ========================================================== */
+.category-card--care {
+  background: linear-gradient(145deg, rgba(69, 148, 130, 0.16), rgba(244, 251, 249, 0.98));
+  color: #25705d;
+}
+
+.category-card--care .category-card__icon {
+  color: #25705d;
+}
+
+/* ==========================================================
+   MODA SHEIN
+   ========================================================== */
 .category-card--fashion {
-  grid-column: span 7;
-  min-height: 250px;
-  background: linear-gradient(145deg, rgba(31, 92, 74, 0.95), rgba(31, 92, 74, 0.82));
+  background: linear-gradient(145deg, rgba(31, 92, 74, 0.98), rgba(47, 112, 91, 0.9));
   color: #ffffff;
 }
 
@@ -739,16 +794,39 @@ p {
 
 .category-card--fashion .category-card__icon {
   background-color: rgba(255, 255, 255, 0.13);
-}
-
-.category-card--fashion .category-card__icon svg {
   color: #d8b25b;
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* ==========================================================
+   KAWAII
+   ========================================================== */
+.category-card--kawaii {
+  background: linear-gradient(145deg, rgba(240, 76, 139, 0.17), rgba(255, 247, 251, 0.98));
+  color: #a03668;
+}
+
+.category-card--kawaii .category-card__icon {
+  color: #f04c8b;
+}
+
+/* ==========================================================
+   BELLEZA
+   ========================================================== */
+.category-card--beauty {
+  background: linear-gradient(145deg, rgba(240, 76, 139, 0.14), rgba(255, 250, 245, 0.98));
+  color: #96385f;
+}
+
+.category-card--beauty .category-card__icon {
+  color: #f04c8b;
+}
+
+/* ==========================================================
+   PROMOCIONES
+   ========================================================== */
 .category-card--promotions {
-  grid-column: span 5;
-  min-height: 250px;
-  background: linear-gradient(145deg, rgba(240, 76, 139, 0.92), rgba(240, 76, 139, 0.74));
+  background: linear-gradient(145deg, rgba(240, 76, 139, 0.96), rgba(220, 53, 117, 0.86));
   color: #ffffff;
 }
 
@@ -757,29 +835,49 @@ p {
 }
 
 .category-card--promotions .category-card__icon {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ==========================================================
+   DESTACADO DESDE DJANGO
+   ========================================================== */
+.category-card--highlighted {
+  background: linear-gradient(145deg, rgba(240, 76, 139, 0.98), rgba(215, 49, 111, 0.88));
+  color: #ffffff;
+  border-color: rgba(240, 76, 139, 0.35);
+  box-shadow: 0 14px 34px rgba(240, 76, 139, 0.2);
+}
+
+.category-card--highlighted .category-card__content p {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.category-card--highlighted .category-card__icon {
   background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
-.category-card::after {
-  content: "";
-  position: absolute;
-  width: 130px;
-  height: 130px;
-  border-radius: 50%;
-  right: -35px;
-  top: -35px;
-  background-color: rgba(255, 255, 255, 0.22);
+/* ==========================================================
+   DEFAULT
+   ========================================================== */
+.category-card--default {
+  background: linear-gradient(145deg, rgba(216, 178, 91, 0.16), rgba(255, 252, 245, 0.98));
+  color: #7b6126;
 }
 
+.category-card--default .category-card__icon {
+  color: #9a762d;
+}
+
+/* ==========================================================
+   RESPONSIVE CATEGORÍAS
+   ========================================================== */
 @media (max-width: 980px) {
-  .category-card--makeup,
-  .category-card--kawaii,
-  .category-card--care {
-    grid-column: span 6;
-  }
-  .category-card--fashion,
-  .category-card--promotions {
-    grid-column: span 6;
+  .categories-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 @media (max-width: 640px) {
@@ -789,16 +887,13 @@ p {
   .categories-grid {
     grid-template-columns: 1fr;
   }
-  .category-card,
-  .category-card--makeup,
-  .category-card--kawaii,
-  .category-card--care,
-  .category-card--fashion,
-  .category-card--promotions {
-    grid-column: 1;
-    min-height: 210px;
+  .category-card {
+    min-height: 220px;
   }
 }
+/* ==========================================================
+   CÓMO COMPRAR
+   ========================================================== */
 .how-to-buy {
   padding: 5rem 0;
   background-color: #fffaf5;
@@ -860,6 +955,10 @@ p {
   margin: 0;
   color: #6d6d6d;
   font-size: 0.9rem;
+}
+
+.how-to-buy__card .btn {
+  margin-top: 1rem;
 }
 
 .how-to-buy__wholesale {
@@ -934,6 +1033,9 @@ p {
     width: 100%;
   }
 }
+/* ==========================================================
+   REDES SOCIALES
+   ========================================================== */
 .social-section {
   padding: 5rem 0;
   background-color: #ffffff;
@@ -1023,6 +1125,9 @@ p {
     grid-template-columns: 1fr;
   }
 }
+/* ==========================================================
+   CONTACTO
+   ========================================================== */
 .contact-section {
   padding: 5rem 0;
   background: radial-gradient(circle at top right, rgba(240, 76, 139, 0.1), transparent 30%), #fffaf5;
@@ -1072,6 +1177,7 @@ p {
   background-color: #ffffff;
   border: 1px solid rgba(0, 0, 0, 0.05);
   box-shadow: 0 8px 22px rgba(0, 0, 0, 0.05);
+  text-decoration: none;
 }
 
 .contact-info-card__icon {
@@ -1119,6 +1225,9 @@ p {
     width: 100%;
   }
 }
+/* ==========================================================
+   PRONTY LIVE
+   ========================================================== */
 .live-preview {
   padding: 4rem 0;
   background-color: #ffffff;

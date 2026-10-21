@@ -80,10 +80,6 @@
 
             <div class="site-header__actions">
 
-                <!-- ==========================================
-                     MENÚ HAMBURGUESA MÓVIL / TABLET
-                     ========================================== -->
-
                 <button
                     type="button"
                     class="site-header__menu-toggle"
@@ -101,10 +97,6 @@
 
                     {% if request.user.is_staff or request.user.is_superuser %}
 
-                        <!-- ==================================
-                             PRONTY LIVE ADMINISTRADOR
-                             ================================== -->
-
                         <a
                             href="{% url 'live_sales:dashboard' %}"
                             class="site-header__action"
@@ -119,10 +111,6 @@
 
                         </a>
 
-
-                        <!-- ==================================
-                             ADMINISTRACIÓN DJANGO
-                             ================================== -->
 
                         <a
                             href="/admin/"
@@ -140,10 +128,6 @@
 
                     {% else %}
 
-                        <!-- ==================================
-                             PRONTY LIVE CLIENTE
-                             ================================== -->
-
                         <a
                             href="{% url 'accounts:live' %}"
                             class="site-header__action"
@@ -158,10 +142,6 @@
 
                         </a>
 
-
-                        <!-- ==================================
-                             MI CUENTA
-                             ================================== -->
 
                         <a
                             href="{% url 'accounts:dashboard' %}"
@@ -181,10 +161,6 @@
 
                 {% else %}
 
-                    <!-- ======================================
-                         USUARIO NO AUTENTICADO
-                         ====================================== -->
-
                     <a
                         href="{% url 'accounts:login' %}"
                         class="site-header__action"
@@ -201,10 +177,6 @@
 
                 {% endif %}
 
-
-                <!-- ==========================================
-                     CARRITO
-                     ========================================== -->
 
                 <a
                     href="{% url 'cart:cart_detail' %}"
@@ -228,10 +200,6 @@
 
         </div>
 
-
-        <!-- ==============================================
-             MENÚ DINÁMICO DE CATEGORÍAS
-             ============================================== -->
 
         <nav
             class="main-nav"
@@ -273,10 +241,6 @@
 
     </header>
 
-
-    <!-- ==============================================
-         BARRA COMERCIAL
-         ============================================== -->
 
     <section class="commercial-bar">
 
@@ -329,10 +293,6 @@
     </section>
 
 
-    <!-- ==============================================
-         CONTENIDO PRINCIPAL
-         ============================================== -->
-
     <main>
 
         {% block content %}
@@ -340,10 +300,6 @@
 
     </main>
 
-
-    <!-- ==============================================
-         WHATSAPP
-         ============================================== -->
 
     <a
         href="https://wa.me/573183473482"
@@ -357,10 +313,6 @@
 
     </a>
 
-
-    <!-- ==============================================
-         FOOTER
-         ============================================== -->
 
     <footer class="site-footer">
 
@@ -387,8 +339,10 @@
                 <div class="site-footer__social">
 
                     <a
-                        href="#"
-                        aria-label="Instagram"
+                        href="https://www.instagram.com/prontyoutlet/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Instagram de Pronty Outlet"
                     >
 
                         <i class="fa-brands fa-instagram"></i>
@@ -397,8 +351,10 @@
 
 
                     <a
-                        href="#"
-                        aria-label="Facebook"
+                        href="https://www.facebook.com/profile.php?id=61572637761995&locale=es_LA"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Facebook de Pronty Outlet"
                     >
 
                         <i class="fa-brands fa-facebook-f"></i>
@@ -407,8 +363,10 @@
 
 
                     <a
-                        href="#"
-                        aria-label="TikTok"
+                        href="https://www.tiktok.com/@prontyoutlet"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="TikTok de Pronty Outlet"
                     >
 
                         <i class="fa-brands fa-tiktok"></i>
@@ -432,10 +390,6 @@
             </div>
 
 
-            <!-- ==========================================
-                 TIENDA
-                 ========================================== -->
-
             <div class="site-footer__column">
 
                 <h3>
@@ -456,19 +410,13 @@
                 {% empty %}
 
                     <a href="{% url 'product_list' %}">
-
                         Ver productos
-
                     </a>
 
                 {% endfor %}
 
             </div>
 
-
-            <!-- ==========================================
-                 AYUDA
-                 ========================================== -->
 
             <div class="site-footer__column">
 
@@ -477,36 +425,32 @@
                 </h3>
 
 
-                <a href="#">
+                <a href="{% url 'content:how_to_buy' %}">
                     Cómo comprar
                 </a>
 
 
-                <a href="#">
+                <a href="{% url 'content:contact' %}">
                     Contáctanos
                 </a>
 
 
-                <a href="#">
+                <a href="{% url 'content:shipping' %}">
                     Envíos
                 </a>
 
 
-                <a href="#">
+                <a href="{% url 'content:returns' %}">
                     Cambios y devoluciones
                 </a>
 
 
-                <a href="#">
+                <a href="{% url 'content:faq' %}">
                     Preguntas frecuentes
                 </a>
 
             </div>
 
-
-            <!-- ==========================================
-                 INFORMACIÓN LEGAL
-                 ========================================== -->
 
             <div class="site-footer__column">
 
@@ -515,31 +459,27 @@
                 </h3>
 
 
-                <a href="#">
+                <a href="{% url 'content:terms' %}">
                     Términos y condiciones
                 </a>
 
 
-                <a href="#">
+                <a href="{% url 'content:privacy' %}">
                     Política de privacidad
                 </a>
 
 
-                <a href="#">
+                <a href="{% url 'content:data_processing' %}">
                     Tratamiento de datos
                 </a>
 
 
-                <a href="#">
+                <a href="{% url 'content:cookies' %}">
                     Política de cookies
                 </a>
 
             </div>
 
-
-            <!-- ==========================================
-                 MEDIOS DE PAGO
-                 ========================================== -->
 
             <div class="site-footer__column">
 
@@ -578,10 +518,6 @@
         </div>
 
 
-        <!-- ==============================================
-             PIE INFERIOR
-             ============================================== -->
-
         <div class="site-footer__bottom">
 
             <div class="container">
@@ -603,20 +539,12 @@
     </footer>
 
 
-    <!-- ==============================================
-         ICONOS
-         ============================================== -->
-
     <script>
 
         lucide.createIcons();
 
     </script>
 
-
-    <!-- ==============================================
-         JS GENERAL
-         ============================================== -->
 
     <script
         src="{% static 'js/main.js' %}"

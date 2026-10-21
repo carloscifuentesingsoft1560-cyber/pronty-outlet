@@ -10,6 +10,7 @@ handler404 = 'config.views.custom_404'
 
 
 urlpatterns = [
+
     path(
         'admin/',
         admin.site.urls
@@ -31,20 +32,28 @@ urlpatterns = [
     ),
 
     path(
+        'informacion/',
+        include('content.urls')
+    ),
+
+    path(
         '',
         include('catalog.urls')
     ),
+
 ]
 
 
 if settings.DEBUG:
 
     urlpatterns += [
+
         path(
             '__prueba-404__/',
             custom_404,
             name='preview_404'
         ),
+
     ]
 
     urlpatterns += static(

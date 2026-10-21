@@ -30,12 +30,18 @@ Inicio | Pronty Outlet
 
             <div class="hero__actions">
 
-                <a href="#" class="btn btn--primary">
+                <a
+                    href="{% url 'product_list' %}"
+                    class="btn btn--primary"
+                >
                     <i data-lucide="shopping-bag"></i>
                     Ver productos
                 </a>
 
-                <a href="#" class="btn btn--secondary">
+                <a
+                    href="{% url 'accounts:register' %}"
+                    class="btn btn--secondary"
+                >
                     <i data-lucide="store"></i>
                     Quiero ser mayorista
                 </a>
@@ -46,26 +52,17 @@ Inicio | Pronty Outlet
 
                 <div>
                     <i data-lucide="truck"></i>
-
-                    <span>
-                        Envíos a toda Colombia
-                    </span>
+                    <span>Envíos a toda Colombia</span>
                 </div>
 
                 <div>
                     <i data-lucide="badge-percent"></i>
-
-                    <span>
-                        Precios especiales
-                    </span>
+                    <span>Precios especiales</span>
                 </div>
 
                 <div>
                     <i data-lucide="shield-check"></i>
-
-                    <span>
-                        Compra segura
-                    </span>
+                    <span>Compra segura</span>
                 </div>
 
             </div>
@@ -103,98 +100,339 @@ Inicio | Pronty Outlet
     </div>
 
 </section>
+
+
+<!-- ======================================================
+     PRONTY LIVE DINÁMICO
+     ====================================================== -->
+
 <section class="live-preview">
 
     <div class="container live-preview__inner">
 
         <div class="live-preview__content">
 
-            <span class="live-preview__badge">
-                <span class="live-preview__dot"></span>
-                PRÓXIMO LIVE
-            </span>
+            {% if home_live %}
 
-            <span class="live-preview__network">
-                <i class="fa-brands fa-tiktok"></i>
-                TikTok Live
-            </span>
+                <span class="live-preview__badge">
 
-            <h2>
-                Beauty Live Pronty
-            </h2>
+                    <span class="live-preview__dot"></span>
 
-            <p>
-                Conéctate, activa tu código y compra tus productos favoritos
-                mientras disfrutas nuestro live.
-            </p>
+                    {% if home_live_is_active %}
+                        EN VIVO AHORA
+                    {% else %}
+                        PRÓXIMO LIVE
+                    {% endif %}
 
-            <div class="live-preview__actions">
+                </span>
 
-                <a href="#" class="btn btn--primary">
-                    <i data-lucide="play-circle"></i>
-                    Ver próximo live
-                </a>
 
-                <a href="#" class="btn btn--secondary">
-                    <i data-lucide="circle-help"></i>
-                    ¿Cómo participar?
-                </a>
+                <span class="live-preview__network">
 
-            </div>
+                    {% if home_live.platform == 'TIKTOK' %}
+
+                        <i class="fa-brands fa-tiktok"></i>
+
+                    {% elif home_live.platform == 'INSTAGRAM' %}
+
+                        <i class="fa-brands fa-instagram"></i>
+
+                    {% elif home_live.platform == 'FACEBOOK' %}
+
+                        <i class="fa-brands fa-facebook-f"></i>
+
+                    {% else %}
+
+                        <i data-lucide="radio"></i>
+
+                    {% endif %}
+
+                    {{ home_live_platform_label }}
+
+                </span>
+
+
+                <h2>
+                    {{ home_live.name }}
+                </h2>
+
+
+                {% if home_live_is_active %}
+
+                    <p>
+                        Estamos en vivo. Ingresa a Pronty Live
+                        para consultar tus productos asignados
+                        y participar en la transmisión.
+                    </p>
+
+                {% else %}
+
+                    <p>
+                        Prepárate para nuestro próximo Pronty Live.
+                        Activa tu código y participa en la transmisión.
+                    </p>
+
+                {% endif %}
+
+
+                <div class="live-preview__actions">
+
+                    <a
+                        href="{% url 'accounts:live' %}"
+                        class="btn btn--primary"
+                    >
+
+                        {% if home_live_is_active %}
+
+                            <i data-lucide="radio"></i>
+                            Entrar a Pronty Live
+
+                        {% else %}
+
+                            <i data-lucide="play-circle"></i>
+                            Ver próximo Live
+
+                        {% endif %}
+
+                    </a>
+
+
+                    <a
+                        href="{% url 'accounts:live' %}"
+                        class="btn btn--secondary"
+                    >
+                        <i data-lucide="circle-help"></i>
+                        ¿Cómo participar?
+                    </a>
+
+                </div>
+
+
+            {% else %}
+
+                <span class="live-preview__badge">
+
+                    <span class="live-preview__dot"></span>
+
+                    PRONTY LIVE
+
+                </span>
+
+
+                <span class="live-preview__network">
+
+                    <i data-lucide="radio"></i>
+
+                    Próximamente
+
+                </span>
+
+
+                <h2>
+                    Pronty Live
+                </h2>
+
+
+                <p>
+                    En este momento no tenemos un Live programado.
+                    Cuando programemos el próximo, aparecerá
+                    automáticamente aquí.
+                </p>
+
+
+                <div class="live-preview__actions">
+
+                    <a
+                        href="{% url 'accounts:live' %}"
+                        class="btn btn--primary"
+                    >
+                        <i data-lucide="user-round"></i>
+                        Mi Pronty Live
+                    </a>
+
+                </div>
+
+            {% endif %}
 
         </div>
 
 
         <div class="live-preview__counter">
 
-            <span>Comenzamos en</span>
+            {% if home_live_is_active %}
 
-            <div class="live-countdown">
+                <span>
+                    Transmisión activa
+                </span>
 
-                <div>
-                    <strong>02</strong>
-                    <span>Días</span>
+
+                <div class="live-preview__activation">
+
+                    <i data-lucide="radio"></i>
+
+                    <div>
+
+                        <span>
+                            Pronty Live
+                        </span>
+
+                        <strong>
+                            ¡Estamos en vivo!
+                        </strong>
+
+                    </div>
+
                 </div>
 
-                <span class="live-countdown__separator">:</span>
 
-                <div>
-                    <strong>05</strong>
-                    <span>Horas</span>
+                <div
+                    class="live-preview__activation"
+                    style="margin-top: 1rem;"
+                >
+
+                    <i data-lucide="badge-check"></i>
+
+                    <div>
+
+                        <span>
+                            Participa en el Live
+                        </span>
+
+                        <strong>
+                            Activa o reactiva tu código con $20.000
+                        </strong>
+
+                    </div>
+
                 </div>
 
-                <span class="live-countdown__separator">:</span>
 
-                <div>
-                    <strong>32</strong>
-                    <span>Min</span>
+            {% elif home_live and home_live.scheduled_at %}
+
+                <span>
+                    Comenzamos en
+                </span>
+
+
+                <div
+                    class="live-countdown"
+                    data-live-target="{{ home_live.scheduled_at|date:'c' }}"
+                >
+
+                    <div>
+                        <strong>00</strong>
+                        <span>Días</span>
+                    </div>
+
+                    <span class="live-countdown__separator">
+                        :
+                    </span>
+
+                    <div>
+                        <strong>00</strong>
+                        <span>Horas</span>
+                    </div>
+
+                    <span class="live-countdown__separator">
+                        :
+                    </span>
+
+                    <div>
+                        <strong>00</strong>
+                        <span>Min</span>
+                    </div>
+
+                    <span class="live-countdown__separator">
+                        :
+                    </span>
+
+                    <div>
+                        <strong>00</strong>
+                        <span>Seg</span>
+                    </div>
+
                 </div>
 
-                 <span class="live-countdown__separator">:</span>
 
-                <div>
-                    <strong>18</strong>
-                    <span>Seg</span>
+                <div class="live-preview__activation">
+
+                    <i data-lucide="calendar-clock"></i>
+
+                    <div>
+
+                        <span>
+                            Fecha programada
+                        </span>
+
+                        <strong>
+                            {{ home_live.scheduled_at|date:"d/m/Y - h:i A" }}
+                        </strong>
+
+                    </div>
+
                 </div>
 
-            </div>
 
-            <div class="live-preview__activation">
+                <div
+                    class="live-preview__activation"
+                    style="margin-top: 1rem;"
+                >
 
-                <i data-lucide="badge-check"></i>
+                    <i data-lucide="badge-check"></i>
 
-                <div>
-                    <span>Participa en el live</span>
-                    <strong>Activa o reactiva tu código con $20.000</strong>
+                    <div>
+
+                        <span>
+                            Participa en el Live
+                        </span>
+
+                        <strong>
+                            Activa o reactiva tu código con $20.000
+                        </strong>
+
+                    </div>
+
                 </div>
 
-            </div>
+
+            {% else %}
+
+                <span>
+                    Próximo Live
+                </span>
+
+
+                <div class="live-preview__activation">
+
+                    <i data-lucide="calendar"></i>
+
+                    <div>
+
+                        <span>
+                            Programación
+                        </span>
+
+                        <strong>
+                            Todavía no hay una fecha programada
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            {% endif %}
 
         </div>
 
     </div>
 
 </section>
+
+
+<!-- ======================================================
+     CATEGORÍAS
+     ====================================================== -->
+
 <section class="categories-section">
 
     <div class="container">
@@ -211,128 +449,147 @@ Inicio | Pronty Outlet
             </h2>
 
             <p>
-                Descubre nuestras principales categorías y elige tus favoritos.
+                Explora las categorías del menú principal
+                y encuentra tus productos favoritos.
             </p>
 
         </div>
 
+
         <div class="categories-grid">
 
-            <!-- Maquillaje -->
-            <a href="#" class="category-card category-card--makeup">
+            {% for category in navigation_categories %}
 
-                <div class="category-card__icon">
-                    <i data-lucide="sparkles"></i>
-                </div>
+                <a
+                    href="{% url 'product_list' %}?category={{ category.slug }}"
+                    class="
+                        category-card
 
-                <div class="category-card__content">
-                    <h3>Maquillaje</h3>
-                    <p>
-                        Labiales, sombras, bases y mucho más.
-                    </p>
+                        {% if category.highlight_in_menu %}
+                            category-card--highlighted
+                        {% elif category.icon == 'gem' %}
+                            category-card--accessories
+                        {% elif category.icon == 'droplets' %}
+                            category-card--care
+                        {% elif category.icon == 'shirt' %}
+                            category-card--fashion
+                        {% elif category.icon == 'heart' or category.icon == 'smile' or category.icon == 'gift' %}
+                            category-card--kawaii
+                        {% elif category.icon == 'badge-percent' %}
+                            category-card--promotions
+                        {% elif category.icon == 'sparkles' or category.icon == 'palette' %}
+                            category-card--beauty
+                        {% else %}
+                            category-card--default
+                        {% endif %}
+                    "
+                >
 
-                    <span>
-                        Ver productos
-                        <i data-lucide="arrow-right"></i>
-                    </span>
-                </div>
+                    <div class="category-card__top">
 
-            </a>
+                        <div class="category-card__icon">
 
+                            <i
+                                data-lucide="{{ category.icon|default:'tag' }}"
+                            ></i>
 
-            <!-- Kawaii -->
-            <a href="#" class="category-card category-card--kawaii">
-
-                <div class="category-card__icon">
-                    <i data-lucide="heart"></i>
-                </div>
-
-                <div class="category-card__content">
-                    <h3>Kawaii</h3>
-                    <p>
-                        Papelería, accesorios y regalos llenos de encanto.
-                    </p>
-
-                    <span>
-                        Ver productos
-                        <i data-lucide="arrow-right"></i>
-                    </span>
-                </div>
-
-            </a>
+                        </div>
 
 
-            <!-- Cuidado facial y corporal -->
-            <a href="#" class="category-card category-card--care">
+                        {% if category.highlight_in_menu %}
 
-                <div class="category-card__icon">
-                    <i data-lucide="droplets"></i>
-                </div>
+                            <span class="category-card__highlight-label">
+                                Destacado
+                            </span>
 
-                <div class="category-card__content">
-                    <h3>Cuidado facial y corporal</h3>
-                    <p>
-                        Skincare y cuidado personal para todos los días.
-                    </p>
+                        {% endif %}
 
-                    <span>
-                        Ver productos
-                        <i data-lucide="arrow-right"></i>
-                    </span>
-                </div>
-
-            </a>
+                    </div>
 
 
-            <!-- Moda SHEIN -->
-            <a href="#" class="category-card category-card--fashion">
+                    <div class="category-card__content">
 
-                <div class="category-card__icon">
-                    <i data-lucide="shirt"></i>
-                </div>
+                        <h3>
+                            {{ category.name }}
+                        </h3>
 
-                <div class="category-card__content">
-                    <h3>Moda SHEIN</h3>
-                    <p>
-                        Paquetes emprendedores de ropa casual y deportiva.
-                    </p>
+                        <p>
+                            Explora los productos disponibles
+                            en {{ category.name }}.
+                        </p>
 
-                    <span>
-                        Emprende con moda
-                        <i data-lucide="arrow-right"></i>
-                    </span>
-                </div>
+                        <span class="category-card__link">
 
-            </a>
+                            Ver productos
+
+                            <i data-lucide="arrow-right"></i>
+
+                        </span>
+
+                    </div>
+
+                </a>
 
 
-            <!-- Promociones -->
-            <a href="#" class="category-card category-card--promotions">
+            {% empty %}
 
-                <div class="category-card__icon">
-                    <i data-lucide="badge-percent"></i>
-                </div>
+                <a
+                    href="{% url 'product_list' %}"
+                    class="
+                        category-card
+                        category-card--default
+                    "
+                >
 
-                <div class="category-card__content">
-                    <h3>Promociones</h3>
-                    <p>
-                        Descubre oportunidades y precios especiales.
-                    </p>
+                    <div class="category-card__top">
 
-                    <span>
-                        Ver promociones
-                        <i data-lucide="arrow-right"></i>
-                    </span>
-                </div>
+                        <div class="category-card__icon">
+                            <i data-lucide="shopping-bag"></i>
+                        </div>
 
-            </a>
+                    </div>
+
+
+                    <div class="category-card__content">
+
+                        <h3>
+                            Ver productos
+                        </h3>
+
+                        <p>
+                            Explora todo el catálogo disponible
+                            de Pronty Outlet.
+                        </p>
+
+                        <span class="category-card__link">
+
+                            Ir a la tienda
+
+                            <i data-lucide="arrow-right"></i>
+
+                        </span>
+
+                    </div>
+
+                </a>
+
+            {% endfor %}
 
         </div>
 
     </div>
 
 </section>
-<section class="how-to-buy">
+
+
+<!-- ======================================================
+     CÓMO COMPRAR
+     ====================================================== -->
+
+<section
+    class="how-to-buy"
+    id="como-comprar"
+>
 
     <div class="container">
 
@@ -348,39 +605,57 @@ Inicio | Pronty Outlet
             </h2>
 
             <p>
-                Elige tus productos, arma tu pedido y finaliza tu compra en pocos pasos.
+                Elige tus productos, arma tu pedido y finaliza tu compra
+                en pocos pasos.
             </p>
 
         </div>
+
 
         <div class="how-to-buy__grid">
 
             <article class="how-to-buy__card">
 
-                <span class="how-to-buy__number">01</span>
+                <span class="how-to-buy__number">
+                    01
+                </span>
 
                 <div class="how-to-buy__icon">
                     <i data-lucide="search"></i>
                 </div>
 
-                <h3>Explora la tienda</h3>
+                <h3>
+                    Explora la tienda
+                </h3>
 
                 <p>
                     Busca por categoría, marca, precio o promociones
                     y encuentra tus productos favoritos.
                 </p>
 
+                <a
+                    href="{% url 'product_list' %}"
+                    class="btn btn--secondary"
+                >
+                    Ir al catálogo
+                </a>
+
             </article>
+
 
             <article class="how-to-buy__card">
 
-                <span class="how-to-buy__number">02</span>
+                <span class="how-to-buy__number">
+                    02
+                </span>
 
                 <div class="how-to-buy__icon">
                     <i data-lucide="shopping-bag"></i>
                 </div>
 
-                <h3>Agrega al carrito</h3>
+                <h3>
+                    Agrega al carrito
+                </h3>
 
                 <p>
                     Selecciona los productos y cantidades que deseas
@@ -389,15 +664,20 @@ Inicio | Pronty Outlet
 
             </article>
 
+
             <article class="how-to-buy__card">
 
-                <span class="how-to-buy__number">03</span>
+                <span class="how-to-buy__number">
+                    03
+                </span>
 
                 <div class="how-to-buy__icon">
                     <i data-lucide="clipboard-check"></i>
                 </div>
 
-                <h3>Finaliza tu pedido</h3>
+                <h3>
+                    Finaliza tu pedido
+                </h3>
 
                 <p>
                     Completa tus datos, selecciona tu transportadora
@@ -406,15 +686,20 @@ Inicio | Pronty Outlet
 
             </article>
 
+
             <article class="how-to-buy__card">
 
-                <span class="how-to-buy__number">04</span>
+                <span class="how-to-buy__number">
+                    04
+                </span>
 
                 <div class="how-to-buy__icon">
                     <i data-lucide="message-circle"></i>
                 </div>
 
-                <h3>Confirma por WhatsApp</h3>
+                <h3>
+                    Confirma por WhatsApp
+                </h3>
 
                 <p>
                     Continúa por WhatsApp y realiza tu pago
@@ -425,27 +710,41 @@ Inicio | Pronty Outlet
 
         </div>
 
+
         <div class="how-to-buy__wholesale">
 
             <div class="how-to-buy__wholesale-icon">
                 <i data-lucide="store"></i>
             </div>
 
+
             <div>
-                <span>¿Quieres comprar para tu emprendimiento?</span>
+
+                <span>
+                    ¿Quieres comprar para tu emprendimiento?
+                </span>
 
                 <h3>
                     Activa tu beneficio mayorista desde $300.000
                 </h3>
 
                 <p>
-                    Regístrate y accede a precios especiales para emprendedores.
+                    Regístrate y accede a precios especiales
+                    para emprendedores.
                 </p>
+
             </div>
 
-            <a href="#" class="btn btn--primary">
+
+            <a
+                href="{% url 'accounts:register' %}"
+                class="btn btn--primary"
+            >
+
                 Quiero ser mayorista
+
                 <i data-lucide="arrow-right"></i>
+
             </a>
 
         </div>
@@ -453,6 +752,12 @@ Inicio | Pronty Outlet
     </div>
 
 </section>
+
+
+<!-- ======================================================
+     REDES SOCIALES
+     ====================================================== -->
+
 <section class="social-section">
 
     <div class="container">
@@ -469,71 +774,120 @@ Inicio | Pronty Outlet
             </h2>
 
             <p>
-                Encuentra novedades, promociones, lanzamientos y próximos lives.
+                Encuentra novedades, promociones,
+                lanzamientos y próximos Lives.
             </p>
 
         </div>
 
+
         <div class="social-grid">
 
-            <a href="#" class="social-card social-card--tiktok">
+            <a
+                href="https://www.tiktok.com/@prontyoutlet"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-card social-card--tiktok"
+                aria-label="Visitar TikTok de Pronty Outlet"
+            >
 
                 <div class="social-card__icon">
                     <i class="fa-brands fa-tiktok"></i>
                 </div>
 
                 <div>
-                    <span>TikTok</span>
-                    <h3>Lives, novedades y promociones</h3>
+
+                    <span>
+                        TikTok
+                    </span>
+
+                    <h3>
+                        Lives, novedades y promociones
+                    </h3>
+
                     <p>
-                        Conéctate con nuestros lives y descubre productos en tiempo real.
+                        Conéctate con nuestros Lives y descubre
+                        productos en tiempo real.
                     </p>
+
                 </div>
 
                 <span class="social-card__link">
-                    Ver TikTok
+                    Visitar TikTok
                     <i data-lucide="arrow-up-right"></i>
                 </span>
 
             </a>
 
-            <a href="#" class="social-card social-card--instagram">
+
+            <a
+                href="https://www.instagram.com/prontyoutlet/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-card social-card--instagram"
+                aria-label="Visitar Instagram de Pronty Outlet"
+            >
 
                 <div class="social-card__icon">
                     <i class="fa-brands fa-instagram"></i>
                 </div>
 
                 <div>
-                    <span>Instagram</span>
-                    <h3>Inspiración y lanzamientos</h3>
+
+                    <span>
+                        Instagram
+                    </span>
+
+                    <h3>
+                        Inspiración y lanzamientos
+                    </h3>
+
                     <p>
-                        Conoce nuevos productos, promociones y contenido de Pronty.
+                        Conoce nuevos productos, promociones
+                        y contenido de Pronty.
                     </p>
+
                 </div>
 
                 <span class="social-card__link">
-                    Ver Instagram
+                    Visitar Instagram
                     <i data-lucide="arrow-up-right"></i>
                 </span>
 
             </a>
 
-            <a href="#" class="social-card social-card--facebook">
+
+            <a
+                href="https://www.facebook.com/profile.php?id=61572637761995&locale=es_LA"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="social-card social-card--facebook"
+                aria-label="Visitar Facebook de Pronty Outlet"
+            >
 
                 <div class="social-card__icon">
                     <i class="fa-brands fa-facebook-f"></i>
                 </div>
 
                 <div>
-                    <span>Facebook</span>
-                    <h3>Comunidad Pronty</h3>
+
+                    <span>
+                        Facebook
+                    </span>
+
+                    <h3>
+                        Comunidad Pronty
+                    </h3>
+
                     <p>
-                        Mantente al día con nuestras publicaciones y próximos eventos.
+                        Mantente al día con nuestras publicaciones
+                        y próximos eventos.
                     </p>
+
                 </div>
 
                 <span class="social-card__link">
-                    Ver Facebook
+                    Visitar Facebook
                     <i data-lucide="arrow-up-right"></i>
                 </span>
 
@@ -544,15 +898,27 @@ Inicio | Pronty Outlet
     </div>
 
 </section>
-<section class="contact-section">
+
+
+<!-- ======================================================
+     CONTACTO
+     ====================================================== -->
+
+<section
+    class="contact-section"
+    id="contacto"
+>
 
     <div class="container contact-section__inner">
 
         <div class="contact-section__content">
 
             <span class="section-heading__eyebrow">
+
                 <i data-lucide="messages-square"></i>
+
                 Estamos para ayudarte
+
             </span>
 
             <h2>
@@ -560,40 +926,71 @@ Inicio | Pronty Outlet
             </h2>
 
             <p>
-                Escríbenos por WhatsApp y te ayudamos con tus pedidos,
-                productos, pagos, envíos o compras para tu emprendimiento.
+                Escríbenos por WhatsApp o correo y te ayudamos con tus
+                pedidos, productos, pagos, envíos o compras para tu
+                emprendimiento.
             </p>
 
             <div class="contact-section__actions">
 
-                <a href="#" class="btn btn--primary">
+                <a
+                    href="https://wa.me/573183473482"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn btn--primary"
+                >
+
                     <i class="fa-brands fa-whatsapp"></i>
+
                     Escribir por WhatsApp
+
                 </a>
 
-                <a href="mailto:prontyoutlet@gmail.com" class="btn btn--secondary">
+
+                <button
+                    type="button"
+                    class="btn btn--secondary"
+                    id="contact-email-open"
+                >
+
                     <i data-lucide="mail"></i>
+
                     Enviar correo
-                </a>
+
+                </button>
 
             </div>
 
         </div>
 
+
         <div class="contact-section__info">
 
-            <div class="contact-info-card">
+            <a
+                href="https://wa.me/573183473482"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="contact-info-card"
+            >
 
                 <div class="contact-info-card__icon">
                     <i data-lucide="clock-3"></i>
                 </div>
 
                 <div>
-                    <span>Atención</span>
-                    <strong>Ventas y soporte en línea</strong>
+
+                    <span>
+                        Atención
+                    </span>
+
+                    <strong>
+                        Ventas y soporte en línea
+                    </strong>
+
                 </div>
 
-            </div>
+            </a>
+
 
             <div class="contact-info-card">
 
@@ -602,28 +999,488 @@ Inicio | Pronty Outlet
                 </div>
 
                 <div>
-                    <span>Cobertura</span>
-                    <strong>Envíos en Colombia</strong>
+
+                    <span>
+                        Cobertura
+                    </span>
+
+                    <strong>
+                        Envíos en Colombia
+                    </strong>
+
                 </div>
 
             </div>
 
-            <div class="contact-info-card">
 
-                <div class="contact-info-card__icon">
-                    <i data-lucide="package-check"></i>
-                </div>
+            {% if request.user.is_authenticated %}
 
-                <div>
-                    <span>Pedidos</span>
-                    <strong>Seguimiento desde tu cuenta</strong>
-                </div>
+                {% if not request.user.is_staff and not request.user.is_superuser %}
 
-            </div>
+                    <a
+                        href="{% url 'accounts:dashboard' %}"
+                        class="contact-info-card"
+                    >
+
+                        <div class="contact-info-card__icon">
+                            <i data-lucide="package-check"></i>
+                        </div>
+
+                        <div>
+
+                            <span>
+                                Pedidos
+                            </span>
+
+                            <strong>
+                                Seguimiento desde tu cuenta
+                            </strong>
+
+                        </div>
+
+                    </a>
+
+                {% else %}
+
+                    <div class="contact-info-card">
+
+                        <div class="contact-info-card__icon">
+                            <i data-lucide="package-check"></i>
+                        </div>
+
+                        <div>
+
+                            <span>
+                                Pedidos
+                            </span>
+
+                            <strong>
+                                Seguimiento desde tu cuenta
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                {% endif %}
+
+            {% else %}
+
+                <a
+                    href="{% url 'accounts:login' %}"
+                    class="contact-info-card"
+                >
+
+                    <div class="contact-info-card__icon">
+                        <i data-lucide="package-check"></i>
+                    </div>
+
+                    <div>
+
+                        <span>
+                            Pedidos
+                        </span>
+
+                        <strong>
+                            Ingresa para consultar tus pedidos
+                        </strong>
+
+                    </div>
+
+                </a>
+
+            {% endif %}
 
         </div>
 
     </div>
 
 </section>
+
+
+<!-- ======================================================
+     MODAL DE CORREO
+     ====================================================== -->
+
+<div
+    class="pronty-email-modal"
+    id="pronty-email-modal"
+    aria-hidden="true"
+>
+
+    <div
+        class="pronty-email-modal__backdrop"
+        data-email-close
+    ></div>
+
+
+    <div
+        class="pronty-email-modal__dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pronty-email-title"
+    >
+
+        <button
+            type="button"
+            class="pronty-email-modal__close"
+            data-email-close
+            aria-label="Cerrar"
+        >
+
+            <i data-lucide="x"></i>
+
+        </button>
+
+
+        <div class="pronty-email-modal__icon">
+            <i data-lucide="mail"></i>
+        </div>
+
+
+        <h2 id="pronty-email-title">
+            Escríbenos por correo
+        </h2>
+
+
+        <p class="pronty-email-modal__intro">
+
+            Completa tu mensaje y abriremos Gmail con la información
+            lista para enviar a Pronty Outlet.
+
+        </p>
+
+
+        <div class="pronty-email-modal__field">
+
+            <label>
+                Para
+            </label>
+
+            <div class="pronty-email-modal__recipient">
+
+                <span>
+                    prontyoutlet@gmail.com
+                </span>
+
+                <button
+                    type="button"
+                    id="contact-email-copy"
+                    aria-label="Copiar correo"
+                >
+
+                    <i data-lucide="copy"></i>
+
+                    Copiar
+
+                </button>
+
+            </div>
+
+        </div>
+
+
+        <div class="pronty-email-modal__field">
+
+            <label for="contact-email-subject">
+                Asunto
+            </label>
+
+            <input
+                type="text"
+                id="contact-email-subject"
+                maxlength="150"
+                placeholder="Ej. Consulta sobre un pedido"
+            >
+
+        </div>
+
+
+        <div class="pronty-email-modal__field">
+
+            <label for="contact-email-message">
+                Mensaje
+            </label>
+
+            <textarea
+                id="contact-email-message"
+                rows="6"
+                maxlength="2000"
+                placeholder="Escribe aquí tu consulta..."
+            ></textarea>
+
+        </div>
+
+
+        <p
+            class="pronty-email-modal__feedback"
+            id="contact-email-feedback"
+            aria-live="polite"
+        ></p>
+
+
+        <div class="pronty-email-modal__actions">
+
+            <button
+                type="button"
+                class="btn btn--secondary"
+                data-email-close
+            >
+                Cancelar
+            </button>
+
+
+            <button
+                type="button"
+                class="btn btn--primary"
+                id="contact-email-gmail"
+            >
+
+                <i class="fa-brands fa-google"></i>
+
+                Abrir Gmail
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<style>
+
+    .pronty-email-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+
+    .pronty-email-modal--open {
+        display: flex;
+    }
+
+
+    .pronty-email-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(18, 39, 31, 0.58);
+        backdrop-filter: blur(4px);
+    }
+
+
+    .pronty-email-modal__dialog {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 560px);
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+        padding: 30px;
+        border-radius: 24px;
+        background: #ffffff;
+        box-shadow:
+            0 25px 70px
+            rgba(0, 0, 0, 0.24);
+    }
+
+
+    .pronty-email-modal__close {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        width: 38px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: #f4f6f5;
+        color: #1f5c4a;
+        cursor: pointer;
+    }
+
+
+    .pronty-email-modal__close svg {
+        width: 20px;
+        height: 20px;
+    }
+
+
+    .pronty-email-modal__icon {
+        width: 54px;
+        height: 54px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 18px;
+        border-radius: 16px;
+        background:
+            rgba(31, 92, 74, 0.1);
+        color: #1f5c4a;
+    }
+
+
+    .pronty-email-modal__icon svg {
+        width: 25px;
+        height: 25px;
+    }
+
+
+    .pronty-email-modal h2 {
+        margin:
+            0 45px
+            8px 0;
+        color: #1f5c4a;
+        font-size: 1.6rem;
+    }
+
+
+    .pronty-email-modal__intro {
+        margin:
+            0 0
+            24px;
+        color: #6d6d6d;
+        line-height: 1.55;
+    }
+
+
+    .pronty-email-modal__field {
+        margin-bottom: 18px;
+    }
+
+
+    .pronty-email-modal__field label {
+        display: block;
+        margin-bottom: 7px;
+        color: #30473e;
+        font-size: 0.86rem;
+        font-weight: 700;
+    }
+
+
+    .pronty-email-modal__field input,
+    .pronty-email-modal__field textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 14px;
+        border:
+            1px solid
+            #dce4df;
+        border-radius: 12px;
+        outline: none;
+        background: #ffffff;
+        color: #2c2c2c;
+        font: inherit;
+    }
+
+
+    .pronty-email-modal__field input:focus,
+    .pronty-email-modal__field textarea:focus {
+        border-color: #1f5c4a;
+        box-shadow:
+            0 0 0 3px
+            rgba(31, 92, 74, 0.1);
+    }
+
+
+    .pronty-email-modal__field textarea {
+        resize: vertical;
+        min-height: 130px;
+    }
+
+
+    .pronty-email-modal__recipient {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 11px 13px;
+        border-radius: 12px;
+        background: #f4f8f5;
+        border:
+            1px solid
+            #dce8e0;
+        color: #1f5c4a;
+        font-weight: 700;
+    }
+
+
+    .pronty-email-modal__recipient button {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 0;
+        background: transparent;
+        color: #f04c8b;
+        cursor: pointer;
+        font-weight: 700;
+    }
+
+
+    .pronty-email-modal__recipient button svg {
+        width: 16px;
+        height: 16px;
+    }
+
+
+    .pronty-email-modal__feedback {
+        min-height: 20px;
+        margin:
+            -3px 0
+            15px;
+        color: #f04c8b;
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+
+    .pronty-email-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+
+    body.pronty-modal-open {
+        overflow: hidden;
+    }
+
+
+    @media (max-width: 640px) {
+
+        .pronty-email-modal {
+            padding: 12px;
+        }
+
+
+        .pronty-email-modal__dialog {
+            padding: 24px 18px;
+        }
+
+
+        .pronty-email-modal__actions {
+            flex-direction: column-reverse;
+        }
+
+
+        .pronty-email-modal__actions .btn {
+            width: 100%;
+        }
+
+
+        .pronty-email-modal__recipient {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+    }
+
+</style>
+
 {% endblock %}
