@@ -1,0 +1,1051 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Reporte {{ session.name }} | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-report {
+        min-height: 75vh;
+
+        padding:
+            38px 20px
+            70px;
+
+        background:
+            linear-gradient(
+                180deg,
+                #fffafc 0%,
+                #ffffff 40%,
+                #f8faf8 100%
+            );
+    }
+
+
+    .live-report__container {
+        max-width: 1250px;
+
+        margin: 0 auto;
+    }
+
+
+    .live-report__header {
+        display: flex;
+
+        justify-content: space-between;
+        align-items: flex-start;
+
+        gap: 24px;
+
+        margin-bottom: 28px;
+    }
+
+
+    .live-report__back {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        margin-bottom: 13px;
+
+        color: #1f6a43;
+
+        text-decoration: none;
+
+        font-weight: 700;
+    }
+
+
+    .live-report__title {
+        margin: 0;
+
+        color: #1f3c2e;
+
+        font-size: 2rem;
+    }
+
+
+    .live-report__meta {
+        display: flex;
+
+        flex-wrap: wrap;
+
+        gap: 8px;
+
+        margin-top: 10px;
+    }
+
+
+    .live-report__badge {
+        display: inline-flex;
+
+        padding:
+            6px
+            10px;
+
+        border-radius: 999px;
+
+        background: #eef7f1;
+
+        color: #1f6a43;
+
+        font-size: 0.8rem;
+
+        font-weight: 700;
+    }
+
+
+    .live-report__selector {
+        min-width: 260px;
+
+        padding: 14px;
+
+        background: white;
+
+        border:
+            1px solid
+            #dce5df;
+
+        border-radius: 14px;
+    }
+
+
+    .live-report__selector label {
+        display: block;
+
+        margin-bottom: 7px;
+
+        color: #4b5563;
+
+        font-size: 0.8rem;
+
+        font-weight: 700;
+    }
+
+
+    .live-report__selector select {
+        width: 100%;
+
+        padding:
+            10px
+            11px;
+
+        border:
+            1px solid
+            #d9dfdb;
+
+        border-radius: 9px;
+
+        background: white;
+
+        color: #26352d;
+    }
+
+
+    .live-report__metrics {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                4,
+                minmax(0, 1fr)
+            );
+
+        gap: 16px;
+
+        margin-bottom: 28px;
+    }
+
+
+    .live-report-metric {
+        padding: 22px;
+
+        background: white;
+
+        border:
+            1px solid
+            #e7ebe8;
+
+        border-radius: 19px;
+
+        box-shadow:
+            0 8px 24px
+            rgba(0, 0, 0, 0.045);
+    }
+
+
+    .live-report-metric__label {
+        display: block;
+
+        color: #6b7280;
+
+        font-size: 0.82rem;
+    }
+
+
+    .live-report-metric__value {
+        display: block;
+
+        margin-top: 8px;
+
+        color: #1f3c2e;
+
+        font-size: 1.7rem;
+
+        font-weight: 850;
+    }
+
+
+    .live-report-metric--profit
+    .live-report-metric__value {
+        color: #1f6a43;
+    }
+
+
+    .live-report-metric--margin
+    .live-report-metric__value {
+        color: #d81b60;
+    }
+
+
+    .live-report__secondary {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                5,
+                minmax(0, 1fr)
+            );
+
+        gap: 12px;
+
+        margin-bottom: 28px;
+    }
+
+
+    .live-report-small {
+        padding: 17px;
+
+        background: #f8faf8;
+
+        border:
+            1px solid
+            #e5ebe7;
+
+        border-radius: 15px;
+    }
+
+
+    .live-report-small span {
+        display: block;
+
+        color: #777;
+
+        font-size: 0.75rem;
+    }
+
+
+    .live-report-small strong {
+        display: block;
+
+        margin-top: 5px;
+
+        color: #26352d;
+
+        font-size: 1.25rem;
+    }
+
+
+    .live-report__operations {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                3,
+                minmax(0, 1fr)
+            );
+
+        gap: 14px;
+
+        margin-bottom: 30px;
+    }
+
+
+    .live-report-operation {
+        padding: 18px;
+
+        border-radius: 16px;
+
+        background: white;
+
+        border:
+            1px solid
+            #e7ebe8;
+    }
+
+
+    .live-report-operation span {
+        color: #777;
+
+        font-size: 0.8rem;
+    }
+
+
+    .live-report-operation strong {
+        display: block;
+
+        margin-top: 6px;
+
+        color: #1f3c2e;
+
+        font-size: 1.3rem;
+    }
+
+
+    .live-report__grid {
+        display: grid;
+
+        grid-template-columns:
+            1.35fr
+            0.85fr;
+
+        gap: 20px;
+    }
+
+
+    .live-report-panel {
+        overflow: hidden;
+
+        background: white;
+
+        border:
+            1px solid
+            #e7ebe8;
+
+        border-radius: 20px;
+
+        box-shadow:
+            0 8px 25px
+            rgba(0, 0, 0, 0.045);
+    }
+
+
+    .live-report-panel__header {
+        padding:
+            20px
+            22px;
+
+        border-bottom:
+            1px solid
+            #eeeeee;
+    }
+
+
+    .live-report-panel__header h2 {
+        margin: 0;
+
+        color: #1f3c2e;
+
+        font-size: 1.1rem;
+    }
+
+
+    .live-report-panel__header p {
+        margin:
+            4px 0
+            0;
+
+        color: #777;
+
+        font-size: 0.82rem;
+    }
+
+
+    .live-report-table-wrap {
+        overflow-x: auto;
+    }
+
+
+    .live-report-table {
+        width: 100%;
+
+        border-collapse: collapse;
+    }
+
+
+    .live-report-table th {
+        padding:
+            11px
+            14px;
+
+        text-align: left;
+
+        background: #fafafa;
+
+        color: #777;
+
+        font-size: 0.7rem;
+
+        text-transform: uppercase;
+    }
+
+
+    .live-report-table td {
+        padding:
+            14px;
+
+        border-top:
+            1px solid
+            #f0f0f0;
+
+        color: #374151;
+
+        font-size: 0.86rem;
+    }
+
+
+    .live-report-table__name {
+        color: #1f2937;
+
+        font-weight: 750;
+    }
+
+
+    .live-report-table__money {
+        color: #1f6a43;
+
+        font-weight: 700;
+    }
+
+
+    .live-report__empty {
+        padding: 35px 20px;
+
+        text-align: center;
+
+        color: #777;
+    }
+
+
+    @media (
+        max-width: 1050px
+    ) {
+
+        .live-report__metrics {
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+        }
+
+
+        .live-report__secondary {
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+        }
+
+
+        .live-report__grid {
+            grid-template-columns: 1fr;
+        }
+
+    }
+
+
+    @media (
+        max-width: 700px
+    ) {
+
+        .live-report__header {
+            flex-direction: column;
+        }
+
+
+        .live-report__selector {
+            width: 100%;
+
+            min-width: 0;
+
+            box-sizing: border-box;
+        }
+
+
+        .live-report__metrics,
+        .live-report__secondary,
+        .live-report__operations {
+            grid-template-columns: 1fr;
+        }
+
+
+        .live-report__title {
+            font-size: 1.55rem;
+        }
+
+    }
+
+</style>
+
+
+<section class="live-report">
+
+    <div class="live-report__container">
+
+
+        <header class="live-report__header">
+
+            <div>
+
+                <a
+                    href="{% url 'live_sales:reports' %}"
+                    class="live-report__back"
+                >
+
+                    <i data-lucide="arrow-left"></i>
+
+                    Todos los reportes
+
+                </a>
+
+
+                <h1 class="live-report__title">
+
+                    {{ session.name }}
+
+                </h1>
+
+
+                <div class="live-report__meta">
+
+                    <span class="live-report__badge">
+
+                        {{ platform }}
+
+                    </span>
+
+
+                    <span class="live-report__badge">
+
+                        {{ status }}
+
+                    </span>
+
+
+                    {% if session.scheduled_at %}
+
+                        <span class="live-report__badge">
+
+                            {{ session.scheduled_at|date:"d/m/Y h:i A" }}
+
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+
+            <div class="live-report__selector">
+
+                <label for="live-report-selector">
+
+                    Cambiar de Live
+
+                </label>
+
+
+                <select
+                    id="live-report-selector"
+                    onchange="
+                        if (this.value) {
+                            window.location.href = this.value;
+                        }
+                    "
+                >
+
+                    {% for item in sessions %}
+
+                        <option
+                            value="{% url 'live_sales:report_detail' item.id %}"
+                            {% if item.id == session.id %}
+                                selected
+                            {% endif %}
+                        >
+
+                            {{ item.name }}
+
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </div>
+
+        </header>
+
+
+        <!-- ==============================================
+             MÉTRICAS FINANCIERAS
+             ============================================== -->
+
+        <div class="live-report__metrics">
+
+            <article class="live-report-metric">
+
+                <span class="live-report-metric__label">
+
+                    Ventas generadas
+
+                </span>
+
+                <strong class="live-report-metric__value">
+
+                    {{ financial.sales }}
+
+                </strong>
+
+            </article>
+
+
+            <article class="live-report-metric">
+
+                <span class="live-report-metric__label">
+
+                    Costo de mercancía
+
+                </span>
+
+                <strong class="live-report-metric__value">
+
+                    {{ financial.cost }}
+
+                </strong>
+
+            </article>
+
+
+            <article
+                class="
+                    live-report-metric
+                    live-report-metric--profit
+                "
+            >
+
+                <span class="live-report-metric__label">
+
+                    Utilidad bruta
+
+                </span>
+
+                <strong class="live-report-metric__value">
+
+                    {{ financial.profit }}
+
+                </strong>
+
+            </article>
+
+
+            <article
+                class="
+                    live-report-metric
+                    live-report-metric--margin
+                "
+            >
+
+                <span class="live-report-metric__label">
+
+                    Margen bruto
+
+                </span>
+
+                <strong class="live-report-metric__value">
+
+                    {{ financial.margin }}
+
+                </strong>
+
+            </article>
+
+        </div>
+
+
+        <!-- ==============================================
+             MÉTRICAS COMERCIALES
+             ============================================== -->
+
+        <div class="live-report__secondary">
+
+            <div class="live-report-small">
+
+                <span>
+                    Unidades vendidas
+                </span>
+
+                <strong>
+                    {{ commercial.units_sold }}
+                </strong>
+
+            </div>
+
+
+            <div class="live-report-small">
+
+                <span>
+                    Pedidos
+                </span>
+
+                <strong>
+                    {{ commercial.orders }}
+                </strong>
+
+            </div>
+
+
+            <div class="live-report-small">
+
+                <span>
+                    Clientes
+                </span>
+
+                <strong>
+                    {{ commercial.customers }}
+                </strong>
+
+            </div>
+
+
+            <div class="live-report-small">
+
+                <span>
+                    Productos
+                </span>
+
+                <strong>
+                    {{ commercial.products }}
+                </strong>
+
+            </div>
+
+
+            <div class="live-report-small">
+
+                <span>
+                    Asignaciones convertidas
+                </span>
+
+                <strong>
+                    {{ commercial.assignments_converted }}
+                </strong>
+
+            </div>
+
+        </div>
+
+
+        <!-- ==============================================
+             OPERACIÓN
+             ============================================== -->
+
+        <div class="live-report__operations">
+
+            <article class="live-report-operation">
+
+                <span>
+                    Total de asignaciones
+                </span>
+
+                <strong>
+                    {{ operations.total_assignments }}
+                </strong>
+
+            </article>
+
+
+            <article class="live-report-operation">
+
+                <span>
+                    Pendientes
+                </span>
+
+                <strong>
+                    {{ operations.pending_assignments }}
+                    asignaciones /
+                    {{ operations.pending_units }}
+                    unidades
+                </strong>
+
+            </article>
+
+
+            <article class="live-report-operation">
+
+                <span>
+                    Liberadas
+                </span>
+
+                <strong>
+                    {{ operations.released_assignments }}
+                    asignaciones /
+                    {{ operations.released_units }}
+                    unidades
+                </strong>
+
+            </article>
+
+        </div>
+
+
+        <!-- ==============================================
+             TABLAS
+             ============================================== -->
+
+        <div class="live-report__grid">
+
+
+            <!-- PRODUCTOS -->
+
+            <section class="live-report-panel">
+
+                <header class="live-report-panel__header">
+
+                    <h2>
+                        Resultados por producto
+                    </h2>
+
+                    <p>
+                        Ventas, costo, utilidad y margen.
+                    </p>
+
+                </header>
+
+
+                {% if products %}
+
+                    <div class="live-report-table-wrap">
+
+                        <table class="live-report-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Producto
+                                    </th>
+
+                                    <th>
+                                        Unidades
+                                    </th>
+
+                                    <th>
+                                        Ventas
+                                    </th>
+
+                                    <th>
+                                        Costo
+                                    </th>
+
+                                    <th>
+                                        Utilidad
+                                    </th>
+
+                                    <th>
+                                        Margen
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                {% for product in products %}
+
+                                    <tr>
+
+                                        <td>
+
+                                            <span class="live-report-table__name">
+
+                                                {{ product.name }}
+
+                                            </span>
+
+                                            <br>
+
+                                            <small>
+                                                {{ product.sku }}
+                                            </small>
+
+                                        </td>
+
+
+                                        <td>
+                                            {{ product.units }}
+                                        </td>
+
+
+                                        <td class="live-report-table__money">
+                                            {{ product.sales }}
+                                        </td>
+
+
+                                        <td>
+                                            {{ product.cost }}
+                                        </td>
+
+
+                                        <td class="live-report-table__money">
+                                            {{ product.profit }}
+                                        </td>
+
+
+                                        <td>
+                                            {{ product.margin }}
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                {% else %}
+
+                    <div class="live-report__empty">
+
+                        Este Live todavía no tiene
+                        ventas convertidas en pedido.
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+
+            <!-- CLIENTES -->
+
+            <section class="live-report-panel">
+
+                <header class="live-report-panel__header">
+
+                    <h2>
+                        Resultados por cliente
+                    </h2>
+
+                    <p>
+                        Participación comercial del Live.
+                    </p>
+
+                </header>
+
+
+                {% if customers %}
+
+                    <div class="live-report-table-wrap">
+
+                        <table class="live-report-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        Cliente
+                                    </th>
+
+                                    <th>
+                                        Unidades
+                                    </th>
+
+                                    <th>
+                                        Ventas
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody>
+
+                                {% for customer in customers %}
+
+                                    <tr>
+
+                                        <td>
+
+                                            <span class="live-report-table__name">
+
+                                                {{ customer.customer_code }}
+
+                                            </span>
+
+                                            <br>
+
+                                            <small>
+                                                {{ customer.name }}
+                                            </small>
+
+                                        </td>
+
+
+                                        <td>
+                                            {{ customer.units }}
+                                        </td>
+
+
+                                        <td class="live-report-table__money">
+                                            {{ customer.sales }}
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+
+                {% else %}
+
+                    <div class="live-report__empty">
+
+                        Este Live todavía no tiene
+                        clientes con ventas convertidas.
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        </div>
+
+    </div>
+
+</section>
+
+{% endblock %}

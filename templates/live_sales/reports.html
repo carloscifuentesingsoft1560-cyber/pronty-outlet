@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+
+{% block title %}
+Reportes | Pronty Live
+{% endblock %}
+
+
+{% block content %}
+
+<style>
+
+    .live-reports {
+        min-height: 75vh;
+
+        padding:
+            40px 20px
+            70px;
+
+        background:
+            linear-gradient(
+                180deg,
+                #fffafc 0%,
+                #ffffff 42%,
+                #f7faf8 100%
+            );
+    }
+
+
+    .live-reports__container {
+        max-width: 1250px;
+
+        margin: 0 auto;
+    }
+
+
+    .live-reports__header {
+        display: flex;
+
+        justify-content: space-between;
+        align-items: center;
+
+        gap: 20px;
+
+        margin-bottom: 30px;
+    }
+
+
+    .live-reports__heading {
+        display: flex;
+
+        align-items: center;
+
+        gap: 15px;
+    }
+
+
+    .live-reports__icon {
+        width: 56px;
+        height: 56px;
+
+        display: flex;
+
+        align-items: center;
+        justify-content: center;
+
+        border-radius: 17px;
+
+        background: #edf7f0;
+
+        color: #1f6a43;
+    }
+
+
+    .live-reports__icon svg {
+        width: 27px;
+        height: 27px;
+    }
+
+
+    .live-reports__title {
+        margin: 0;
+
+        color: #1f3c2e;
+
+        font-size: 2rem;
+    }
+
+
+    .live-reports__subtitle {
+        margin:
+            5px 0
+            0;
+
+        color: #6b7280;
+    }
+
+
+    .live-reports__back {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 8px;
+
+        padding:
+            10px
+            15px;
+
+        border-radius: 11px;
+
+        text-decoration: none;
+
+        color: #1f6a43;
+
+        background: #edf7f0;
+
+        font-weight: 700;
+    }
+
+
+    .live-reports__panel {
+        overflow: hidden;
+
+        background: white;
+
+        border:
+            1px solid
+            #e8ece9;
+
+        border-radius: 22px;
+
+        box-shadow:
+            0 10px 30px
+            rgba(0, 0, 0, 0.05);
+    }
+
+
+    .live-reports__panel-header {
+        padding:
+            22px
+            25px;
+
+        border-bottom:
+            1px solid
+            #eeeeee;
+    }
+
+
+    .live-reports__panel-header h2 {
+        margin: 0;
+
+        color: #1f3c2e;
+
+        font-size: 1.2rem;
+    }
+
+
+    .live-reports__panel-header p {
+        margin:
+            5px 0
+            0;
+
+        color: #777;
+
+        font-size: 0.9rem;
+    }
+
+
+    .live-reports__table-wrap {
+        overflow-x: auto;
+    }
+
+
+    .live-reports__table {
+        width: 100%;
+
+        border-collapse: collapse;
+    }
+
+
+    .live-reports__table th {
+        padding:
+            13px
+            18px;
+
+        text-align: left;
+
+        background: #fafafa;
+
+        color: #777;
+
+        font-size: 0.76rem;
+
+        text-transform: uppercase;
+    }
+
+
+    .live-reports__table td {
+        padding:
+            17px
+            18px;
+
+        border-top:
+            1px solid
+            #f0f0f0;
+
+        color: #374151;
+
+        vertical-align: middle;
+    }
+
+
+    .live-reports__name {
+        display: block;
+
+        color: #1f2937;
+
+        font-weight: 800;
+    }
+
+
+    .live-reports__platform {
+        display: block;
+
+        margin-top: 4px;
+
+        color: #7a7a7a;
+
+        font-size: 0.82rem;
+    }
+
+
+    .live-reports__status {
+        display: inline-flex;
+
+        padding:
+            5px
+            10px;
+
+        border-radius: 999px;
+
+        background: #eef7f1;
+
+        color: #1f6a43;
+
+        font-size: 0.78rem;
+
+        font-weight: 700;
+    }
+
+
+    .live-reports__money {
+        color: #1f6a43;
+
+        font-weight: 800;
+    }
+
+
+    .live-reports__action {
+        display: inline-flex;
+
+        align-items: center;
+
+        gap: 7px;
+
+        padding:
+            8px
+            11px;
+
+        border-radius: 9px;
+
+        text-decoration: none;
+
+        background: #1f6a43;
+
+        color: white;
+
+        font-size: 0.82rem;
+
+        font-weight: 750;
+    }
+
+
+    .live-reports__empty {
+        padding: 50px 20px;
+
+        text-align: center;
+
+        color: #777;
+    }
+
+
+    @media (
+        max-width: 700px
+    ) {
+
+        .live-reports__header {
+            flex-direction: column;
+
+            align-items: flex-start;
+        }
+
+
+        .live-reports__title {
+            font-size: 1.55rem;
+        }
+
+    }
+
+</style>
+
+
+<section class="live-reports">
+
+    <div class="live-reports__container">
+
+
+        <header class="live-reports__header">
+
+            <div class="live-reports__heading">
+
+                <div class="live-reports__icon">
+
+                    <i data-lucide="chart-no-axes-combined"></i>
+
+                </div>
+
+
+                <div>
+
+                    <h1 class="live-reports__title">
+
+                        Reportes de Pronty Live
+
+                    </h1>
+
+
+                    <p class="live-reports__subtitle">
+
+                        Ventas, costos, utilidad y resultados
+                        de cada transmisión.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <a
+                href="{% url 'live_sales:dashboard' %}"
+                class="live-reports__back"
+            >
+
+                <i data-lucide="arrow-left"></i>
+
+                Volver a Pronty Live
+
+            </a>
+
+        </header>
+
+
+        <section class="live-reports__panel">
+
+            <div class="live-reports__panel-header">
+
+                <h2>
+                    Lives registrados
+                </h2>
+
+                <p>
+                    Selecciona una transmisión para consultar
+                    su reporte completo.
+                </p>
+
+            </div>
+
+
+            {% if rows %}
+
+                <div class="live-reports__table-wrap">
+
+                    <table class="live-reports__table">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>
+                                    Live
+                                </th>
+
+                                <th>
+                                    Estado
+                                </th>
+
+                                <th>
+                                    Fecha
+                                </th>
+
+                                <th>
+                                    Ventas
+                                </th>
+
+                                <th>
+                                    Unidades
+                                </th>
+
+                                <th>
+                                    Pedidos
+                                </th>
+
+                                <th>
+                                    Asignaciones
+                                </th>
+
+                                <th>
+                                    Acción
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody>
+
+                            {% for row in rows %}
+
+                                <tr>
+
+                                    <td>
+
+                                        <span class="live-reports__name">
+
+                                            {{ row.session.name }}
+
+                                        </span>
+
+                                        <span class="live-reports__platform">
+
+                                            {{ row.platform }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <span class="live-reports__status">
+
+                                            {{ row.status }}
+
+                                        </span>
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {% if row.session.scheduled_at %}
+
+                                            {{ row.session.scheduled_at|date:"d/m/Y h:i A" }}
+
+                                        {% else %}
+
+                                            Sin fecha
+
+                                        {% endif %}
+
+                                    </td>
+
+
+                                    <td class="live-reports__money">
+
+                                        {{ row.sales }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ row.units }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ row.orders }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        {{ row.assignments }}
+
+                                    </td>
+
+
+                                    <td>
+
+                                        <a
+                                            href="{% url 'live_sales:report_detail' row.session.id %}"
+                                            class="live-reports__action"
+                                        >
+
+                                            <i data-lucide="chart-column"></i>
+
+                                            Ver reporte
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+            {% else %}
+
+                <div class="live-reports__empty">
+
+                    <i data-lucide="chart-column"></i>
+
+                    <p>
+                        Todavía no hay Lives para reportar.
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </div>
+
+</section>
+
+{% endblock %}

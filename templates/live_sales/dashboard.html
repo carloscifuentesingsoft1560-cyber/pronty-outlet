@@ -276,7 +276,7 @@ Pronty Live | Pronty Outlet
 
         grid-template-columns:
             repeat(
-                4,
+                5,
                 minmax(0, 1fr)
             );
 
@@ -363,6 +363,13 @@ Pronty Live | Pronty Outlet
         background: #eef6ff;
 
         color: #26649a;
+    }
+
+
+    .live-quick-card__icon--purple {
+        background: #f4efff;
+
+        color: #6d4cc8;
     }
 
 
@@ -601,10 +608,39 @@ Pronty Live | Pronty Outlet
        ====================================================== */
 
     @media (
+        max-width: 1180px
+    ) {
+
+        .live-dashboard__quick-grid {
+            grid-template-columns:
+                repeat(
+                    3,
+                    minmax(0, 1fr)
+                );
+        }
+
+    }
+
+
+    @media (
         max-width: 1050px
     ) {
 
-        .live-dashboard__metrics,
+        .live-dashboard__metrics {
+            grid-template-columns:
+                repeat(
+                    2,
+                    minmax(0, 1fr)
+                );
+        }
+
+    }
+
+
+    @media (
+        max-width: 800px
+    ) {
+
         .live-dashboard__quick-grid {
             grid-template-columns:
                 repeat(
@@ -1043,6 +1079,49 @@ Pronty Live | Pronty Outlet
                             Consulta reservas, productos asignados,
                             pedidos generados y asignaciones
                             liberadas durante los Lives.
+
+                        </span>
+
+                    </div>
+
+                </a>
+
+
+                <!-- ======================================
+                     REPORTES
+                     ====================================== -->
+
+                <a
+                    href="{% url 'live_sales:reports' %}"
+                    class="live-quick-card"
+                >
+
+                    <div
+                        class="
+                            live-quick-card__icon
+                            live-quick-card__icon--purple
+                        "
+                    >
+
+                        <i data-lucide="chart-no-axes-combined"></i>
+
+                    </div>
+
+
+                    <div>
+
+                        <span class="live-quick-card__title">
+
+                            Reportes
+
+                        </span>
+
+
+                        <span class="live-quick-card__text">
+
+                            Consulta ventas, costos, utilidad,
+                            margen, productos y clientes
+                            de cada transmisión.
 
                         </span>
 

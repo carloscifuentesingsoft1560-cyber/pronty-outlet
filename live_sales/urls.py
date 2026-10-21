@@ -2,6 +2,7 @@ from django.urls import path
 
 from . import assignment_views
 from . import customer_views
+from . import report_views
 from . import session_product_views
 from . import views
 
@@ -19,6 +20,22 @@ urlpatterns = [
         '',
         views.live_dashboard,
         name='dashboard'
+    ),
+
+    # ========================================================
+    # REPORTES
+    # ========================================================
+
+    path(
+        'reportes/',
+        report_views.live_reports,
+        name='reports'
+    ),
+
+    path(
+        'reportes/<int:session_id>/',
+        report_views.live_report_detail,
+        name='report_detail'
     ),
 
     # ========================================================
