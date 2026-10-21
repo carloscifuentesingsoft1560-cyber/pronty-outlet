@@ -80,6 +80,23 @@
 
             <div class="site-header__actions">
 
+                <!-- ==========================================
+                     MENÚ HAMBURGUESA MÓVIL / TABLET
+                     ========================================== -->
+
+                <button
+                    type="button"
+                    class="site-header__menu-toggle"
+                    aria-label="Abrir menú de categorías"
+                    aria-expanded="false"
+                    aria-controls="main-navigation"
+                >
+
+                    <i data-lucide="menu"></i>
+
+                </button>
+
+
                 {% if request.user.is_authenticated %}
 
                     {% if request.user.is_staff or request.user.is_superuser %}
@@ -216,7 +233,10 @@
              MENÚ DINÁMICO DE CATEGORÍAS
              ============================================== -->
 
-        <nav class="main-nav">
+        <nav
+            class="main-nav"
+            id="main-navigation"
+        >
 
             <div class="container main-nav__inner">
 

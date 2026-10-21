@@ -4,6 +4,7 @@ from decimal import Decimal
 
 import qrcode
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.urls import reverse
@@ -80,10 +81,6 @@ def reserve_new_live_assignment(
 
     with transaction.atomic():
 
-        # ====================================================
-        # PRODUCTO
-        # ====================================================
-
         try:
             selected_product = (
                 assignment.product
@@ -114,10 +111,6 @@ def reserve_new_live_assignment(
         )
 
 
-        # ====================================================
-        # CLIENTE
-        # ====================================================
-
         try:
             customer = (
                 assignment.customer
@@ -143,10 +136,6 @@ def reserve_new_live_assignment(
                 )
             )
 
-
-        # ====================================================
-        # LIVE
-        # ====================================================
 
         try:
             live_session = (
@@ -177,10 +166,6 @@ def reserve_new_live_assignment(
             )
 
 
-        # ====================================================
-        # PRODUCTO HABILITADO EN EL LIVE
-        # ====================================================
-
         live_product = (
             LiveSessionProduct.objects
             .select_for_update()
@@ -203,10 +188,6 @@ def reserve_new_live_assignment(
             )
 
 
-        # ====================================================
-        # CANTIDAD
-        # ====================================================
-
         if (
             assignment.quantity is None
             or assignment.quantity <= 0
@@ -219,10 +200,6 @@ def reserve_new_live_assignment(
                 )
             )
 
-
-        # ====================================================
-        # STOCK
-        # ====================================================
 
         if (
             assignment.quantity
@@ -237,10 +214,6 @@ def reserve_new_live_assignment(
                 )
             )
 
-
-        # ====================================================
-        # PRECIO Y COSTO
-        # ====================================================
 
         assignment.unit_price = (
             live_product.effective_price
@@ -259,18 +232,10 @@ def reserve_new_live_assignment(
         )
 
 
-        # ====================================================
-        # GUARDAR ASIGNACIÓN
-        # ====================================================
-
         assignment.full_clean()
 
         assignment.save()
 
-
-        # ====================================================
-        # CREAR RESERVA REAL
-        # ====================================================
 
         reference = (
             get_live_assignment_reference(
@@ -342,10 +307,6 @@ def release_live_assignment(
         )
 
 
-        # ====================================================
-        # YA LIBERADA
-        # ====================================================
-
         if (
             locked_assignment.status
             == LiveAssignment.Status.RELEASED
@@ -356,10 +317,6 @@ def release_live_assignment(
                 'La asignación ya estaba liberada.'
             )
 
-
-        # ====================================================
-        # YA CONVERTIDA EN PEDIDO
-        # ====================================================
 
         if (
             locked_assignment.status
@@ -376,20 +333,12 @@ def release_live_assignment(
             )
 
 
-        # ====================================================
-        # REFERENCIA LIVE
-        # ====================================================
-
         reference = (
             get_live_assignment_reference(
                 locked_assignment
             )
         )
 
-
-        # ====================================================
-        # BUSCAR RESERVA
-        # ====================================================
 
         reservation = (
             InventoryMovement.objects
@@ -418,10 +367,6 @@ def release_live_assignment(
             )
 
 
-        # ====================================================
-        # EVITAR DOBLE LIBERACIÓN
-        # ====================================================
-
         already_released = (
             InventoryMovement.objects
             .filter(
@@ -447,10 +392,6 @@ def release_live_assignment(
                 )
             )
 
-
-        # ====================================================
-        # DEVOLVER INVENTARIO
-        # ====================================================
 
         InventoryMovement.objects.create(
             product=(
@@ -478,10 +419,6 @@ def release_live_assignment(
             created_by=released_by,
         )
 
-
-        # ====================================================
-        # ACTUALIZAR ESTADO
-        # ====================================================
 
         now = timezone.now()
 
@@ -546,10 +483,6 @@ def convert_live_assignments_to_order(
 
     with transaction.atomic():
 
-        # ====================================================
-        # CARGAR Y BLOQUEAR ASIGNACIONES
-        # ====================================================
-
         assignments = list(
             LiveAssignment.objects
             .select_for_update()
@@ -581,10 +514,6 @@ def convert_live_assignments_to_order(
                 )
             )
 
-
-        # ====================================================
-        # ESTADO DE LAS ASIGNACIONES
-        # ====================================================
 
         for assignment in assignments:
 
@@ -623,10 +552,6 @@ def convert_live_assignments_to_order(
                 )
 
 
-        # ====================================================
-        # TODAS DEL MISMO CLIENTE
-        # ====================================================
-
         customer_ids = {
             assignment.customer.pk
             for assignment in assignments
@@ -663,10 +588,6 @@ def convert_live_assignments_to_order(
         )
 
 
-        # ====================================================
-        # PERFIL
-        # ====================================================
-
         try:
 
             profile = (
@@ -686,10 +607,6 @@ def convert_live_assignments_to_order(
                 )
             )
 
-
-        # ====================================================
-        # DATOS DEL CLIENTE
-        # ====================================================
 
         customer_name = (
             user.get_full_name().strip()
@@ -736,10 +653,6 @@ def convert_live_assignments_to_order(
                 )
             )
 
-
-        # ====================================================
-        # VALIDAR RESERVAS LIVE
-        # ====================================================
 
         reservation_movements = []
 
@@ -831,10 +744,6 @@ def convert_live_assignments_to_order(
             )
 
 
-        # ====================================================
-        # TOTAL DEL PEDIDO
-        # ====================================================
-
         total = sum(
             (
                 assignment.unit_price
@@ -843,10 +752,6 @@ def convert_live_assignments_to_order(
             for assignment in assignments
         )
 
-
-        # ====================================================
-        # TOTAL REFERENCIA DETAL
-        # ====================================================
 
         retail_reference_total = sum(
             (
@@ -857,19 +762,11 @@ def convert_live_assignments_to_order(
         )
 
 
-        # ====================================================
-        # ACTIVACIÓN MAYORISTA
-        # ====================================================
-
         wholesale_activation_qualified = (
             retail_reference_total
             >= WHOLESALE_ACTIVATION_MINIMUM
         )
 
-
-        # ====================================================
-        # ENVÍO GRATIS
-        # ====================================================
 
         free_shipping = (
             total
@@ -887,10 +784,6 @@ def convert_live_assignments_to_order(
 
             shipping_cost = None
 
-
-        # ====================================================
-        # CREAR PEDIDO
-        # ====================================================
 
         order = Order.objects.create(
             customer=user,
@@ -955,10 +848,6 @@ def convert_live_assignments_to_order(
         )
 
 
-        # ====================================================
-        # RESERVA DE 3 DÍAS
-        # ====================================================
-
         order.reservation_expires_at = (
             order.created_at
             + timedelta(days=3)
@@ -972,10 +861,6 @@ def convert_live_assignments_to_order(
             ]
         )
 
-
-        # ====================================================
-        # ITEMS DEL PEDIDO
-        # ====================================================
 
         for assignment in assignments:
 
@@ -1014,21 +899,6 @@ def convert_live_assignments_to_order(
             )
 
 
-        # ====================================================
-        # TRANSFERIR RESERVAS LIVE AL PEDIDO
-        # ====================================================
-        #
-        # NO se descuenta stock nuevamente.
-        #
-        # Solo cambiamos la referencia:
-        #
-        # LIVE-ASG-000003
-        #
-        #        ↓
-        #
-        # PRY-2026-000034
-        # ====================================================
-
         for movement in reservation_movements:
 
             movement.reference = (
@@ -1048,10 +918,6 @@ def convert_live_assignments_to_order(
                 ]
             )
 
-
-        # ====================================================
-        # MARCAR ASIGNACIONES COMO ORDERED
-        # ====================================================
 
         now = timezone.now()
 
@@ -1124,6 +990,9 @@ def build_product_qr_absolute_url(
     """
     Construye la URL absoluta que se guardará dentro
     del código QR.
+
+    Si QR_BASE_URL está definida, se utiliza esa URL.
+    Si no está definida, se usa el host de la petición.
     """
 
     relative_url = reverse(
@@ -1132,6 +1001,25 @@ def build_product_qr_absolute_url(
             'code': qr_record.code,
         },
     )
+
+
+    qr_base_url = (
+        getattr(
+            settings,
+            'QR_BASE_URL',
+            ''
+        )
+        .strip()
+        .rstrip('/')
+    )
+
+
+    if qr_base_url:
+
+        return (
+            f'{qr_base_url}'
+            f'{relative_url}'
+        )
 
 
     return request.build_absolute_uri(
