@@ -190,6 +190,13 @@ class Cart:
                 * quantity
             )
 
+        for assignment in self.get_live_assignments():
+
+            total += (
+                Decimal(assignment.product.retail_price)
+                * assignment.quantity
+            )
+
         return total
 
 
