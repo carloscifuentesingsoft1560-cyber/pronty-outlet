@@ -2,10 +2,12 @@ from decimal import Decimal
 
 from accounts.models import CustomerProfile
 from catalog.models import Product
+from live_sales.models import LiveAssignment
 
 
 WHOLESALE_ACTIVATION_MINIMUM = Decimal('300000.00')
 FREE_SHIPPING_MINIMUM = Decimal('1000000.00')
+LIVE_ASSIGNMENTS_SESSION_KEY = 'live_cart_assignment_ids'
 
 
 class Cart:
@@ -37,6 +39,107 @@ class Cart:
             )
 
             self.customer_profile.refresh_commercial_status()
+
+
+    # =========================================================
+    # ASIGNACIONES PRONTY LIVE EN EL CARRITO
+    # =========================================================
+
+    def get_live_assignments(self):
+
+        if (
+            not self.request.user.is_authenticated
+            or self.request.user.is_staff
+            or self.request.user.is_superuser
+        ):
+            return LiveAssignment.objects.none()
+
+        assignment_ids = self.session.get(
+            LIVE_ASSIGNMENTS_SESSION_KEY,
+            []
+        )
+
+        assignments = (
+            LiveAssignment.objects
+            .select_related(
+                'product',
+                'customer',
+                'customer__user',
+                'live_session',
+            )
+            .filter(
+                pk__in=assignment_ids,
+                customer__user=self.request.user,
+                status=LiveAssignment.Status.ASSIGNED,
+            )
+            .order_by('id')
+        )
+
+        valid_ids = list(
+            assignments.values_list('pk', flat=True)
+        )
+
+        if set(valid_ids) != set(assignment_ids):
+            self.session[LIVE_ASSIGNMENTS_SESSION_KEY] = valid_ids
+            self.save()
+
+        return assignments
+
+
+    def add_live_assignments(self, assignment_ids):
+
+        if (
+            not self.request.user.is_authenticated
+            or self.request.user.is_staff
+            or self.request.user.is_superuser
+        ):
+            return 0
+
+        valid_ids = list(
+            LiveAssignment.objects
+            .filter(
+                pk__in=assignment_ids,
+                customer__user=self.request.user,
+                status=LiveAssignment.Status.ASSIGNED,
+            )
+            .values_list('pk', flat=True)
+        )
+
+        current_ids = set(
+            self.session.get(
+                LIVE_ASSIGNMENTS_SESSION_KEY,
+                []
+            )
+        )
+
+        current_ids.update(valid_ids)
+
+        self.session[LIVE_ASSIGNMENTS_SESSION_KEY] = sorted(
+            current_ids
+        )
+
+        self.save()
+
+        return len(valid_ids)
+
+
+    def remove_live_assignment(self, assignment_id):
+
+        current_ids = list(
+            self.session.get(
+                LIVE_ASSIGNMENTS_SESSION_KEY,
+                []
+            )
+        )
+
+        try:
+            current_ids.remove(int(assignment_id))
+        except (TypeError, ValueError):
+            return
+
+        self.session[LIVE_ASSIGNMENTS_SESSION_KEY] = current_ids
+
+        self.save()
 
 
     # =========================================================
@@ -337,7 +440,22 @@ class Cart:
                 'is_wholesale_price'
             ] = use_wholesale
 
+            item['is_live_assignment'] = False
+            item['live_assignment'] = None
+
             yield item
+
+        for assignment in self.get_live_assignments():
+
+            yield {
+                'product': assignment.product,
+                'quantity': assignment.quantity,
+                'price': Decimal(assignment.unit_price),
+                'total_price': Decimal(assignment.subtotal),
+                'is_wholesale_price': False,
+                'is_live_assignment': True,
+                'live_assignment': assignment,
+            }
 
 
     # =========================================================
@@ -346,11 +464,19 @@ class Cart:
 
     def __len__(self):
 
-        return sum(
+        normal_quantity = sum(
             item['quantity']
             for item
             in self.cart.values()
         )
+
+        live_quantity = sum(
+            assignment.quantity
+            for assignment
+            in self.get_live_assignments()
+        )
+
+        return normal_quantity + live_quantity
 
 
     # =========================================================
