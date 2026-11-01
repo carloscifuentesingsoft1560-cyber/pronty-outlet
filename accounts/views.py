@@ -11,6 +11,7 @@ from django.utils.http import url_has_allowed_host_and_scheme
 from django.utils.translation import override
 from django.views.decorators.http import require_POST
 
+from cart.cart import Cart
 from cart.models import Order
 from cart.reservation_services import expire_order_if_due
 
@@ -18,10 +19,6 @@ from live_sales.models import (
     LiveAssignment,
     LiveCustomerAccess,
 )
-from live_sales.services import (
-    convert_live_assignments_to_order,
-)
-
 from .models import CustomerProfile
 
 
@@ -225,32 +222,18 @@ def account_dashboard(request):
 @require_POST
 def generate_live_order(request):
     """
-    Permite al cliente convertir sus asignaciones activas
-    de Pronty Live en un pedido real.
+    Lleva las asignaciones activas de Pronty Live al carrito
+    para que el cliente continúe por el checkout normal.
 
-    Seguridad:
-    - solamente asignaciones del usuario autenticado;
-    - solamente ASSIGNED;
-    - el servicio vuelve a validar todo dentro de transacción;
-    - no se vuelve a descontar inventario.
+    Las asignaciones ya tienen inventario reservado; por eso
+    aquí no se crea el pedido ni se descuenta inventario.
     """
-
-    # ========================================================
-    # ADMINISTRADORES NO GENERAN PEDIDOS COMO CLIENTES
-    # ========================================================
 
     if (
         request.user.is_staff
         or request.user.is_superuser
     ):
-
-        return redirect(
-            '/admin/'
-        )
-
-    # ========================================================
-    # ACCESO LIVE
-    # ========================================================
+        return redirect('/admin/')
 
     live_access = (
         LiveCustomerAccess.objects
@@ -265,38 +248,26 @@ def generate_live_order(request):
 
         messages.error(
             request,
-            (
-                'Tu cuenta no tiene activado '
-                'Pronty Live.'
-            )
+            'Tu cuenta no tiene activado Pronty Live.'
         )
 
         return redirect(
-            'accounts:dashboard'
+            'accounts:live'
         )
 
-    # ========================================================
-    # IDS SELECCIONADOS
-    # ========================================================
-
-    raw_assignment_ids = (
-        request.POST.getlist(
-            'assignment_ids'
-        )
+    raw_assignment_ids = request.POST.getlist(
+        'assignment_ids'
     )
 
     if not raw_assignment_ids:
 
         messages.warning(
             request,
-            (
-                'Selecciona al menos un producto '
-                'de Pronty Live.'
-            )
+            'Selecciona al menos un producto de Pronty Live.'
         )
 
         return redirect(
-            'accounts:dashboard'
+            'accounts:live'
         )
 
     try:
@@ -307,51 +278,23 @@ def generate_live_order(request):
             in raw_assignment_ids
         })
 
-    except (
-        TypeError,
-        ValueError,
-    ):
+    except (TypeError, ValueError):
 
         messages.error(
             request,
-            (
-                'La selección de productos '
-                'no es válida.'
-            )
+            'La selección de productos no es válida.'
         )
 
         return redirect(
-            'accounts:dashboard'
+            'accounts:live'
         )
-
-    if not assignment_ids:
-
-        messages.warning(
-            request,
-            (
-                'Selecciona al menos un producto '
-                'de Pronty Live.'
-            )
-        )
-
-        return redirect(
-            'accounts:dashboard'
-        )
-
-    # ========================================================
-    # VALIDAR PROPIEDAD DE LAS ASIGNACIONES
-    # ========================================================
 
     valid_assignment_ids = list(
         LiveAssignment.objects
         .filter(
             pk__in=assignment_ids,
             customer=live_access,
-            status=(
-                LiveAssignment
-                .Status
-                .ASSIGNED
-            ),
+            status=LiveAssignment.Status.ASSIGNED,
         )
         .values_list(
             'pk',
@@ -368,87 +311,43 @@ def generate_live_order(request):
             request,
             (
                 'Uno o más productos seleccionados '
-                'ya no están disponibles para '
-                'generar el pedido. '
+                'ya no están disponibles. '
                 'Actualiza la página e inténtalo nuevamente.'
             )
         )
 
         return redirect(
-            'accounts:dashboard'
+            'accounts:live'
         )
 
-    # ========================================================
-    # CONVERTIR A PEDIDO
-    # ========================================================
+    cart = Cart(request)
 
-    try:
+    added = cart.add_live_assignments(
+        valid_assignment_ids
+    )
 
-        order = (
-            convert_live_assignments_to_order(
-                valid_assignment_ids,
-                created_by=request.user,
-            )
-        )
-
-    except ValidationError as error:
-
-        if getattr(
-            error,
-            'messages',
-            None
-        ):
-
-            error_message = ' '.join(
-                error.messages
-            )
-
-        else:
-
-            error_message = str(
-                error
-            )
+    if added == 0:
 
         messages.error(
             request,
-            error_message
+            'No fue posible agregar los productos al carrito.'
         )
 
         return redirect(
-            'accounts:dashboard'
+            'accounts:live'
         )
-
-    except Exception as error:
-
-        messages.error(
-            request,
-            (
-                'No fue posible generar el pedido '
-                'de Pronty Live. '
-                f'Detalle: {error}'
-            )
-        )
-
-        return redirect(
-            'accounts:dashboard'
-        )
-
-    # ========================================================
-    # ÉXITO
-    # ========================================================
 
     messages.success(
         request,
         (
-            'Tu pedido de Pronty Live fue creado '
-            f'correctamente: {order.order_number}. '
-            'Ahora puedes continuar con el pago.'
+            f'{added} producto(s) de Pronty Live '
+            'fueron agregados al carrito. '
+            'Revisa tu pedido y continúa al checkout.'
         )
     )
 
     return redirect(
-        'accounts:order_detail',
-        order_number=order.order_number
+        'cart:cart_detail'
     )
 
 
