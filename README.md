@@ -694,14 +694,51 @@ Toda información sensible debe administrarse mediante variables de entorno.
 | Documento | Estado |
 |---|---|
 | README técnico | Actualizado |
-| SRS | Pendiente |
-| Manual de usuario | Pendiente |
-| Manual de administrador | Pendiente |
-| Manual de instalación | Pendiente |
-| Arquitectura | Pendiente |
-| Pruebas | Pendiente |
-| Guía de producción | Pendiente |
+| SRS | Actualizado |
+| Manual de usuario | Actualizado |
+| Manual de administrador | Actualizado |
+| Manual de instalación | Actualizado |
+| Arquitectura | Actualizado |
+| Pruebas | Actualizado |
+| Guía de producción | Actualizado |
 | Políticas legales | Borrador sujeto a validación |
+
+---
+
+# Producción y despliegue económico
+
+La arquitectura objetivo para la primera etapa de producción es:
+
+```text
+GitHub
+   ↓
+Google Cloud Run — Django + Gunicorn
+   ↓
+Neon — PostgreSQL
+   ↓
+Cloudflare R2 — archivos media
+```
+
+El proyecto conserva **SQLite para desarrollo local**. Cuando se define `DATABASE_URL`, Django utiliza PostgreSQL automáticamente.
+
+El repositorio incluye:
+
+- `Dockerfile`;
+- `.dockerignore`;
+- `.env.example`;
+- configuración de WhiteNoise para archivos estáticos;
+- soporte opcional para Cloudflare R2;
+- GitHub Actions para validar Django y migraciones.
+
+La infraestructura inicial está diseñada para aprovechar los niveles gratuitos de los proveedores. El costo mensual puede mantenerse cercano a **$0 COP** mientras el consumo permanezca dentro de esos límites. El dominio comercial sería el principal costo fijo inicial.
+
+Para detalles consulta:
+
+- `ARQUITECTURA.md`;
+- `DESPLIEGUE_PRODUCCION.md`;
+- `MANUAL_INSTALACION.md`;
+- `PRUEBAS.md`.
+
 
 ---
 
