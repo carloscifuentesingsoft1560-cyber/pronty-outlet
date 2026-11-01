@@ -67,6 +67,9 @@ Carrito | Pronty Outlet
 
                                 <span class="cart-item__category">
                                     {{ item.product.category.name }}
+                                    {% if item.is_live_assignment %}
+                                        · Pronty Live
+                                    {% endif %}
                                 </span>
 
                                 <h2>
@@ -102,29 +105,45 @@ Carrito | Pronty Outlet
 
                             <div class="cart-item__actions">
 
-                                <form
-                                    method="post"
-                                    action="{% url 'cart:cart_update' item.product.pk %}"
-                                >
-                                    {% csrf_token %}
+                                {% if item.is_live_assignment %}
 
-                                    <label>
-                                        Cantidad
-                                    </label>
+                                    <div>
+                                        <label>
+                                            Cantidad reservada
+                                        </label>
 
-                                    <input
-                                        type="number"
-                                        name="quantity"
-                                        value="{{ item.quantity }}"
-                                        min="1"
-                                        max="{{ item.product.stock }}"
+                                        <strong>
+                                            {{ item.quantity }}
+                                        </strong>
+                                    </div>
+
+                                {% else %}
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'cart:cart_update' item.product.pk %}"
                                     >
+                                        {% csrf_token %}
 
-                                    <button type="submit">
-                                        Actualizar
-                                    </button>
+                                        <label>
+                                            Cantidad
+                                        </label>
 
-                                </form>
+                                        <input
+                                            type="number"
+                                            name="quantity"
+                                            value="{{ item.quantity }}"
+                                            min="1"
+                                            max="{{ item.product.stock }}"
+                                        >
+
+                                        <button type="submit">
+                                            Actualizar
+                                        </button>
+
+                                    </form>
+
+                                {% endif %}
 
 
                                 <div class="cart-item__subtotal">
@@ -140,21 +159,43 @@ Carrito | Pronty Outlet
                                 </div>
 
 
-                                <form
-                                    method="post"
-                                    action="{% url 'cart:cart_remove' item.product.pk %}"
-                                >
-                                    {% csrf_token %}
+                                {% if item.is_live_assignment %}
 
-                                    <button
-                                        class="cart-item__remove"
-                                        type="submit"
+                                    <form
+                                        method="post"
+                                        action="{% url 'cart:cart_remove_live_assignment' item.live_assignment.pk %}"
                                     >
-                                        <i data-lucide="trash-2"></i>
-                                        Eliminar
-                                    </button>
+                                        {% csrf_token %}
 
-                                </form>
+                                        <button
+                                            class="cart-item__remove"
+                                            type="submit"
+                                        >
+                                            <i data-lucide="trash-2"></i>
+                                            Retirar del carrito
+                                        </button>
+
+                                    </form>
+
+                                {% else %}
+
+                                    <form
+                                        method="post"
+                                        action="{% url 'cart:cart_remove' item.product.pk %}"
+                                    >
+                                        {% csrf_token %}
+
+                                        <button
+                                            class="cart-item__remove"
+                                            type="submit"
+                                        >
+                                            <i data-lucide="trash-2"></i>
+                                            Eliminar
+                                        </button>
+
+                                    </form>
+
+                                {% endif %}
 
                             </div>
 
