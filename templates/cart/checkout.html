@@ -246,6 +246,15 @@ Checkout | Pronty Outlet
                                     Interrapidísimo
                                 </option>
 
+                                <option
+                                    value="no_aplica"
+                                    {% if checkout_data.carrier == 'no_aplica' %}
+                                        selected
+                                    {% endif %}
+                                >
+                                    No aplica
+                                </option>
+
                             </select>
 
                         </div>
@@ -293,6 +302,9 @@ Checkout | Pronty Outlet
 
                             <strong>
                                 {{ item.product.name }}
+                                {% if item.is_live_assignment %}
+                                    · Pronty Live
+                                {% endif %}
                             </strong>
 
                             <span>
