@@ -11,6 +11,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from catalog.models import InventoryMovement, Product
+from live_sales.models import LiveAssignment
+from live_sales.services import get_live_assignment_reference
 
 from .cart import Cart
 from .models import Order, OrderItem
@@ -276,6 +278,88 @@ def checkout(request):
                         'quantity'
                     ]
 
+                    if item.get(
+                        'is_live_assignment'
+                    ):
+
+                        if (
+                            not request.user.is_authenticated
+                            or request.user.is_staff
+                            or request.user.is_superuser
+                        ):
+
+                            raise ValidationError(
+                                (
+                                    'Debes iniciar sesión como cliente '
+                                    'para comprar productos de Pronty Live.'
+                                )
+                            )
+
+                        assignment = (
+                            LiveAssignment.objects
+                            .select_for_update()
+                            .select_related(
+                                'customer',
+                                'customer__user',
+                                'product',
+                            )
+                            .filter(
+                                pk=(
+                                    item[
+                                        'live_assignment'
+                                    ].pk
+                                ),
+                                customer__user=request.user,
+                                status=(
+                                    LiveAssignment
+                                    .Status
+                                    .ASSIGNED
+                                ),
+                            )
+                            .first()
+                        )
+
+                        if not assignment:
+
+                            raise ValidationError(
+                                (
+                                    'Uno de los productos de Pronty Live '
+                                    'ya no está disponible.'
+                                )
+                            )
+
+                        if (
+                            assignment.product_id
+                            != product.pk
+                            or assignment.quantity
+                            != quantity
+                        ):
+
+                            raise ValidationError(
+                                (
+                                    'La reserva de Pronty Live cambió. '
+                                    'Actualiza el carrito e inténtalo nuevamente.'
+                                )
+                            )
+
+                        validated_items.append(
+                            {
+                                'product': product,
+                                'quantity': quantity,
+                                'unit_price': (
+                                    assignment.unit_price
+                                ),
+                                'subtotal': (
+                                    assignment.subtotal
+                                ),
+                                'live_assignment': (
+                                    assignment
+                                ),
+                            }
+                        )
+
+                        continue
+
                     if quantity > product.stock:
 
                         raise ValidationError(
@@ -292,6 +376,7 @@ def checkout(request):
                             'quantity': quantity,
                             'unit_price': item['price'],
                             'subtotal': item['total_price'],
+                            'live_assignment': None,
                         }
                     )
 
@@ -419,36 +504,108 @@ def checkout(request):
                         ],
                     )
 
-                    InventoryMovement.objects.create(
-                        product=product,
-
-                        movement_type=(
-                            InventoryMovement
-                            .MovementType
-                            .RESERVATION
-                        ),
-
-                        quantity=quantity,
-
-                        reason=(
-                            f'Reserva temporal correspondiente '
-                            f'al pedido {order.order_number}'
-                        ),
-
-                        reference=(
-                            order.order_number
-                        ),
-
-                        created_by=(
-                            request.user
-                            if (
-                                request.user.is_authenticated
-                                and not request.user.is_staff
-                                and not request.user.is_superuser
-                            )
-                            else None
-                        ),
+                    live_assignment = item.get(
+                        'live_assignment'
                     )
+
+                    if live_assignment:
+
+                        live_reference = (
+                            get_live_assignment_reference(
+                                live_assignment
+                            )
+                        )
+
+                        reservation = (
+                            InventoryMovement.objects
+                            .select_for_update()
+                            .filter(
+                                product=product,
+                                reference=live_reference,
+                                movement_type=(
+                                    InventoryMovement
+                                    .MovementType
+                                    .RESERVATION
+                                ),
+                            )
+                            .first()
+                        )
+
+                        if not reservation:
+
+                            raise ValidationError(
+                                (
+                                    'No se encontró la reserva de inventario '
+                                    'de un producto de Pronty Live.'
+                                )
+                            )
+
+                        reservation.reference = (
+                            order.order_number
+                        )
+
+                        reservation.reason = (
+                            f'Reserva Pronty Live transferida '
+                            f'al pedido {order.order_number}'
+                        )
+
+                        reservation.save(
+                            update_fields=[
+                                'reference',
+                                'reason',
+                            ]
+                        )
+
+                        live_assignment.status = (
+                            LiveAssignment
+                            .Status
+                            .ORDERED
+                        )
+
+                        live_assignment.order = (
+                            order
+                        )
+
+                        live_assignment.save(
+                            update_fields=[
+                                'status',
+                                'order',
+                                'updated_at',
+                            ]
+                        )
+
+                    else:
+
+                        InventoryMovement.objects.create(
+                            product=product,
+
+                            movement_type=(
+                                InventoryMovement
+                                .MovementType
+                                .RESERVATION
+                            ),
+
+                            quantity=quantity,
+
+                            reason=(
+                                f'Reserva temporal correspondiente '
+                                f'al pedido {order.order_number}'
+                            ),
+
+                            reference=(
+                                order.order_number
+                            ),
+
+                            created_by=(
+                                request.user
+                                if (
+                                    request.user.is_authenticated
+                                    and not request.user.is_staff
+                                    and not request.user.is_superuser
+                                )
+                                else None
+                            ),
+                        )
 
         except Product.DoesNotExist:
 
@@ -1047,6 +1204,27 @@ def cart_remove(
 
     cart.remove(
         product
+    )
+
+    return redirect(
+        'cart:cart_detail'
+    )
+
+
+# ============================================================
+# RETIRAR PRODUCTO DE PRONTY LIVE DEL CARRITO
+# ============================================================
+
+@require_POST
+def cart_remove_live_assignment(
+    request,
+    assignment_id
+):
+
+    cart = Cart(request)
+
+    cart.remove_live_assignment(
+        assignment_id
     )
 
     return redirect(
