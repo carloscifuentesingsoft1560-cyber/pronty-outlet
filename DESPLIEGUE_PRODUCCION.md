@@ -110,3 +110,66 @@ Se recomienda registrar:
 - [ ] WhatsApp probado.
 - [ ] Redes sociales probadas.
 - [ ] Políticas legales aprobadas.
+
+## 16. Stack de producción seleccionado
+
+Primera etapa:
+
+- aplicación: Google Cloud Run;
+- base de datos: Neon PostgreSQL;
+- archivos media: Cloudflare R2;
+- código y CI: GitHub;
+- servidor WSGI: Gunicorn;
+- archivos estáticos: WhiteNoise.
+
+## 17. Variables de producción
+
+Además de las variables existentes, producción debe definir:
+
+```env
+DJANGO_SECRET_KEY=...
+DEBUG=False
+ALLOWED_HOSTS=...
+CSRF_TRUSTED_ORIGINS=https://...
+QR_BASE_URL=https://...
+DATABASE_URL=postgresql://...
+R2_ACCESS_KEY_ID=...
+R2_SECRET_ACCESS_KEY=...
+R2_BUCKET_NAME=...
+R2_ENDPOINT_URL=...
+R2_CUSTOM_DOMAIN=...
+```
+
+Nunca se deben subir los valores reales al repositorio.
+
+## 18. Construcción con Docker
+
+El repositorio incluye un `Dockerfile` listo para construir la aplicación.
+
+Prueba local conceptual:
+
+```powershell
+docker build -t pronty-outlet .
+docker run --env-file .env -p 8080:8080 pronty-outlet
+```
+
+## 19. Migraciones en producción
+
+Antes de poner en servicio una versión que contenga cambios de modelos:
+
+```powershell
+python manage.py migrate
+```
+
+Las migraciones deben ejecutarse contra la base PostgreSQL de producción usando `DATABASE_URL`.
+
+## 20. GitHub Actions
+
+El repositorio contiene una validación automática que ejecuta:
+
+```text
+python manage.py check
+python manage.py makemigrations --check --dry-run
+```
+
+Esto permite detectar errores básicos de configuración o migraciones pendientes en cada actualización de la rama principal.
