@@ -50,6 +50,12 @@ urlpatterns = [
     ),
 
     path(
+        'eliminar-live/<int:assignment_id>/',
+        views.cart_remove_live_assignment,
+        name='cart_remove_live_assignment'
+    ),
+
+    path(
         'vaciar/',
         views.cart_clear,
         name='cart_clear'
