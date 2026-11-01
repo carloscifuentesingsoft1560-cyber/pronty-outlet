@@ -131,3 +131,41 @@ Principios:
 - monitoreo;
 - backups;
 - CI/CD.
+
+## 11. Arquitectura objetivo de producción
+
+La arquitectura definida para la primera etapa de producción busca minimizar costos fijos sin sacrificar seguridad ni capacidad de crecimiento.
+
+```text
+Internet
+   |
+ HTTPS
+   |
+Google Cloud Run
+Django / Pronty Outlet
+   |
+   +---- Neon PostgreSQL
+   |
+   +---- Cloudflare R2 (media)
+```
+
+### Componentes
+
+- **Google Cloud Run:** ejecución de la aplicación Django mediante contenedor.
+- **Neon PostgreSQL:** base de datos PostgreSQL administrada para producción.
+- **Cloudflare R2:** almacenamiento persistente para imágenes y archivos media.
+- **GitHub:** código fuente, historial de cambios y validaciones automáticas.
+- **WhiteNoise:** entrega de archivos estáticos del proyecto.
+- **Gunicorn:** servidor WSGI de producción.
+
+### Estrategia de costos
+
+En la etapa inicial se priorizan los niveles gratuitos de Cloud Run, Neon y Cloudflare R2. El costo mensual esperado puede mantenerse cercano a **$0 COP** mientras el uso permanezca dentro de los límites gratuitos de cada proveedor.
+
+El principal costo fijo previsto al inicio es el dominio comercial, estimado de forma orientativa entre **$60.000 y $100.000 COP al año**, según extensión y proveedor.
+
+Los límites, precios y condiciones de los proveedores pueden cambiar; antes del despliegue definitivo deben verificarse nuevamente.
+
+### Escalabilidad
+
+Cloud SQL no se utilizará en la primera etapa. Se evaluará posteriormente si el volumen de tráfico, pedidos o requerimientos operativos justifican asumir una infraestructura de base de datos con mayor costo fijo.
