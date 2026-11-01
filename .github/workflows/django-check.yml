@@ -1,0 +1,37 @@
+name: Django checks
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  django-check:
+    runs-on: ubuntu-latest
+
+    env:
+      DJANGO_SECRET_KEY: github-actions-test-secret
+      DEBUG: "True"
+      ALLOWED_HOSTS: 127.0.0.1,localhost
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Validar Django
+        run: python manage.py check
+
+      - name: Validar migraciones
+        run: python manage.py makemigrations --check --dry-run
